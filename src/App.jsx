@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
-import { Search, Navigation, Plus, MapPin, BarChart3, ChevronLeft } from 'lucide-react';
+import { Search, Navigation, Plus, MapPin, BarChart3, ChevronLeft, ArrowRight, Mail } from 'lucide-react';
 import AppMap from './components/Map';
 import ReviewCard from './components/ReviewCard';
 import MultiReviewCard from './components/MultiReviewCard';
-import AIAssistant from './components/AIAssistant';
+import AgentBox from './components/AgentBox';
 import CreateReview from './components/CreateReview';
 import UserProfile from './components/UserProfile';
 import './index.css';
 
 function App() {
-  const [appMode, setAppMode] = useState('landing'); // 'landing', 'consumer', 'business'
+  const [appMode, setAppMode] = useState('landing');
   const [selectedLocationReviews, setSelectedLocationReviews] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -17,6 +17,9 @@ function App() {
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
   const [mapUpdateTrigger, setMapUpdateTrigger] = useState(0);
+
+  const [showEmailPrompt, setShowEmailPrompt] = useState(false);
+  const [marketResearchEmail, setMarketResearchEmail] = useState('');
 
   const handleReviewSelect = (reviewsOrReview) => {
     if (Array.isArray(reviewsOrReview)) {
@@ -29,6 +32,15 @@ function App() {
   };
 
   const handleSearch = () => setQuery(searchInput);
+
+  const startBusinessMode = () => {
+     if (!marketResearchEmail || !marketResearchEmail.includes('@')) {
+         alert("Please enter a valid email address to receive Agent emails.");
+         return;
+     }
+     setShowEmailPrompt(false);
+     setAppMode('business');
+  };
 
   if (appMode === 'landing') {
     return (
@@ -53,7 +65,7 @@ function App() {
             </button>
 
             <button 
-              onClick={() => setAppMode('business')}
+              onClick={() => setShowEmailPrompt(true)}
               className="glass-panel" 
               style={{ flex: 1, padding: 20, cursor: 'pointer', border: '1px solid #cbd5e1', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 15, transition: 'transform 0.2s', backgroundColor: '#fff' }}
             >
@@ -61,10 +73,32 @@ function App() {
                 <BarChart3 size={32} />
               </div>
               <h3 style={{ margin: 0 }}>Market Research</h3>
-              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>Analyze regional review densities using geospatial hexagons.</p>
+              <p style={{ fontSize: '0.85rem', color: '#64748b', margin: 0 }}>Access Geospatial data and trigger AI Sales Agents.</p>
             </button>
           </div>
         </div>
+
+        {showEmailPrompt && (
+             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(3px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
+                 <div className="glass-panel" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20, width: 350, boxShadow: '0 25px 50px rgba(0,0,0,0.1)' }}>
+                     <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10 }}><Mail color="#8b5cf6" size={20} /> Identity Verification</h3>
+                     <p style={{ fontSize: '0.9rem', color: '#64748b', margin: 0 }}>Enter your email address to securely route AI-generated intelligence briefings and automated sales outreach directly to your inbox for verification.</p>
+                     <input 
+                         type="email" 
+                         value={marketResearchEmail} 
+                         onChange={(e) => setMarketResearchEmail(e.target.value)} 
+                         placeholder="you@example.com"
+                         autoFocus
+                         onKeyDown={(e) => e.key === 'Enter' && startBusinessMode()}
+                         style={{ padding: '12px 15px', borderRadius: 10, border: '1px solid #cbd5e1', outline: 'none', fontSize: '1rem' }}
+                     />
+                     <div style={{ display: 'flex', gap: 10 }}>
+                         <button onClick={() => setShowEmailPrompt(false)} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', backgroundColor: '#e2e8f0', cursor: 'pointer' }}>Cancel</button>
+                         <button onClick={startBusinessMode} style={{ flex: 1, padding: '10px', borderRadius: 10, border: 'none', backgroundColor: '#8b5cf6', color: '#fff', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>Initialize <ArrowRight size={16}/></button>
+                     </div>
+                 </div>
+             </div>
+        )}
       </div>
     );
   }
@@ -123,7 +157,7 @@ function App() {
         </button>
       )}
 
-      {appMode === 'business' && <AIAssistant />}
+      {appMode === 'business' && <AgentBox demoEmail={marketResearchEmail} />}
 
       {selectedReview && (
         <ReviewCard 

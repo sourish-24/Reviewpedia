@@ -1,9 +1,16 @@
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import Review from './models/Review.js';
+import B2BClient from './models/B2BClient.js';
+import OutreachLog from './models/OutreachLog.js';
 import { generateMockReviews } from '../src/utils/mockData.js';
+import { runProspectingAgent } from './agents/ProspectingAgent.js';
+import { runDealIntelligenceAgent } from './agents/DealIntelligenceAgent.js';
 
 const app = express();
 app.use(cors());
@@ -13,71 +20,109 @@ let mongoServer;
 
 const startServer = async () => {
   try {
-    // 1. Spin up MongoDB Memory Server
     mongoServer = await MongoMemoryServer.create();
     const uri = mongoServer.getUri();
     
-    // 2. Connect Mongoose
     await mongoose.connect(uri);
     console.log(`Connected to In-Memory MongoDB at ${uri}`);
 
-    // Wait for indexes to build
     await Review.init();
 
-    // 3. Seed Database with Initial Dummy Data
     const count = await Review.countDocuments();
     if (count === 0) {
-      console.log("Seeding database with initial dummy reviews...");
-      const mockData = generateMockReviews(28.7041, 77.1025, 300);
-      let processed = mockData.map(({ id, ...rest }) => rest);
-
-      // Explicitly inject a cluster of 5 reviews right at the default map center
-      const forcedCluster = [];
-      for (let i = 1; i <= 5; i++) {
-        forcedCluster.push({
-          lat: 28.7041, lng: 77.1025,
-          productName: `Test Product ${i}`,
-          category: `Electronics`,
-          platform: `Local Shop`,
-          rating: 4 + (i % 2),
-          summary: `This is explicitly clustered review #${i} at exactly the map center.`,
-          reviewer: `DemoUser${i}`,
-          trustScore: 80 + i,
-          date: new Date().toISOString().split('T')[0]
-        });
-      }
+      console.log("Seeding database with initial platform data for AI Agents...");
       
-      processed = processed.concat(forcedCluster);
-      await Review.insertMany(processed);
-      console.log(`Inserted ${processed.length} dummy reviews.`);
-
-      // Give it extra reviews specifically tailored to "cars" so the search behaves well.
-      const carReviews = generateMockReviews(28.72, 77.12, 10).map(({ id, ...rest }) => ({
-        ...rest,
-        productName: "Honda City Cover",
-        category: "Automotive",
-        summary: "These cars accessories are phenomenal, specifically for the swift and city models."
+      const generalData = generateMockReviews(28.7041, 77.1025, 30);
+      let processed = generalData.map(({ id, ...rest }) => ({
+          ...rest,
+          sentiment_score: Math.random(),
+          demandSignals: Math.floor(Math.random() * 5),
+          h3Index: "883da164ebfffff",
+          city: "Delhi"
       }));
-       await Review.insertMany(carReviews);
+
+      // Platform Target 1: "boAt" (Prospecting Agent Target: >50 reviews, not client)
+      const boatReviews = generateMockReviews(18.5204, 73.8567, 15).map(({ id, ...rest }) => ({
+        ...rest,
+        productName: "boAt Airdopes 141",
+        category: "Audio",
+        platform: "Amazon",
+        summary: "Sound quality is great but charging cable sucks.",
+        reviewer: "LocalUserPune" + Math.floor(Math.random() * 99),
+        sentiment_score: 0.6,
+        demandSignals: 4,
+        h3Index: "8860144005fffff", // Pune h3 simulated
+        city: "Pune"
+      }));
+
+      // Platform Target 2: "Noise" (Deal Intelligence Target: Client inactive >7 days, sentiment spike)
+      const noiseReviews = generateMockReviews(12.9716, 77.5946, 10).map(({ id, ...rest }) => ({
+        ...rest,
+        productName: "Noise ColorFit Pro 4",
+        category: "Wearables",
+        platform: "Flipkart",
+        summary: "Strap breaking after 2 weeks, terrible quality.",
+        reviewer: "LocalUserBlr" + Math.floor(Math.random() * 99),
+        sentiment_score: 0.2, // Very negative
+        demandSignals: 6,
+        h3Index: "8861892589fffff", // Bangalore h3 simulated
+        city: "Bengaluru",
+        date: new Date().toISOString() // Marked as very recent
+      }));
+
+      const noiseClient = new B2BClient({
+          client_id: "noise_123",
+          companyName: "Noise",
+          contactEmail: "founder@gonoise.com",
+          primaryCategories: ["Wearables"],
+          primaryCities: ["Bengaluru", "Delhi"],
+          lastLogin: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000) // 9 days ago
+      });
+
+      await noiseClient.save();
+      
+      processed = processed.concat(boatReviews).concat(noiseReviews);
+      await Review.insertMany(processed);
+      console.log(`Successfully seeded DB: ${processed.length} reviews, 1 B2BClient.`);
     }
 
-    // Routes
+    // --- AI Sales Agent Endpoints ---
+    app.post('/api/agents/run-prospecting', async (req, res) => {
+        if (!process.env.GEMINI_API_KEY) return res.status(400).json({ error: "Missing GEMINI_API_KEY in .env" });
+        try {
+            console.log("\n-> Executing Prospecting Agent via API...");
+            const { demoEmail } = req.body;
+            const result = await runProspectingAgent(demoEmail);
+            res.json({ success: true, result });
+        } catch(e) {
+            console.error(e);
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    app.post('/api/agents/run-deal-intelligence', async (req, res) => {
+        if (!process.env.GEMINI_API_KEY) return res.status(400).json({ error: "Missing GEMINI_API_KEY in .env" });
+        try {
+            console.log("\n-> Executing Deal Intelligence Agent via API...");
+            const { demoEmail } = req.body;
+            const result = await runDealIntelligenceAgent(demoEmail);
+            res.json({ success: true, result });
+        } catch(e) {
+            console.error(e);
+            res.status(500).json({ error: e.message });
+        }
+    });
+
+    // --- Standard Frontend Endpoints ---
     app.get('/api/reviews', async (req, res) => {
       try {
         const search = req.query.search;
         let filter = {};
-
         if (search && search.trim() !== '') {
-          // MongoDB Native Text Search
           filter = { $text: { $search: search } };
         }
-
         const reviews = await Review.find(filter).limit(500);
-        // Map _id strictly to string for frontend compatibility since mock data used 'id'
-        const normalized = reviews.map(r => ({
-          ...r.toObject(),
-          id: r._id.toString()
-        }));
+        const normalized = reviews.map(r => ({ ...r.toObject(), id: r._id.toString() }));
         res.json(normalized);
       } catch (err) {
         console.error(err);

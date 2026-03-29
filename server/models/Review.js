@@ -10,7 +10,12 @@ const ReviewSchema = new mongoose.Schema({
   summary: { type: String, required: true },
   reviewer: { type: String, required: true },
   trustScore: { type: Number, required: true },
-  date: { type: String, required: true }
+  date: { type: String, required: true },
+  // Hackathon Agent Fields
+  sentiment_score: { type: Number, default: 0.8 },
+  demandSignals: { type: Number, default: 0 },
+  h3Index: { type: String, default: "" },
+  city: { type: String, default: "Unknown" }
 });
 
 // Create a text index on productName, summary, and category for full-text search
