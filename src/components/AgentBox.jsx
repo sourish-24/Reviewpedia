@@ -69,53 +69,54 @@ Select an autonomous workflow below to trigger the LLM to search the database an
         className="glass-panel" 
         onClick={() => setIsOpen(true)}
         style={{
-          position: 'absolute', bottom: 30, right: 30, width: 60, height: 60, 
-          borderRadius: 30, display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', border: 'none', zIndex: 1000,
-          boxShadow: '0 10px 25px rgba(236,72,153,0.3)',
-          background: 'linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%)'
+          position: 'absolute', top: 30, right: 30, height: 48, padding: '0 20px', 
+          borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+          cursor: 'pointer', border: '1px solid var(--outline-variant)', zIndex: 1000,
+          whiteSpace: 'nowrap', color: 'var(--on-surface)'
         }}
       >
-        <Bot color="#fff" size={28} />
+        <Bot size={20} color="var(--on-surface)" />
+        <span style={{ fontWeight: 600, fontFamily: 'var(--font-body)', fontSize: '0.95rem' }}>Open Agent Window</span>
       </button>
     );
   }
 
+  // Active Chat Window anchored to Bottom Left
   return (
     <div className="glass-panel" style={{
-      position: 'absolute', bottom: 30, right: 30, width: 400, height: 550, zIndex: 1000,
+      position: 'absolute', top: 30, right: 30, width: 400, height: 550, zIndex: 1000,
       display: 'flex', flexDirection: 'column', overflow: 'hidden',
-      boxShadow: '0 20px 40px rgba(0,0,0,0.1)'
+      boxShadow: '0 40px 60px rgba(0, 0, 0, 0.25)',
+      border: '1px solid var(--outline-variant)'
     }}>
-      <div style={{ padding: '15px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.7)' }}>
-        <h3 style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '1rem', background: '-webkit-linear-gradient(135deg, #ec4899, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 700 }}>
-             <Bot size={20} color="#ec4899"/> AI Sales Orchestrator
+      <div style={{ padding: '15px', borderBottom: '1px solid var(--outline-variant)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'var(--surface-lowest)' }}>
+        <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, fontSize: '1rem', color: 'var(--on-surface)' }}>
+             <Bot size={20} color="var(--primary)"/> AI Sales Orchestrator
         </h3>
-        <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
+        <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><X size={18} color="var(--on-surface-variant)" /></button>
       </div>
       
-      <div style={{ flex: 1, padding: '15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, backgroundColor: 'rgba(255,255,255,0.3)' }}>
+      <div style={{ flex: 1, padding: '15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, backgroundColor: 'var(--surface-highest)' }}>
         {messages.map((msg, i) => (
           <div key={i} style={{
             alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-            backgroundColor: msg.role === 'user' ? '#8b5cf6' : (msg.isError ? '#fef2f2' : 'rgba(255,255,255,0.95)'),
-            color: msg.role === 'user' ? '#fff' : (msg.isError ? '#ef4444' : 'var(--text-main)'),
-            border: msg.isSystem ? '1px dashed #cbd5e1' : (msg.isError ? '1px solid #f87171' : '1px solid var(--glass-border)'),
+            backgroundColor: msg.role === 'user' ? 'var(--primary)' : (msg.isSystem ? 'var(--surface-lowest)' : 'var(--surface-lowest)'),
+            color: msg.role === 'user' ? 'var(--on-primary)' : 'var(--on-surface)',
+            border: msg.isSystem ? 'none' : 'none',
             padding: '12px 16px',
-            borderRadius: '15px',
-            borderBottomRightRadius: msg.role === 'user' ? 2 : 15,
-            borderBottomLeftRadius: msg.role === 'ai' ? 2 : 15,
+            borderRadius: msg.role === 'user' ? '12px 12px 0 12px' : '0 12px 12px 12px',
             maxWidth: '90%',
-            fontSize: '0.9rem',
+            fontSize: '0.875rem',
             lineHeight: 1.5,
             whiteSpace: 'pre-wrap',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+            fontFamily: 'var(--font-body)',
+            boxShadow: msg.role === 'user' ? 'none' : '0 4px 10px rgba(0,0,0,0.02)'
           }}>
             {msg.text}
           </div>
         ))}
         {isDeploying && (
-             <div style={{ alignSelf: 'flex-start', display: 'flex', gap: 10, alignItems: 'center', padding: '10px', fontSize: '0.85rem', color: '#64748b' }}>
+             <div style={{ alignSelf: 'flex-start', display: 'flex', gap: 10, alignItems: 'center', padding: '10px', fontSize: '0.85rem', color: 'var(--on-surface-variant)', fontFamily: 'var(--font-body)' }}>
                  <Loader2 size={16} className="animate-spin" />
                  Executing LLM Functions...
              </div>
@@ -123,14 +124,14 @@ Select an autonomous workflow below to trigger the LLM to search the database an
         <div ref={messagesEndRef} />
       </div>
 
-      <div style={{ padding: '15px', borderTop: '1px solid var(--glass-border)', display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: 'rgba(255,255,255,0.6)' }}>
+      <div style={{ padding: '15px', display: 'flex', flexDirection: 'column', gap: 10, backgroundColor: 'var(--surface-lowest)' }}>
         <button 
            onClick={() => runAgent('prospecting')}
            disabled={isDeploying}
+           className="btn-primary"
            style={{ 
-               padding: '12px', borderRadius: 10, border: 'none', 
-               backgroundColor: isDeploying ? '#e2e8f0' : '#8b5cf6', color: isDeploying ? '#94a3b8' : '#fff', 
-               cursor: isDeploying ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8
+               padding: '12px', opacity: isDeploying ? 0.5 : 1, borderRadius: '9999px',
+               display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8
            }}
         >
           <Sparkles size={16} /> Run Prospecting Agent
@@ -138,10 +139,11 @@ Select an autonomous workflow below to trigger the LLM to search the database an
         <button 
            onClick={() => runAgent('deal-intelligence')}
            disabled={isDeploying}
+           className="btn-primary"
            style={{ 
-               padding: '12px', borderRadius: 10, border: 'none', 
-               backgroundColor: isDeploying ? '#e2e8f0' : '#ec4899', color: isDeploying ? '#94a3b8' : '#fff', 
-               cursor: isDeploying ? 'not-allowed' : 'pointer', fontWeight: 600, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8
+               padding: '12px', opacity: isDeploying ? 0.5 : 1, borderRadius: '9999px',
+               background: isDeploying ? 'var(--surface-high)' : 'var(--on-surface)', color: isDeploying ? 'var(--on-surface-variant)' : 'var(--surface-lowest)',
+               display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8
            }}
         >
           <Mail size={16} /> Run Deal Intel Agent

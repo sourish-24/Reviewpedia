@@ -1,11 +1,21 @@
 :root {
-  --font-family: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
-  --bg-color: #f8fafc;
-  --text-main: #0f172a;
-  --primary-color: #2563eb;
-  --panel-bg: rgba(255, 255, 255, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.3);
-  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  --font-body: 'Inter', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-display: 'Space Grotesk', system-ui, sans-serif;
+  
+  --primary: #6e00c1;
+  --primary-container: #8a2be2;
+  --surface: #f9f9f9;
+  --surface-low: #f3f3f4;
+  --surface-lowest: #ffffff;
+  --surface-high: #e2e8f0;
+  --surface-highest: #e2e8f0; 
+  --on-surface: #1a1c1c;
+  --on-surface-variant: #475569;
+  --on-primary: #ffffff;
+  
+  --outline-variant: rgba(0, 0, 0, 0.1); 
+  --golden-star: #eab308;
+  --empty-star: #94a3b8;
 }
 
 * {
@@ -15,10 +25,17 @@
 }
 
 body {
-  font-family: var(--font-family);
-  background-color: var(--bg-color);
-  color: var(--text-main);
-  overflow: hidden; /* App will be mostly full-screen map */
+  font-family: var(--font-body);
+  background-color: var(--surface);
+  color: var(--on-surface);
+  overflow: hidden; 
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  color: var(--on-surface);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .app-container {
@@ -28,12 +45,53 @@ body {
   flex-direction: column;
 }
 
-/* Glassmorphism Util */
+/* Glassmorphism Overlay Standard */
 .glass-panel {
-  background: var(--panel-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--outline-variant);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.08), 0 24px 60px rgba(0, 0, 0, 0.25); /* Added omni-shadow for top edge contrast, deeper bottom shadow */
+  border-radius: 24px; /* Significantly rounded edges */
+}
+
+/* Base Tonal Panel */
+.tonal-panel {
+  background: var(--surface-highest); /* Darker tone specifically requested by user */
+  border-radius: 8px; /* sm/md rounding */
+  border: none;
+}
+
+/* Standard Button */
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-container) 100%);
+  color: var(--on-primary);
+  border: none;
+  border-radius: 9999px; /* Max rounding */
+  font-family: var(--font-body);
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s; /* added shadow and transform animation */
+  box-shadow: 0 8px 24px rgba(110, 0, 193, 0.3); /* Primary button shadow */
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 12px 32px rgba(110, 0, 193, 0.4);
+}
+
+/* Chips/Pills */
+.chip {
+  background: var(--surface-high);
+  color: var(--on-surface-variant);
+  border-radius: 9999px; /* full rounding */
+  padding: 4px 12px;
+  font-size: 0.75rem; /* label-sm */
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
 }

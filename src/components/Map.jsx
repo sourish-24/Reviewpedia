@@ -125,7 +125,7 @@ export default function AppMap({ onReviewSelect, searchQuery, mapUpdateTrigger, 
            const size = cluster.length > 9 ? 34 : 28;
            const icon = L.divIcon({
               className: 'custom-marker',
-              html: `<div style="background-color: var(--primary-color); width: ${size}px; height: ${size}px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${cluster.length > 9 ? 11 : 12}px">${cluster.length}</div>`,
+              html: `<div style="background-color: var(--primary); width: ${size}px; height: ${size}px; border-radius: 50%; border: 3px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${cluster.length > 9 ? 11 : 12}px">${cluster.length}</div>`,
               iconSize: [size, size],
               iconAnchor: [size/2, size/2]
            });
