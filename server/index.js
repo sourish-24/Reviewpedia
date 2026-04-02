@@ -78,12 +78,77 @@ const startServer = async () => {
           primaryCities: ["Bengaluru", "Delhi"],
           lastLogin: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000) // 9 days ago
       });
-
       await noiseClient.save();
+
+      // Target 3: "Mamaearth" (Deal Intelligence Target: Client inactive > 10 days, dropping sentiment)
+      const mamaearthReviews = generateMockReviews(19.0760, 72.8777, 12).map(({ id, ...rest }) => ({
+        ...rest,
+        productName: "Mamaearth Onion Shampoo",
+        category: "Beauty",
+        platform: "Nykaa",
+        summary: "Caused more hairfall than before and smells like chemicals.",
+        reviewer: "Mumbaikar" + Math.floor(Math.random() * 99),
+        sentiment_score: 0.15,
+        rating: Math.floor(Math.random() * 2) + 1,
+        demandSignals: 5,
+        h3Index: "8860144005fffff", // Mumbai simulated
+        city: "Mumbai",
+        date: new Date().toISOString()
+      }));
+
+      const mamaClient = new B2BClient({
+          client_id: "mama_789",
+          companyName: "Mamaearth",
+          contactEmail: "retention@mamaearth.in",
+          primaryCategories: ["Beauty", "Personal Care"],
+          primaryCities: ["Mumbai", "Delhi"],
+          lastLogin: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000) // 14 days ago
+      });
+      await mamaClient.save();
+
+      // Target 4: "Mokobara" (Prospecting Target: High volume, high sentiment, not a client)
+      const mokobaraReviews = generateMockReviews(12.9716, 77.5946, 18).map(({ id, ...rest }) => ({
+        ...rest,
+        productName: "Mokobara Transit Backpack",
+        category: "Luggage",
+        platform: "Myntra",
+        summary: "Absolutely stunning design and so much space for my laptop. Best purchase.",
+        reviewer: "TechBroBLR" + Math.floor(Math.random() * 99),
+        sentiment_score: 0.9,
+        rating: 5,
+        demandSignals: 7,
+        h3Index: "8861892589fffff",
+        city: "Bengaluru"
+      }));
+
+      // Target 5: "Samsung" (Deal Intelligence Target: Client active, huge volume, looking good)
+      const samsungReviews = generateMockReviews(28.7041, 77.1025, 20).map(({ id, ...rest }) => ({
+        ...rest,
+        productName: "Samsung Galaxy S24",
+        category: "Electronics",
+        platform: "Amazon",
+        summary: "Display is amazing and AI features are actually useful.",
+        reviewer: "DelhiGeek" + Math.floor(Math.random() * 99),
+        sentiment_score: 0.85,
+        rating: Math.floor(Math.random() * 2) + 4, // 4-5
+        demandSignals: 9,
+        h3Index: "883da164ebfffff",
+        city: "Delhi"
+      }));
       
-      processed = processed.concat(boatReviews).concat(noiseReviews);
+      const samsungClient = new B2BClient({
+          client_id: "sam_999",
+          companyName: "Samsung India",
+          contactEmail: "vp.sales@samsung.com",
+          primaryCategories: ["Electronics"],
+          primaryCities: ["Delhi", "Mumbai", "Bengaluru"],
+          lastLogin: new Date() // Active today
+      });
+      await samsungClient.save();
+      
+      processed = processed.concat(boatReviews).concat(noiseReviews).concat(mamaearthReviews).concat(mokobaraReviews).concat(samsungReviews);
       await Review.insertMany(processed);
-      console.log(`Successfully seeded DB: ${processed.length} reviews, 1 B2BClient.`);
+      console.log(`Successfully seeded DB: ${processed.length} reviews, 3 B2BClients.`);
     }
 
     // --- AI Sales Agent Endpoints ---

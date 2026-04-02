@@ -1,4 +1,4 @@
-export const PRODUCT_CATEGORIES = ['Electronics', 'Home Appliances', 'Clothing', 'Automotive', 'Food & Dining'];
+export const PRODUCT_CATEGORIES = ['Electronics', 'Home Appliances', 'Clothing', 'Automotive', 'Food & Dining', 'Beauty', 'Luggage', 'Personal Care', 'Wearables', 'Audio'];
 
 // Helper to generate a random point near a center (rough approximation for lat/lng)
 function getRandomLocation(lat, lng, radiusKm) {
@@ -17,7 +17,7 @@ function getRandomLocation(lat, lng, radiusKm) {
 }
 
 const names = ["Aarav", "Priya", "Vikram", "Neha", "Rohan", "Sneha", "Amit", "Kavita", "Rahul", "Anjali"];
-const platforms = ["Amazon", "Flipkart", "Local Shop", "Croma", "Reliance Digital"];
+const platforms = ["Amazon", "Flipkart", "Local Shop", "Croma", "Reliance Digital", "Nykaa", "Myntra"];
 
 export const generateMockReviews = (centerLat, centerLng, count = 50) => {
   const reviews = [];
