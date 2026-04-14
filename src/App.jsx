@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Search, Navigation, Plus, MapPin, BarChart3, ChevronLeft, ArrowRight, Mail } from 'lucide-react';
 import AppMap from './components/Map';
 import ReviewCard from './components/ReviewCard';
@@ -20,25 +20,6 @@ function App() {
 
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [marketResearchEmail, setMarketResearchEmail] = useState('');
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const sharedText = params.get('text') || params.get('title') || '';
-    if (sharedText) {
-      // Use [\s\S]* to aggressively match everything after Flipkart including Windows \r\n newlines
-      let cleanText = sharedText.replace(/Take a look at this\s+/ig, "")
-               .replace(/\s+on\s+Flipkart[\s\S]*$/ig, "")
-               .replace(/http[^\s]+/ig, "")
-               .trim();
-               
-      if (cleanText) {
-        setSearchInput(cleanText);
-        // Ensure app wakes into consumer mode to search
-        setAppMode('consumer');
-        window.history.replaceState({}, document.title, window.location.pathname);
-      }
-    }
-  }, []);
 
   const handleReviewSelect = (reviewsOrReview) => {
     if (Array.isArray(reviewsOrReview)) {
