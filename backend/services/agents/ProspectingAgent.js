@@ -1,8 +1,8 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { toolsDeclarations, toolsMap } from './tools.js';
-import Review from '../models/Review.js';
-import B2BClient from '../models/B2BClient.js';
-import OutreachLog from '../models/OutreachLog.js';
+import Review from '../../models/Review.js';
+import B2BClient from '../../models/B2BClient.js';
+import OutreachLog from '../../models/OutreachLog.js';
 
 export async function runProspectingAgent(demoEmail) {
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);

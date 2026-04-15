@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import Review from '../models/Review.js';
-import B2BClient from '../models/B2BClient.js';
-import OutreachLog from '../models/OutreachLog.js';
+import Review from '../../models/Review.js';
+import B2BClient from '../../models/B2BClient.js';
+import OutreachLog from '../../models/OutreachLog.js';
 
 export async function get_full_brand_context({ brand_name }) {
   const reviews = await Review.find({ productName: { $regex: new RegExp(brand_name, 'i') } });
