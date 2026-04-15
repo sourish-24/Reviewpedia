@@ -4,21 +4,21 @@ import B2BClient from '../../models/B2BClient.js';
 import OutreachLog from '../../models/OutreachLog.js';
 
 export async function get_full_brand_context({ brand_name }) {
-  const reviews = await Review.find({ productName: { $regex: new RegExp(brand_name, 'i') } });
+  const reviews = await Review.find({ "product.name": { $regex: new RegExp(brand_name, 'i') } });
   if (reviews.length === 0) return { error: "Brand not found" };
 
   const totalReviews = reviews.length;
-  const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews;
+  const avgRating = reviews.reduce((sum, r) => sum + (r.review?.rating || 0), 0) / totalReviews;
   
   const cityBreakdown = {};
   let totalDemandSignals = 0;
   const hexCounts = {};
   
   reviews.forEach(r => {
-    cityBreakdown[r.city] = (cityBreakdown[r.city] || 0) + 1;
-    totalDemandSignals += (r.demandSignals || 0);
-    if (r.h3Index) {
-      hexCounts[r.h3Index] = (hexCounts[r.h3Index] || 0) + 1;
+    if (r.location?.city) cityBreakdown[r.location.city] = (cityBreakdown[r.location.city] || 0) + 1;
+    totalDemandSignals += (r.analytics?.demandSignals || 0);
+    if (r.location?.h3Index) {
+      hexCounts[r.location.h3Index] = (hexCounts[r.location.h3Index] || 0) + 1;
     }
   });
 
@@ -55,20 +55,20 @@ export async function get_full_client_context({ client_id }) {
   if (!client) return { error: "Client not found" };
 
   const dLogin = new Date(client.lastLogin);
-  const reviews = await Review.find({ productName: { $regex: new RegExp(client.companyName, 'i') } });
+  const reviews = await Review.find({ "product.name": { $regex: new RegExp(client.companyName, 'i') } });
   
-  const newReviews = reviews.filter(r => new Date(r.date) > dLogin);
+  const newReviews = reviews.filter(r => new Date(r.metadata?.date || 0) > dLogin);
   const cityBreakdown = {};
   newReviews.forEach(r => {
-    cityBreakdown[r.city] = (cityBreakdown[r.city] || 0) + 1;
+    if (r.location?.city) cityBreakdown[r.location.city] = (cityBreakdown[r.location.city] || 0) + 1;
   });
 
   const cutoff = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-  const recentNegatives = reviews.filter(r => new Date(r.date) > cutoff && r.sentiment_score < 0.5);
+  const recentNegatives = reviews.filter(r => new Date(r.metadata?.date || 0) > cutoff && r.analytics?.sentimentScore < 0.5);
   let spike_detected = recentNegatives.length >= 5;
 
   let totalDemandSignals = 0;
-  newReviews.forEach(r => totalDemandSignals += (r.demandSignals || 0));
+  newReviews.forEach(r => totalDemandSignals += (r.analytics?.demandSignals || 0));
 
   return {
     client_profile: {
@@ -77,10 +77,10 @@ export async function get_full_client_context({ client_id }) {
         lastLogin: client.lastLogin
     },
     new_reviews_since_login: newReviews.length,
-    new_average_rating: newReviews.length > 0 ? (newReviews.reduce((sum, r) => sum + r.rating, 0) / newReviews.length).toFixed(2) : 0,
+    new_average_rating: newReviews.length > 0 ? (newReviews.reduce((sum, r) => sum + (r.review?.rating || 0), 0) / newReviews.length).toFixed(2) : 0,
     top_new_complaints: ["strap breaking", "syncing issues"], 
     urgent_sentiment_spike: spike_detected ? {
-         affected_city: recentNegatives[0]?.city || "Bengaluru",
+         affected_city: recentNegatives[0]?.location?.city || "Bengaluru",
          negative_count: recentNegatives.length,
          dominant_complaint: "strap breaking after 2 weeks"
     } : null,

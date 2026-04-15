@@ -113,15 +113,21 @@ export default function AppMap({ onReviewSelect, searchQuery, mapUpdateTrigger, 
 
     // Consumer Mode: Standard Markers Grouped by Location
     if (viewMode === 'consumer') {
-       const grouped = {};
-       reviews.forEach(review => {
-           // simple grouping by 4 decimal places roughly 10 meters bounds
-           const key = `${review.lat.toFixed(4)},${review.lng.toFixed(4)}`;
-           if(!grouped[key]) grouped[key] = [];
-           grouped[key].push(review);
+       const groups = {};
+       reviews.forEach(r => {
+         const idx = r.location?.h3Index;
+         if (!idx) return;
+         if (!groups[idx]) {
+           groups[idx] = [];
+         }
+         groups[idx].push(r);
        });
        
-       Object.values(grouped).forEach(cluster => {
+       Object.values(groups).forEach(cluster => {
+           const centerLat = cluster[0].location?.lat;
+           const centerLng = cluster[0].location?.lng;
+           if (!centerLat || !centerLng) return;
+
            const size = cluster.length > 9 ? 34 : 28;
            const icon = L.divIcon({
               className: 'custom-marker',
@@ -129,7 +135,7 @@ export default function AppMap({ onReviewSelect, searchQuery, mapUpdateTrigger, 
               iconSize: [size, size],
               iconAnchor: [size/2, size/2]
            });
-           const marker = L.marker([cluster[0].lat, cluster[0].lng], { icon });
+           const marker = L.marker([centerLat, centerLng], { icon });
            marker.on('click', () => onReviewSelect(cluster)); // Pass array of reviews to App for UI
            markersLayer.current.addLayer(marker);
        });
@@ -146,7 +152,7 @@ export default function AppMap({ onReviewSelect, searchQuery, mapUpdateTrigger, 
         const h3Counts = {};
 
         reviews.forEach(review => {
-            const h3Index = h3.latLngToCell(review.lat, review.lng, resolution);
+            const h3Index = review.location?.h3Index || h3.latLngToCell(review.location.lat, review.location.lng, resolution);
             h3Counts[h3Index] = (h3Counts[h3Index] || 0) + 1;
         });
 
@@ -162,7 +168,7 @@ export default function AppMap({ onReviewSelect, searchQuery, mapUpdateTrigger, 
                     iconSize: [14, 14],
                     iconAnchor: [7, 7]
                 });
-                const marker = L.marker([review.lat, review.lng], { icon }).bindTooltip(review.productName);
+                const marker = L.marker([review.location.lat, review.location.lng], { icon }).bindTooltip(review.product?.name || 'Product');
                 marker.on('click', () => onReviewSelect(review)); // Legacy fallback for business mode clicking single review
                 markersLayer.current.addLayer(marker);
             });

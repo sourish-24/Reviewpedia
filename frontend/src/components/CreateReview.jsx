@@ -33,13 +33,10 @@ export default function CreateReview({ onClose, onPostSuccess }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          productName,
-          category,
-          rating,
-          summary,
-          lat,
-          lng,
-          platform: "Local Post"
+          product: { name: productName, category },
+          review: { title: summary.substring(0, 50), text: summary, rating },
+          location: { lat, lng },
+          source: { platform: "Local Post" }
         })
       });
       if (res.ok) {
