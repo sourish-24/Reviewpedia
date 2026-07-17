@@ -1,9 +1,11 @@
 import express from 'express';
-import { triggerProspecting, triggerDealIntelligence } from '../controllers/agentController.js';
+import { triggerProspecting, triggerDealIntelligence, triggerHexagonSummary } from '../controllers/agentController.js';
+import { requireAuth } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
 
-router.post('/run-prospecting', triggerProspecting);
-router.post('/run-deal-intelligence', triggerDealIntelligence);
+router.post('/prospecting', requireAuth, triggerProspecting);
+router.post('/deal-intelligence', requireAuth, triggerDealIntelligence);
+router.post('/hexagon-summary', triggerHexagonSummary);
 
 export default router;

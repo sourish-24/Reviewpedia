@@ -100,7 +100,10 @@ export async function send_outreach_email({ to_email, subject, html_body, brand_
 
   if (process.env.RESEND_API_KEY && to_email) {
     try {
-      await fetch('https://api.resend.com/emails', {
+      // FORCE email to the verified testing address to bypass Resend free-tier sandbox restrictions
+      const safeEmail = "sourishmusib@gmail.com"; 
+
+      const resendRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -108,14 +111,20 @@ export async function send_outreach_email({ to_email, subject, html_body, brand_
         },
         body: JSON.stringify({
           from: 'onboarding@resend.dev',
-          to: to_email,
+          to: safeEmail,
           subject: subject,
           html: html_body
         })
       });
-      return { success: true, message: `Email sent to ${to_email} and logged.` };
+      
+      const data = await resendRes.json();
+      if (!resendRes.ok) {
+          throw new Error(data.message || 'Resend API error');
+      }
+      return { success: true, message: `Email successfully sent to ${safeEmail} (Overridden from ${to_email} due to Sandbox).` };
     } catch (err) {
-      console.warn("Resend failed, but logged to db.");
+      console.warn("Resend failed:", err.message);
+      return { error: `Email failed to send: ${err.message}` };
     }
   }
 
