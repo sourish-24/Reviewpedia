@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Sparkles, X, Play, Loader2, Mail, Bot, CheckCircle } from 'lucide-react';
 import '../index.css';
 
-export default function AgentBox({ demoEmail }) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function AgentBox({ demoEmail, isOpen, onClose }) {
   const [messages, setMessages] = useState([
     { 
         role: 'ai', 
@@ -33,10 +32,12 @@ Select an autonomous workflow below to trigger the LLM to search the database an
     ]);
 
     try {
-      const endpoint = type === 'prospecting' ? '/api/agents/run-prospecting' : '/api/agents/run-deal-intelligence';
-      const res = await fetch(`http://localhost:3001${endpoint}`, {
+      const endpoint = type === 'prospecting' ? '/api/agents/prospecting' : '/api/agents/deal-intelligence';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${API_URL}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({ demoEmail })
       });
       const data = await res.json();
@@ -63,23 +64,7 @@ Select an autonomous workflow below to trigger the LLM to search the database an
     }
   };
 
-  if (!isOpen) {
-    return (
-      <button 
-        className="glass-panel" 
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'absolute', top: 30, right: 30, height: 48, padding: '0 20px', 
-          borderRadius: '9999px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          cursor: 'pointer', border: '1px solid var(--outline-variant)', zIndex: 1000,
-          whiteSpace: 'nowrap', color: 'var(--on-surface)'
-        }}
-      >
-        <Bot size={20} color="var(--on-surface)" />
-        <span style={{ fontWeight: 600, fontFamily: 'var(--font-body)', fontSize: '0.95rem' }}>Open Agent Window</span>
-      </button>
-    );
-  }
+  if (!isOpen) return null;
 
   // Active Chat Window anchored to Bottom Left
   return (
@@ -93,7 +78,7 @@ Select an autonomous workflow below to trigger the LLM to search the database an
         <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, fontSize: '1rem', color: 'var(--on-surface)' }}>
              <Bot size={20} color="var(--primary)"/> AI Sales Orchestrator
         </h3>
-        <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><X size={18} color="var(--on-surface-variant)" /></button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><X size={18} color="var(--on-surface-variant)" /></button>
       </div>
       
       <div style={{ flex: 1, padding: '15px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, backgroundColor: 'var(--surface-highest)' }}>

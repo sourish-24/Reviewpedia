@@ -8,7 +8,7 @@ export const getConversations = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const conversations = await Conversation.find({ participants: userId })
-            .populate('participants', 'username _id')
+            .populate('participants', 'username _id profilePic')
             .sort({ updatedAt: -1 });
 
         res.json({ success: true, conversations });
@@ -29,7 +29,7 @@ export const createOrGetConversation = async (req, res, next) => {
         // Check if conversation already exists (handles backwards compatibility with unsorted)
         let conversation = await Conversation.findOne({
             participants: { $all: [currentUserId, targetUser._id], $size: 2 }
-        }).populate('participants', 'username _id');
+        }).populate('participants', 'username _id profilePic');
 
         if (!conversation) {
             // To prevent race conditions (like React StrictMode sending 2 rapid requests),
@@ -50,7 +50,7 @@ export const createOrGetConversation = async (req, res, next) => {
             );
             
             // Populate after upsert
-            conversation = await Conversation.findById(conversation._id).populate('participants', 'username _id');
+            conversation = await Conversation.findById(conversation._id).populate('participants', 'username _id profilePic');
         }
 
         res.json({ success: true, conversation });
@@ -64,7 +64,7 @@ export const getMessages = async (req, res, next) => {
     try {
         const { conversationId } = req.params;
         const messages = await Message.find({ conversationId })
-            .populate('sender', 'username _id')
+            .populate('sender', 'username _id profilePic')
             .sort({ createdAt: 1 });
 
         res.json({ success: true, messages });
@@ -97,7 +97,7 @@ export const uploadChatMedia = async (req, res, next) => {
 // Send a new message
 export const sendMessage = async (req, res, next) => {
     try {
-        const { conversationId, text, mediaUrl, mediaType, receiverId } = req.body;
+        const { conversationId, text, mediaUrl, mediaType, receiverId, location } = req.body;
         const senderId = req.user.id;
 
         const message = await Message.create({
@@ -105,14 +105,16 @@ export const sendMessage = async (req, res, next) => {
             sender: senderId,
             text,
             mediaUrl,
-            mediaType
+            mediaType,
+            location
         });
 
-        const populatedMessage = await message.populate('sender', 'username _id');
+        const populatedMessage = await message.populate('sender', 'username _id profilePic');
 
         // Update the conversation's last message
         let lastMsgText = text;
         if (!text && mediaUrl) lastMsgText = `[Attached ${mediaType}]`;
+        if (!text && location) lastMsgText = `[Shared Location]`;
         
         await Conversation.findByIdAndUpdate(conversationId, {
             lastMessage: lastMsgText,

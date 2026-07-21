@@ -32,18 +32,30 @@ export const logout = (req, res) => {
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
-export const getMe = (req, res) => {
-    // req.user is populated by authMiddleware
-    if (req.user) {
-        res.status(200).json({ success: true, user: req.user });
-    } else {
-        res.status(401).json({ success: false, message: 'Not authenticated' });
+import User from '../models/User.js';
+
+export const getMe = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json({ success: false, message: 'Not authenticated' });
+        }
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        res.status(200).json({ success: true, user });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
     }
 };
 
 export const updateProfile = async (req, res) => {
     try {
-        const { token, user } = await authService.updateProfile(req.user.id, req.body);
+        const updateData = { ...req.body };
+        if (req.file) {
+            updateData.profilePic = req.file.path;
+        }
+        const { token, user } = await authService.updateProfile(req.user.id, updateData);
         
         res.cookie('token', token, {
             httpOnly: true,

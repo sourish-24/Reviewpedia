@@ -1,4 +1,4 @@
-export const PRODUCT_CATEGORIES = ['Electronics', 'Home Appliances', 'Clothing', 'Automotive', 'Food & Dining', 'Beauty', 'Luggage', 'Personal Care', 'Wearables', 'Audio'];
+export const PRODUCT_CATEGORIES = ['Electronics', 'Home Appliances', 'Clothing', 'Automotive', 'Food & Dining', 'Beauty', 'Luggage', 'Personal Care', 'Wearables'];
 
 // Helper to generate a random point near a center (rough approximation for lat/lng)
 function getRandomLocation(lat, lng, radiusKm) {

@@ -2,7 +2,7 @@ import React from 'react';
 import { User, ShieldCheck, MapPin, X, MessageCircle } from 'lucide-react';
 import { generateMockReviews } from '../utils/mockData';
 
-export default function UserProfile({ username, onClose }) {
+export default function UserProfile({ username, onClose, onChatClick }) {
   const recentActivity = generateMockReviews(28.7041, 77.1025, 3).map(r => ({ ...r, reviewer: username }));
 
   return (
@@ -31,7 +31,7 @@ export default function UserProfile({ username, onClose }) {
         </div>
 
         <div style={{ display: 'flex', gap: 10, marginBottom: '32px' }}>
-            <button className="btn-primary" style={{ flex: 1, padding: '14px', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <button onClick={onChatClick} className="btn-primary" style={{ flex: 1, padding: '14px', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: 'pointer' }}>
                 <MessageCircle size={18} /> Chat with {username}
             </button>
         </div>

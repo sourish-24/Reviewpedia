@@ -1,9 +1,49 @@
 import React from 'react';
-import { Star, X, MapPin, Calendar, CheckCircle, Image as ImageIcon } from 'lucide-react';
+import { Star, X, MapPin, Calendar, CheckCircle, Image as ImageIcon, Trash2 } from 'lucide-react';
 import '../index.css';
+import ConfirmModal from './ConfirmModal';
 
-export default function MultiReviewCard({ reviews, onClose, onUserClick }) {
+export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess }) {
+  const [confirmModal, setConfirmModal] = React.useState({ isOpen: false, title: '', message: '', onConfirm: null });
+
+  const requestConfirm = (title, message, onConfirmAction) => {
+      setConfirmModal({
+          isOpen: true,
+          title,
+          message,
+          onConfirm: async () => {
+              setConfirmModal(prev => ({ ...prev, isOpen: false }));
+              await onConfirmAction();
+          }
+      });
+  };
+
   if (!reviews || reviews.length === 0) return null;
+
+  const handleDelete = (id) => {
+    requestConfirm(
+      "Delete Review",
+      "Are you sure you want to permanently delete this review?",
+      async () => {
+        try {
+          const API_URL = import.meta.env.VITE_API_URL || '';
+          const res = await fetch(`${API_URL}/api/reviews/${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+          });
+          if (res.ok) {
+            if (onDeleteSuccess) onDeleteSuccess(id);
+          } else {
+            const data = await res.json();
+            alert(data.error || "Failed to delete review");
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Network error deleting review");
+        }
+      }
+    );
+  };
 
   return (
     <div className="review-card-overlay" style={{
@@ -67,14 +107,29 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick }) {
                                 </p>
                             </div>
                         </div>
-                        <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'var(--font-body)' }}>
-                            <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
+                        <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)' }}>
+                            {currentUser && currentUser.username === review.user?.name && (
+                                <button onClick={() => handleDelete(review.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 0, display: 'flex' }}>
+                                    <Trash2 size={16} />
+                                </button>
+                            )}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
+                            </div>
                         </div>
                     </div>
                 </div>
             ))}
         </div>
       </div>
+      
+      <ConfirmModal 
+          isOpen={confirmModal.isOpen}
+          title={confirmModal.title}
+          message={confirmModal.message}
+          onConfirm={confirmModal.onConfirm}
+          onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+      />
     </div>
   );
 }

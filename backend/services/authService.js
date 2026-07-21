@@ -19,7 +19,8 @@ export const registerUser = async (data) => {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
-        role: newUser.role
+        role: newUser.role,
+        profilePic: newUser.profilePic
     };
 };
 
@@ -37,7 +38,9 @@ export const loginUser = async (email, password) => {
     const payload = {
         id: user._id,
         username: user.username,
-        role: user.role
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
@@ -66,12 +69,18 @@ export const updateProfile = async (userId, data) => {
         user.email = data.email;
     }
 
+    if (data.profilePic) {
+        user.profilePic = data.profilePic;
+    }
+
     await user.save();
 
     const payload = {
         id: user._id,
         username: user.username,
-        role: user.role
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
@@ -82,7 +91,8 @@ export const updateProfile = async (userId, data) => {
             id: user._id,
             username: user.username,
             email: user.email,
-            role: user.role
+            role: user.role,
+            profilePic: user.profilePic
         }
     };
 };

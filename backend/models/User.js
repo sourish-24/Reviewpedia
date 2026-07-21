@@ -25,6 +25,10 @@ const UserSchema = new mongoose.Schema({
     type: String,
     enum: ['user', 'admin', 'b2b'],
     default: 'user'
+  },
+  profilePic: {
+    type: String,
+    default: ''
   }
 }, { timestamps: true });
 

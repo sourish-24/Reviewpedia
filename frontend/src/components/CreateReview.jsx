@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, X, Star } from 'lucide-react';
+import { Camera, MapPin, X, Star, Trash2 } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from '../utils/mockData';
 
 export default function CreateReview({ onClose, onPostSuccess }) {
@@ -8,6 +8,9 @@ export default function CreateReview({ onClose, onPostSuccess }) {
   const [category, setCategory] = useState('');
   const [summary, setSummary] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const fileInputRef = React.useRef(null);
 
   const handleSubmit = async () => {
     if (!productName || !category || rating === 0 || !summary) {
@@ -29,21 +32,33 @@ export default function CreateReview({ onClose, onPostSuccess }) {
 
   const postReview = async (lat, lng) => {
     try {
-      const res = await fetch('/api/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      
+      const payloadData = {
           product: { name: productName, category },
           review: { title: summary.substring(0, 50), text: summary, rating },
           location: { lat, lng },
           source: { platform: "Local Post" }
-        })
+      };
+
+      const formData = new FormData();
+      formData.append('data', JSON.stringify(payloadData));
+      if (selectedImage) {
+          formData.append('image', selectedImage);
+      }
+
+      const res = await fetch(`${API_URL}/api/reviews`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
       });
       if (res.ok) {
         if (onPostSuccess) onPostSuccess();
         else onClose(); // fallback
       } else {
-        alert("Failed to submit the review.");
+        const errText = await res.text();
+        console.error("Backend response:", errText);
+        alert(`Failed to submit the review.\nServer says: ${errText}`);
       }
     } catch (e) {
       console.error("Failed to post:", e);
@@ -53,65 +68,101 @@ export default function CreateReview({ onClose, onPostSuccess }) {
     }
   };
 
+  const handleImageChange = (e) => {
+      const file = e.target.files[0];
+      if (file) {
+          setSelectedImage(file);
+          setPreviewUrl(URL.createObjectURL(file));
+      }
+  };
+
   const inputStyle = {
-      width: '100%', padding: '12px 16px', border: 'none', borderBottom: '2px solid transparent',
-      background: 'var(--surface-highest)', outline: 'none', fontSize: '1rem',
-      fontFamily: 'var(--font-body)', color: 'var(--on-surface)', transition: 'border-color 0.2s',
-      borderRadius: '8px 8px 0 0'
+      width: '100%', padding: '10px 12px', border: '1px solid rgba(255, 255, 255, 0.1)',
+      background: 'rgba(255, 255, 255, 0.03)', outline: 'none', fontSize: '0.9rem',
+      fontFamily: 'var(--font-body)', color: '#ffffff', transition: 'border-color 0.2s',
+      borderRadius: '8px', boxSizing: 'border-box'
   };
 
   return (
-    <div style={{
-      position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-      backgroundColor: 'rgba(26, 28, 28, 0.4)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(4px)'
+    <div style={{ 
+        width: '100%',
+        padding: '24px', 
+        background: 'rgba(3, 3, 3, 0.6)', 
+        backdropFilter: 'blur(12px)', 
+        WebkitBackdropFilter: 'blur(12px)',
+        border: '1px solid rgba(255, 255, 255, 0.05)',
+        boxShadow: 'none',
+        borderRadius: '16px',
+        color: '#ffffff',
+        boxSizing: 'border-box'
     }}>
-      <div className="glass-panel" style={{ width: 500, padding: '32px', background: 'var(--surface-lowest)', position: 'relative', border: 'none' }}>
-        <button onClick={onClose} style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-surface-variant)' }}><X size={24} /></button>
-        
-        <h2 style={{ margin: '0 0 24px 0', fontSize: '1.75rem', color: 'var(--on-surface)' }}>Create Review</h2>
+        <h2 style={{ margin: '0 0 20px 0', fontSize: '1.4rem', color: '#ffffff', fontFamily: 'var(--font-display)' }}>Create Review</h2>
 
-        <div style={{ display: 'flex', gap: 16, marginBottom: 24 }}>
-          <div className="tonal-panel" style={{ flex: 1, height: 110, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--on-surface-variant)', background: 'var(--surface-highest)', border: '1px dashed var(--on-surface-variant)' }}>
-            <Camera size={28} style={{ marginBottom: 8, color: 'var(--primary)' }} />
-            <span style={{ fontSize: '0.875rem', fontFamily: 'var(--font-body)' }}>Add Media</span>
+        <div style={{ display: 'flex', gap: 12, marginBottom: 20 }}>
+          <div 
+            style={{ width: 200, height: 200, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#a1a1aa', background: 'rgba(255, 255, 255, 0.03)', border: previewUrl ? 'none' : '1px dashed rgba(255, 255, 255, 0.2)', borderRadius: '8px', overflow: 'hidden', position: 'relative', transition: 'background 0.2s' }}
+            onClick={() => fileInputRef.current?.click()}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)'}
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)'}
+          >
+            {previewUrl ? (
+                <>
+                    <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseOver={e => e.currentTarget.style.opacity = 1} onMouseOut={e => e.currentTarget.style.opacity = 0}>
+                        <span style={{ color: 'white', fontSize: '0.8rem', fontWeight: 600 }}>Change</span>
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedImage(null);
+                                setPreviewUrl(null);
+                                if (fileInputRef.current) fileInputRef.current.value = '';
+                            }}
+                            style={{ position: 'absolute', bottom: 6, right: 6, background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4, display: 'flex' }}
+                            title="Remove Media"
+                        >
+                            <Trash2 size={16} />
+                        </button>
+                    </div>
+                </>
+            ) : (
+                <>
+                    <Camera size={24} style={{ marginBottom: 6, color: 'var(--primary)' }} />
+                    <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-body)' }}>Add Media</span>
+                </>
+            )}
+            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
           </div>
-          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 10, justifyContent: 'center' }}>
             <input 
               type="text" 
               placeholder="Product Name" 
               value={productName}
               onChange={e => setProductName(e.target.value)}
-              onFocus={(e) => e.target.style.borderBottomColor = 'var(--primary)'}
-              onBlur={(e) => e.target.style.borderBottomColor = 'transparent'}
+              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
               style={inputStyle} 
             />
             <select 
               value={category}
               onChange={e => setCategory(e.target.value)}
-              onFocus={(e) => e.target.style.borderBottomColor = 'var(--primary)'}
-              onBlur={(e) => e.target.style.borderBottomColor = 'transparent'}
+              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
               style={{ ...inputStyle, cursor: 'pointer' }}
             >
-              <option value="" disabled hidden>Select Category</option>
+              <option value="" disabled hidden style={{ color: 'black' }}>Select Category</option>
               {PRODUCT_CATEGORIES.map(c => <option key={c} value={c} style={{ color: 'black' }}>{c}</option>)}
             </select>
           </div>
         </div>
 
-        <div className="tonal-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, padding: '16px', background: 'var(--surface-highest)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--on-surface)' }}>
-            <MapPin size={20} color="var(--primary)" /> <span style={{ fontSize: '0.95rem', fontFamily: 'var(--font-body)', fontWeight: 500 }}>Tag Current Location</span>
-          </div>
-          <input type="checkbox" defaultChecked style={{ accentColor: 'var(--primary)', width: 18, height: 18, cursor: 'pointer' }} />
-        </div>
 
-        <div style={{ marginBottom: 24 }}>
-          <p style={{ margin: '0 0 12px 0', fontSize: '0.875rem', color: 'var(--on-surface-variant)', fontFamily: 'var(--font-body)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Rating</p>
-          <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ margin: '0 0 8px 0', fontSize: '0.8rem', color: '#a1a1aa', fontFamily: 'var(--font-body)', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Your Rating</p>
+          <div style={{ display: 'flex', gap: 6 }}>
             {[1, 2, 3, 4, 5].map(star => (
               <Star 
                 key={star} 
-                size={34} 
+                size={28} 
                 fill={star <= rating ? "var(--golden-star)" : "none"} 
                 color={star <= rating ? "var(--golden-star)" : "var(--empty-star)"}
                 onClick={() => setRating(star)}
@@ -122,26 +173,28 @@ export default function CreateReview({ onClose, onPostSuccess }) {
         </div>
 
         <textarea 
-          placeholder="Share your experience (What did you like? Dislike? Was the seller reliable?)" 
+          placeholder="Share your experience (What did you like? Dislike?)" 
           value={summary}
           onChange={e => setSummary(e.target.value)}
-          onFocus={(e) => e.target.style.borderBottomColor = 'var(--primary)'}
-          onBlur={(e) => e.target.style.borderBottomColor = 'transparent'}
-          style={{ ...inputStyle, height: 120, resize: 'none', marginBottom: 24 }}
+          onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
+          onBlur={(e) => e.target.style.borderColor = 'rgba(255, 255, 255, 0.1)'}
+          style={{ ...inputStyle, height: 100, resize: 'none', marginBottom: 20 }}
         />
 
         <button 
-          className="btn-primary"
           onClick={handleSubmit}
           disabled={loading}
           style={{ 
-            width: '100%', padding: '16px', opacity: loading ? 0.7 : 1,
-            cursor: loading ? 'not-allowed' : 'pointer', fontSize: '1.05rem'
+            width: '100%', padding: '12px', opacity: loading ? 0.7 : 1,
+            cursor: loading ? 'not-allowed' : 'pointer', fontSize: '0.95rem',
+            background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px',
+            fontWeight: 600, transition: 'background 0.2s'
           }}
+          onMouseOver={e => { if(!loading) e.currentTarget.style.background = '#634cf2'; }}
+          onMouseOut={e => { if(!loading) e.currentTarget.style.background = 'var(--primary)'; }}
         >
           {loading ? 'Posting...' : 'Post Review'}
         </button>
       </div>
-    </div>
   );
 }
