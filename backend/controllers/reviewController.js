@@ -83,3 +83,51 @@ export const deleteReview = async (req, res, next) => {
         next(err);
     }
 };
+
+export const updateReview = async (req, res, next) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+
+        // Authorize edit
+        if (review.user?.name !== req.user?.username && req.user?.role !== 'admin') {
+            return res.status(403).json({ error: 'You are not authorized to edit this review' });
+        }
+
+        const bodyData = req.body.data ? JSON.parse(req.body.data) : req.body;
+
+        let mediaArray = review.review?.media || [];
+        if (req.file) {
+            mediaArray = [{ type: 'image', url: req.file.path }];
+        }
+
+        if (bodyData.product?.name) review.product.name = bodyData.product.name;
+        if (bodyData.product?.brand !== undefined) review.product.brand = bodyData.product.brand;
+        if (bodyData.product?.category) review.product.category = bodyData.product.category;
+
+        if (bodyData.review) {
+            if (bodyData.review.text !== undefined) {
+                review.review.text = bodyData.review.text;
+                review.review.title = bodyData.review.text.substring(0, 50);
+            }
+            if (bodyData.review.rating !== undefined) {
+                review.review.rating = bodyData.review.rating;
+                if (review.analytics) review.analytics.sentimentScore = bodyData.review.rating / 5;
+            }
+            if (req.file) {
+                review.review.media = mediaArray;
+            }
+        }
+
+        await review.save();
+
+        const rObj = review.toObject();
+        rObj.id = rObj._id.toString();
+
+        res.json(rObj);
+    } catch (err) {
+        next(err);
+    }
+};

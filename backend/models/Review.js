@@ -8,6 +8,7 @@ const MediaSchema = new mongoose.Schema({
 const ReviewSchema = new mongoose.Schema({
   product: {
     name: { type: String, required: true },
+    brand: { type: String },
     category: { type: String }
   },
   review: {
@@ -39,7 +40,7 @@ const ReviewSchema = new mongoose.Schema({
   }
 });
 
-ReviewSchema.index({ "product.name": "text", "review.text": "text", "review.title": "text", "location.city": "text" });
+ReviewSchema.index({ "product.name": "text", "product.brand": "text", "review.text": "text", "review.title": "text", "location.city": "text" });
 
 const Review = mongoose.model('Review', ReviewSchema);
 export default Review;
