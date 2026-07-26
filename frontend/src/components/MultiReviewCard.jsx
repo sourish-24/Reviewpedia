@@ -118,11 +118,11 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                                 <ImageIcon size={32} />
                             )}
                         </div>
-                        <div style={{ flex: 1 }}>
-                            <h3 style={{ fontSize: '1.125rem', margin: 0, color: '#18181b' }}>{review.product?.name}</h3>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
-                                {review.product?.brand && <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600 }}>{review.product.brand}</span>}
-                                <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b' }}>{review.product?.category}</span>
+                        <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
+                            <h3 style={{ fontSize: '1.125rem', margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{review.product?.name}</h3>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+                                {review.product?.brand && <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>{review.product.brand}</span>}
+                                <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>{review.product?.category}</span>
                             </div>
                             
                             <div style={{ display: 'flex', gap: '3px', margin: '8px 0 0 0' }}>
@@ -133,48 +133,49 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                         </div>
                     </div>
 
-                    <p style={{ margin: '0', lineHeight: 1.5, fontSize: '0.95rem', color: '#27272a', fontFamily: 'var(--font-body)', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+                    <p style={{ margin: '0', padding: '10px 0', lineHeight: 1.5, fontSize: '0.95rem', color: '#27272a', fontFamily: 'var(--font-body)', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
                     "{review.review?.text || review.review?.title}"
                     </p>
 
-                    <div style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        paddingTop: '8px', borderTop: '1px solid #e4e4e7'
-                    }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onUserClick && onUserClick(review.user?.name, review.user)}>
-                            {review.user?.profilePic ? (
-                                <img 
-                                    src={review.user.profilePic} 
-                                    alt={review.user?.name || 'User'} 
-                                    style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover' }} 
-                                />
-                            ) : (
-                                <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
-                                {review.user?.name ? review.user.name[0] : '?'}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '8px', borderTop: '1px solid #e4e4e7' }}>
+                        <div style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                        }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }} onClick={() => onUserClick && onUserClick(review.user?.name, review.user)}>
+                                {review.user?.profilePic ? (
+                                    <img 
+                                        src={review.user.profilePic} 
+                                        alt={review.user?.name || 'User'} 
+                                        style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
+                                    />
+                                ) : (
+                                    <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
+                                    {review.user?.name ? review.user.name[0] : '?'}
+                                    </div>
+                                )}
+                                <div style={{ minWidth: 0 }}>
+                                    <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b', wordBreak: 'break-word' }}>
+                                        {review.user?.name || 'Anonymous'} 
+                                        {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" />}
+                                    </p>
                                 </div>
-                            )}
-                            <div>
-                                <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b' }}>
-                                    {review.user?.name || 'Anonymous'} 
-                                    {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" />}
-                                </p>
+                            </div>
+                            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
+                                </div>
                             </div>
                         </div>
-                        <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
-                            </div>
-                        </div>
-                    </div>
 
-                    {review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post' && (
-                      <div style={{ 
-                        marginTop: '4px',
-                        fontSize: '0.72rem', color: '#a1a1aa', fontStyle: 'italic', lineHeight: 1.4
-                      }}>
-                        This user does not exist on Reviewpedia &amp; this review was collected from {review.source.platform.charAt(0).toUpperCase() + review.source.platform.slice(1)}
-                      </div>
-                    )}
+                        {review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post' && (
+                          <div style={{ 
+                            marginTop: '4px', paddingTop: '0px', borderTop: 'none',
+                            fontSize: '0.72rem', color: '#a1a1aa', fontStyle: 'italic', lineHeight: 1.4
+                          }}>
+                            This user does not exist on Reviewpedia &amp; this review was collected from {review.source.platform.charAt(0).toUpperCase() + review.source.platform.slice(1)}
+                          </div>
+                        )}
+                    </div>
                 </div>
             ))}
         </div>

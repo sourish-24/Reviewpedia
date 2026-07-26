@@ -58,13 +58,13 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
           <X size={20} />
         </button>
         
-        <div style={{ paddingRight: '30px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '4px', margin: 0, color: '#ffffff' }}>{review.product?.name}</h2>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
-                {review.product?.brand && <span className="chip" style={{ backgroundColor: 'rgba(14, 165, 233, 0.2)', border: '1px solid #0ea5e9', padding: '2px 8px', color: '#ffffff', fontWeight: 600 }}>{review.product.brand}</span>}
-                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: '#ffffff' }}>{review.product?.category}</span>
+        <div style={{ paddingRight: '30px', minWidth: 0 }}>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '4px', margin: 0, color: '#ffffff', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{review.product?.name}</h2>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
+                {review.product?.brand && <span className="chip" style={{ backgroundColor: 'rgba(14, 165, 233, 0.2)', border: '1px solid #0ea5e9', padding: '2px 8px', color: '#ffffff', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>{review.product.brand}</span>}
+                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: '#ffffff', wordBreak: 'break-word' }}>{review.product?.category}</span>
                 <span style={{ color: '#ffffff', fontSize: '0.75rem' }}>•</span>
-                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: '#ffffff' }}>{review.source?.platform}</span>
+                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: '#ffffff', wordBreak: 'break-word' }}>{review.source?.platform}</span>
             </div>
         </div>
 
@@ -108,7 +108,7 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
                         )}
                     </div>
                 )}
-                <div style={{ flex: 1 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
                     <div style={{ display: 'flex', gap: '2px' }}>
                     {[...Array(5)].map((_, i) => (
                         <Star key={i} size={15} fill={i < (review.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (review.review?.rating || 0) ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
@@ -117,7 +117,7 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
                 </div>
             </div>
 
-            <p style={{ margin: 0, lineHeight: 1.5, fontSize: '0.95rem', fontFamily: 'var(--font-body)', color: '#27272a', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+            <p style={{ margin: 0, padding: '10px 0', lineHeight: 1.5, fontSize: '0.95rem', fontFamily: 'var(--font-body)', color: '#27272a', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
             "{review.review?.text || review.review?.title}"
             </p>
 
@@ -129,43 +129,45 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
             </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onUserClick(review.user?.name, review.user)}>
-            {review.user?.profilePic ? (
-              <img 
-                src={review.user.profilePic} 
-                alt={review.user?.name || 'User'} 
-                style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} 
-              />
-            ) : (
-              <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
-                 {review.user?.name ? review.user.name[0] : '?'}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onUserClick(review.user?.name, review.user)}>
+              {review.user?.profilePic ? (
+                <img 
+                  src={review.user.profilePic} 
+                  alt={review.user?.name || 'User'} 
+                  style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} 
+                />
+              ) : (
+                <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                   {review.user?.name ? review.user.name[0] : '?'}
+                </div>
+              )}
+              <div>
+                <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: 'var(--on-surface)' }}>
+                  {review.user?.name || 'Anonymous'} 
+                  {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" />}
+                </p>
+                <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', margin: 0 }}>Trust Score: {review.analytics?.trustScore || 0}%</p>
               </div>
-            )}
-            <div>
-              <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: 'var(--on-surface)' }}>
-                {review.user?.name || 'Anonymous'} 
-                {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" />}
-              </p>
-              <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', margin: 0 }}>Trust Score: {review.analytics?.trustScore || 0}%</p>
+            </div>
+            
+            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-body)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <Calendar size={12} /> {review.metadata?.date || 'Unknown Date'}
+              </div>
             </div>
           </div>
-          
-          <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-body)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <Calendar size={12} /> {review.metadata?.date || 'Unknown Date'}
-            </div>
-          </div>
-        </div>
 
-        {review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post' && (
-          <div style={{ 
-            marginTop: '6px',
-            fontSize: '0.72rem', color: '#a1a1aa', fontStyle: 'italic', lineHeight: 1.4
-          }}>
-            This user does not exist on Reviewpedia &amp; this review was collected from {review.source.platform.charAt(0).toUpperCase() + review.source.platform.slice(1)}
-          </div>
-        )}
+          {review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post' && (
+            <div style={{ 
+              marginTop: '4px', paddingTop: '0px', borderTop: 'none',
+              fontSize: '0.72rem', color: '#a1a1aa', fontStyle: 'italic', lineHeight: 1.4
+            }}>
+              This user does not exist on Reviewpedia &amp; this review was collected from {review.source.platform.charAt(0).toUpperCase() + review.source.platform.slice(1)}
+            </div>
+          )}
+        </div>
       </div>
       
       <ConfirmModal 
