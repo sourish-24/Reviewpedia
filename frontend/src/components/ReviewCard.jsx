@@ -1,10 +1,12 @@
-import React from 'react';
-import { Star, X, MapPin, Calendar, CheckCircle, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Star, X, MapPin, Calendar, CheckCircle, Trash2, Pencil } from 'lucide-react';
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
+import MediaLightbox from './MediaLightbox';
 
-export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess }) {
-  const [confirmModal, setConfirmModal] = React.useState({ isOpen: false, title: '', message: '', onConfirm: null });
+export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit }) {
+  const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   const requestConfirm = (title, message, onConfirmAction) => {
       setConfirmModal({
@@ -47,56 +49,99 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
 
   return (
     <div className="review-card-overlay" style={{
-      position: 'absolute', top: '10%', right: '2%', width: '380px', zIndex: 1000
+      position: 'absolute', top: '20px', left: '20px', bottom: '20px', right: 'calc(50vw + 316px)', minWidth: '320px', zIndex: 1000, maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column'
     }}>
-      <div className="glass-panel" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div className="glass-panel" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '20px', overflowY: 'auto', maxHeight: '100%' }}>
         <button onClick={onClose} style={{
-          position: 'absolute', top: 15, right: 15, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-surface-variant)'
+          position: 'absolute', top: 15, right: 15, background: 'none', border: 'none', cursor: 'pointer', color: '#ffffff'
         }}>
           <X size={20} />
         </button>
         
         <div style={{ paddingRight: '30px' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '4px', margin: 0 }}>{review.product?.name}</h2>
+            <h2 style={{ fontSize: '1.5rem', marginBottom: '4px', margin: 0, color: '#ffffff' }}>{review.product?.name}</h2>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
-                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: 'var(--on-surface-variant)' }}>{review.product?.category}</span>
-                <span style={{ color: 'var(--on-surface-variant)', fontSize: '0.75rem' }}>•</span>
-                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: 'var(--on-surface-variant)' }}>{review.source?.platform}</span>
+                {review.product?.brand && <span className="chip" style={{ backgroundColor: 'rgba(14, 165, 233, 0.2)', border: '1px solid #0ea5e9', padding: '2px 8px', color: '#ffffff', fontWeight: 600 }}>{review.product.brand}</span>}
+                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: '#ffffff' }}>{review.product?.category}</span>
+                <span style={{ color: '#ffffff', fontSize: '0.75rem' }}>•</span>
+                <span className="chip" style={{ backgroundColor: 'transparent', padding: 0, color: '#ffffff' }}>{review.source?.platform}</span>
             </div>
         </div>
 
-        <div className="tonal-panel" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
-            <div style={{ display: 'flex', gap: '2px', color: 'var(--on-surface)' }}>
-            {[...Array(5)].map((_, i) => (
-                <Star key={i} size={15} fill={i < (review.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (review.review?.rating || 0) ? "var(--golden-star)" : "var(--empty-star)"} strokeWidth={1.5} />
-            ))}
+        <div style={{ backgroundColor: '#F8F4F0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', border: '1px solid #e4e4e7', color: '#18181b' }}>
+            {currentUser && (
+                currentUser.username === review.user?.name ||
+                (currentUser.id && review.user?.id && (currentUser.id === review.user.id || currentUser.id.toString() === review.user.id.toString())) ||
+                (currentUser._id && review.user?.id && (currentUser._id === review.user.id || currentUser._id.toString() === review.user.id.toString()))
+            ) && (
+                <div style={{ position: 'absolute', top: '14px', right: '14px', display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center', zIndex: 5 }}>
+                    {onEdit && (
+                        <button onClick={() => onEdit(review)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#71717a', padding: '2px', display: 'flex' }} title="Edit Review">
+                            <Pencil size={15} />
+                        </button>
+                    )}
+                    <button onClick={handleDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '2px', display: 'flex' }} title="Delete Review">
+                        <Trash2 size={16} />
+                    </button>
+                </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 16 }}>
+                {review.review?.media && review.review.media.length > 0 && (
+                    <div 
+                        style={{ 
+                            width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                            borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                            color: '#71717a', flexShrink: 0, overflow: 'hidden', cursor: 'pointer', position: 'relative' 
+                        }}
+                        onClick={() => setLightboxIndex(0)}
+                    >
+                        {review.review.media[0].type === 'video' ? (
+                            <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ) : (
+                            <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        )}
+                        {review.review.media.length > 1 && (
+                            <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
+                                +{review.review.media.length - 1}
+                            </div>
+                        )}
+                    </div>
+                )}
+                <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '2px' }}>
+                    {[...Array(5)].map((_, i) => (
+                        <Star key={i} size={15} fill={i < (review.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (review.review?.rating || 0) ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
+                    ))}
+                    </div>
+                </div>
             </div>
 
-            <p style={{ margin: 0, lineHeight: 1.5, fontSize: '0.95rem', fontFamily: 'var(--font-body)', color: 'var(--on-surface)', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
+            <p style={{ margin: 0, lineHeight: 1.5, fontSize: '0.95rem', fontFamily: 'var(--font-body)', color: '#27272a', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>
             "{review.review?.text || review.review?.title}"
             </p>
-            
-            {review.review?.media && review.review.media.length > 0 && review.review.media[0].type === 'image' && (
-               <img 
-                  src={review.review.media[0].url} 
-                  alt="Review media" 
-                  style={{ width: '100%', maxHeight: '200px', objectFit: 'cover', borderRadius: '12px', marginTop: '10px' }} 
-               />
-            )}
 
             <div style={{ 
                 position: 'absolute', top: '16px', right: '12px', 
-                fontSize: '0.65rem', color: 'var(--on-surface-variant)', fontFamily: 'var(--font-body)', textTransform: 'uppercase', letterSpacing: '0.05em' 
+                fontSize: '0.65rem', color: '#71717a', fontFamily: 'var(--font-body)', textTransform: 'uppercase', letterSpacing: '0.05em' 
             }}>
                 Lat: {review.location?.lat?.toFixed(4) || 'N/A'}, Lng: {review.location?.lng?.toFixed(4) || 'N/A'}
             </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onUserClick(review.user?.name)}>
-            <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'var(--surface-highest)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
-               {review.user?.name ? review.user.name[0] : '?'}
-            </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onUserClick(review.user?.name, review.user)}>
+            {review.user?.profilePic ? (
+              <img 
+                src={review.user.profilePic} 
+                alt={review.user?.name || 'User'} 
+                style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} 
+              />
+            ) : (
+              <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                 {review.user?.name ? review.user.name[0] : '?'}
+              </div>
+            )}
             <div>
               <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: 'var(--on-surface)' }}>
                 {review.user?.name || 'Anonymous'} 
@@ -107,16 +152,20 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
           </div>
           
           <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-body)' }}>
-            {currentUser && currentUser.username === review.user?.name && (
-                <button onClick={handleDelete} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: 0, display: 'flex' }}>
-                    <Trash2 size={16} />
-                </button>
-            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <Calendar size={12} /> {review.metadata?.date || 'Unknown Date'}
             </div>
           </div>
         </div>
+
+        {review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post' && (
+          <div style={{ 
+            marginTop: '6px',
+            fontSize: '0.72rem', color: '#a1a1aa', fontStyle: 'italic', lineHeight: 1.4
+          }}>
+            This user does not exist on Reviewpedia &amp; this review was collected from {review.source.platform.charAt(0).toUpperCase() + review.source.platform.slice(1)}
+          </div>
+        )}
       </div>
       
       <ConfirmModal 
@@ -126,6 +175,19 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
           onConfirm={confirmModal.onConfirm}
           onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
       />
+
+      {lightboxIndex !== null && review.review?.media && (
+          <MediaLightbox
+              mediaMessages={review.review.media.map(m => ({
+                  mediaUrl: m.url,
+                  mediaType: m.type || 'image',
+                  sender: { username: review.user?.name }
+              }))}
+              initialIndex={lightboxIndex}
+              onClose={() => setLightboxIndex(null)}
+              currentUser={currentUser}
+          />
+      )}
     </div>
   );
 }

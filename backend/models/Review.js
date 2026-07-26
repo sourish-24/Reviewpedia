@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 
 const MediaSchema = new mongoose.Schema({
   type: { type: String, default: 'image' },
-  url: { type: String }
+  url: { type: String },
+  size: { type: Number, default: 0 }
 }, { _id: false });
 
 const ReviewSchema = new mongoose.Schema({
@@ -18,6 +19,7 @@ const ReviewSchema = new mongoose.Schema({
     media: [MediaSchema]
   },
   user: {
+    id: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     name: { type: String }
   },
   source: {

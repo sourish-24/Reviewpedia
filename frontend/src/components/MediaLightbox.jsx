@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 export default function MediaLightbox({ mediaMessages, initialIndex, onClose, currentUser, onDelete }) {
@@ -26,7 +27,7 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
 
     const currentMedia = mediaMessages[currentIndex];
 
-    return (
+    return ReactDOM.createPortal(
         <div style={{
             position: 'fixed',
             top: 0,
@@ -35,7 +36,7 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
             height: '100vh',
             backgroundColor: 'rgba(0, 0, 0, 0.9)',
             backdropFilter: 'blur(8px)',
-            zIndex: 99999,
+            zIndex: 999999,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center'
@@ -141,7 +142,7 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
             )}
 
             {/* Delete Button */}
-            {currentMedia.sender.username === currentUser?.username && onDelete && (
+            {currentMedia?.sender?.username && currentMedia.sender.username === currentUser?.username && onDelete && (
                 <button 
                     onClick={() => onDelete(currentMedia._id)}
                     style={{
@@ -181,6 +182,7 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
             }}>
                 {currentIndex + 1} / {mediaMessages.length}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }

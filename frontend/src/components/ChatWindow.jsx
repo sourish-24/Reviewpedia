@@ -14,6 +14,8 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
     const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
     const [lightboxData, setLightboxData] = useState({ isOpen: false, initialIndex: 0 });
     const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
+    const [isPaperclipHovered, setIsPaperclipHovered] = useState(false);
+    const [isMapPinHovered, setIsMapPinHovered] = useState(false);
     const messagesEndRef = useRef(null);
     const fileInputRef = useRef(null);
 
@@ -128,7 +130,8 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                         receiverId: otherUser._id,
                         text: '',
                         mediaUrl: uploadData.mediaUrl,
-                        mediaType: uploadData.mediaType
+                        mediaType: uploadData.mediaType,
+                        mediaSize: uploadData.mediaSize
                     };
                     const mediaRes = await fetch(`${API_URL}/api/chat/messages`, {
                         method: 'POST',
@@ -140,10 +143,10 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     if (mediaData.success) {
                         setMessages(prev => [...prev, mediaData.message]);
                     } else {
-                         throw new Error(mediaData.error?.message || "Failed to send media message");
+                        alert(mediaData.error?.message || "Failed to send media");
                     }
                 } else {
-                    throw new Error(uploadData.error?.message || "Failed to upload media");
+                    alert(uploadData.error?.message || "Failed to upload media");
                 }
             }
 
@@ -242,16 +245,16 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
     const renderMedia = (msg, isMine) => {
         if (msg.mediaType === 'location' && msg.location) {
             return (
-                <div style={{ marginTop: msg.text ? '8px' : '0', padding: '12px', background: isMine ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.05)', borderRadius: '8px', border: isMine ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--outline-variant)', display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '150px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: isMine ? '#ffffff' : 'var(--primary)' }}>
-                        <MapPin size={18} />
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Location Shared</span>
+                <div style={{ marginTop: msg.text ? '6px' : '0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ffffff', fontWeight: 600, fontSize: '0.95rem' }}>
+                        <MapPin size={18} color="#0ea5e9" />
+                        <span>Location Shared</span>
                     </div>
                     <a 
                         href={`https://www.google.com/maps/search/?api=1&query=${msg.location.lat},${msg.location.lng}`} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        style={{ color: isMine ? '#93c5fd' : '#3b82f6', textDecoration: 'none', fontSize: '0.85rem', marginTop: '4px' }}
+                        style={{ color: '#38bdf8', textDecoration: 'underline', fontSize: '0.88rem', fontWeight: 500 }}
                     >
                         View on Map
                     </a>
@@ -265,17 +268,17 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     src={msg.mediaUrl} 
                     alt="attachment" 
                     onClick={() => handleMediaClick(msg)}
-                    style={{ width: '200px', height: '200px', objectFit: 'cover', borderRadius: '8px', marginTop: msg.text ? '8px' : '0', cursor: 'pointer' }} 
+                    style={{ width: '220px', height: '220px', objectFit: 'cover', borderRadius: '16px', marginTop: msg.text ? '8px' : '0', cursor: 'pointer' }} 
                 />
             );
         }
         if (msg.mediaType === 'video') {
             return (
-                <div style={{ position: 'relative', width: '200px', height: '200px', marginTop: msg.text ? '8px' : '0', cursor: 'pointer' }} onClick={() => handleMediaClick(msg)}>
-                    <video style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', pointerEvents: 'none' }}>
+                <div style={{ position: 'relative', width: '220px', height: '220px', marginTop: msg.text ? '8px' : '0', cursor: 'pointer' }} onClick={() => handleMediaClick(msg)}>
+                    <video style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '16px', pointerEvents: 'none' }}>
                         <source src={msg.mediaUrl} type="video/mp4" />
                     </video>
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.3)', borderRadius: '16px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                             ▶
                         </div>
@@ -372,9 +375,9 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
     };
 
     return (
-        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-lowest)' }}>
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', backgroundColor: '#161E2E', fontFamily: 'var(--font-body)' }}>
             {/* Header */}
-            <div style={{ height: '72px', padding: '0 24px', boxSizing: 'border-box', borderBottom: '1px solid var(--outline-variant)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--surface-lowest)' }}>
+            <div style={{ height: '72px', padding: '0 24px', boxSizing: 'border-box', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#161E2E' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     {otherUser.profilePic ? (
                         <img 
@@ -385,21 +388,21 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     ) : (
                         <div style={{ 
                             width: '40px', height: '40px', borderRadius: '50%', 
-                            backgroundColor: 'var(--primary)', color: 'white',
+                            backgroundColor: '#0ea5e9', color: '#ffffff',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontWeight: 'bold', fontSize: '1.2rem'
                         }}>
                             {otherUser.username[0].toUpperCase()}
                         </div>
                     )}
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--on-surface)' }}>{otherUser.username}</h3>
+                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#ffffff', fontFamily: 'var(--font-display)', fontWeight: 600 }}>{otherUser.username}</h3>
                 </div>
                 
                 <button 
                     onClick={handleDeleteConversation}
                     disabled={isDeleting}
                     style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px', borderRadius: '8px', transition: 'background-color 0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-highest)'}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'}
                     onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                     title="Delete Chat"
                 >
@@ -408,9 +411,9 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             </div>
 
             {/* Messages Area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: 'var(--surface-lowest)' }}>
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', backgroundColor: '#161E2E' }}>
                 {messages.length === 0 ? (
-                    <div style={{ textAlign: 'center', color: 'var(--on-surface-variant)', marginTop: '20px' }}>
+                    <div style={{ textAlign: 'center', color: '#94a3b8', marginTop: '20px', fontSize: '0.95rem' }}>
                         Say hi to {otherUser.username}!
                     </div>
                 ) : (
@@ -424,13 +427,21 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                                 onMouseLeave={() => setHoveredMessageId(null)}
                                 style={{ 
                                     alignSelf: isMine ? 'flex-end' : 'flex-start',
+                                    alignItems: isMine ? 'flex-end' : 'flex-start',
                                     maxWidth: '70%',
                                     display: 'flex',
                                     flexDirection: 'column',
                                     position: 'relative'
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexDirection: isMine ? 'row' : 'row-reverse' }}>
+                                <div style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    gap: '8px', 
+                                    flexDirection: isMine ? 'row' : 'row-reverse',
+                                    justifyContent: isMine ? 'flex-end' : 'flex-start',
+                                    width: '100%'
+                                }}>
                                     {isMine && isHovered && !group.isMediaOnlyGroup && (
                                         <button 
                                             onClick={() => handleDeleteGroup(group)}
@@ -441,16 +452,26 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                                         </button>
                                     )}
                                     <div style={{
-                                        backgroundColor: isMine ? 'var(--primary)' : 'var(--surface-highest)',
-                                        color: isMine ? 'white' : 'var(--on-surface)',
-                                        padding: '8px 12px',
-                                        borderRadius: isMine ? '16px 16px 0 16px' : '16px 16px 16px 0',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                                        backgroundColor: group.isMediaOnlyGroup ? 'transparent' : (isMine ? '#1A355B' : 'rgba(255, 255, 255, 0.08)'),
+                                        color: '#ffffff',
+                                        padding: group.isMediaOnlyGroup ? 0 : '10px 16px',
+                                        borderRadius: group.isMediaOnlyGroup ? '0px' : (isMine ? '18px 18px 0 18px' : '18px 18px 18px 0'),
+                                        boxShadow: 'none',
                                         wordBreak: 'break-word',
-                                        fontSize: '0.9rem'
+                                        fontSize: '0.95rem',
+                                        lineHeight: 1.5,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: isMine ? 'flex-end' : 'flex-start'
                                     }}>
                                         {group.isMediaOnlyGroup ? (
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                flexWrap: 'wrap', 
+                                                gap: '8px',
+                                                justifyContent: isMine ? 'flex-end' : 'flex-start',
+                                                width: '100%'
+                                            }}>
                                                 {group.messages.map(m => <React.Fragment key={m._id}>{renderMedia(m, isMine)}</React.Fragment>)}
                                             </div>
                                         ) : (
@@ -462,9 +483,10 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                                     </div>
                                 </div>
                                 <div style={{ 
-                                    fontSize: '0.6rem', 
-                                    color: 'var(--on-surface-variant)', 
+                                    fontSize: '0.7rem', 
+                                    color: '#94a3b8', 
                                     marginTop: '4px',
+                                    padding: '0 4px',
                                     alignSelf: isMine ? 'flex-end' : 'flex-start'
                                 }}>
                                     {new Date(group.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -477,7 +499,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             </div>
 
             {/* Input Area */}
-            <div style={{ padding: '12px 24px', backgroundColor: 'var(--surface-lowest)', borderTop: '1px solid var(--outline-variant)' }}>
+            <div style={{ padding: '10px 24px', backgroundColor: '#28303E', borderTop: '1px solid rgba(255, 255, 255, 0.08)' }}>
                 {files.length > 0 && (
                     <div style={{ marginBottom: '12px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                         {files.map((fileObj, idx) => (
@@ -485,12 +507,12 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                                 display: 'flex', 
                                 alignItems: 'center', 
                                 gap: '6px', 
-                                backgroundColor: 'var(--surface-high)', 
-                                padding: '6px 12px', 
-                                borderRadius: '8px',
+                                backgroundColor: 'rgba(255, 255, 255, 0.08)', 
+                                padding: '6px 14px', 
+                                borderRadius: '9999px',
                                 fontSize: '0.85rem',
-                                color: 'var(--primary)',
-                                border: '1px solid var(--outline-variant)'
+                                color: '#0ea5e9',
+                                border: 'none'
                             }}>
                                 <Paperclip size={14} />
                                 <span style={{ maxWidth: '150px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -529,25 +551,25 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     <button 
                         type="button" 
                         onClick={() => fileInputRef.current?.click()}
-                        style={{ background: 'var(--surface-highest)', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-surface-variant)', transition: 'background-color 0.2s' }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-high)'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-highest)'}
+                        onMouseEnter={() => setIsPaperclipHovered(true)}
+                        onMouseLeave={() => setIsPaperclipHovered(false)}
+                        style={{ background: '#28303E', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                         disabled={isSending}
                         title="Attach Media"
                     >
-                        <Paperclip size={20} />
+                        <Paperclip size={18} color={isPaperclipHovered ? '#ffffff' : '#94a3b8'} style={{ transition: 'color 0.2s' }} />
                     </button>
                     
                     <button 
                         type="button" 
                         onClick={handleShareLocation}
-                        style={{ background: 'var(--surface-highest)', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--on-surface-variant)', transition: 'background-color 0.2s' }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-high)'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'var(--surface-highest)'}
+                        onMouseEnter={() => setIsMapPinHovered(true)}
+                        onMouseLeave={() => setIsMapPinHovered(false)}
+                        style={{ background: '#28303E', border: 'none', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                         disabled={isSending}
                         title="Attach Location"
                     >
-                        <MapPin size={20} />
+                        <MapPin size={18} color={isMapPinHovered ? '#ffffff' : '#94a3b8'} style={{ transition: 'color 0.2s' }} />
                     </button>
                     
                     <input 
@@ -555,17 +577,16 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                         value={text}
                         onChange={(e) => setText(e.target.value)}
                         placeholder="Type a message..."
-                        style={{ flex: 1, padding: '10px 16px', borderRadius: '9999px', border: '1px solid var(--outline-variant)', background: 'var(--surface-highest)', color: 'var(--on-surface)', fontSize: '0.9rem', outline: 'none', fontFamily: 'var(--font-body)' }}
+                        style={{ flex: 1, padding: '10px 20px', borderRadius: '9999px', border: 'none', background: '#28303E', color: '#ffffff', fontSize: '0.92rem', outline: 'none', fontFamily: 'var(--font-body)' }}
                         disabled={isSending}
                     />
                     
                     <button 
                         type="submit" 
-                        className="btn-primary"
-                        style={{ width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, opacity: (!text.trim() && files.length === 0) ? 0.5 : 1, cursor: (!text.trim() && files.length === 0) ? 'not-allowed' : 'pointer' }}
+                        style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'none', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, opacity: (!text.trim() && files.length === 0) ? 0.4 : 1, cursor: (!text.trim() && files.length === 0) ? 'not-allowed' : 'pointer', flexShrink: 0 }}
                         disabled={(!text.trim() && files.length === 0) || isSending}
                     >
-                        {isSending ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
+                        {isSending ? <Loader2 size={20} className="animate-spin" color="#0EA5E9" /> : <Send size={20} color="#0EA5E9" />}
                     </button>
                 </form>
             </div>

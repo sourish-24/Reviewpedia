@@ -1,9 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, ShieldCheck, MapPin, X, MessageCircle } from 'lucide-react';
 import { generateMockReviews } from '../utils/mockData';
 
-export default function UserProfile({ username, onClose, onChatClick }) {
+export default function UserProfile({ username, userProfilePic, onClose, onChatClick }) {
+  const [profilePic, setProfilePic] = useState(userProfilePic || null);
   const recentActivity = generateMockReviews(28.7041, 77.1025, 3).map(r => ({ ...r, reviewer: username }));
+
+  useEffect(() => {
+    if (!profilePic && username) {
+      const API_URL = import.meta.env.VITE_API_URL || '';
+      fetch(`${API_URL}/api/auth/user/${encodeURIComponent(username)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.user?.profilePic) {
+            setProfilePic(data.user.profilePic);
+          }
+        })
+        .catch(err => console.error("Failed to fetch user profile pic:", err));
+    }
+  }, [username, profilePic]);
 
   return (
     <div style={{
@@ -14,9 +29,17 @@ export default function UserProfile({ username, onClose, onChatClick }) {
         <button onClick={onClose} style={{ position: 'absolute', top: 20, right: 20, background: 'none', border: 'none', cursor: 'pointer', color: 'var(--on-surface-variant)' }}><X size={24} /></button>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-            <div style={{ width: 88, height: 88, borderRadius: '50%', backgroundColor: 'var(--surface-highest)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '2.5rem', fontFamily: 'var(--font-display)' }}>
-               {username[0]}
-            </div>
+            {profilePic ? (
+                <img 
+                    src={profilePic} 
+                    alt={username} 
+                    style={{ width: 88, height: 88, borderRadius: '50%', objectFit: 'cover', boxShadow: 'none' }} 
+                />
+            ) : (
+                <div style={{ width: 88, height: 88, borderRadius: '50%', backgroundColor: 'var(--surface-highest)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '2.5rem', fontFamily: 'var(--font-display)' }}>
+                   {username ? username[0].toUpperCase() : '?'}
+                </div>
+            )}
             <div style={{ textAlign: 'center' }}>
                 <h2 style={{ fontSize: '1.75rem', display: 'flex', alignItems: 'center', gap: 10, justifyContent: 'center', margin: 0 }}>
                     {username} <ShieldCheck color="var(--primary)" size={24} />

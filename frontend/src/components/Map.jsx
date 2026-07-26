@@ -88,7 +88,8 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
           const loc = DEFAULT_CENTER;
           setUserLocation(loc);
           mapInstance.current.setView(loc, 12);
-        }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     } else {
       setLoadingMsg("Geolocation not supported by browser.");
@@ -117,6 +118,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
           const loc = [position.coords.latitude, position.coords.longitude];
           setUserLocation(loc);
           sessionStorage.setItem('userLoc', JSON.stringify(loc));
+          sessionStorage.setItem('mapState', JSON.stringify({ lat: loc[0], lng: loc[1], zoom: 14 }));
           showUserDotRef.current = true;
           if (mapInstance.current) {
              mapInstance.current.flyTo(loc, 14);
@@ -132,7 +134,8 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
           console.warn("Geolocation error:", error);
           setLoadingMsg("Location denied or unavailable.");
           setTimeout(() => setLoadingMsg(null), 2000);
-        }
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
       );
     }
   };

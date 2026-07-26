@@ -6,8 +6,8 @@ import { upload } from '../middlewares/uploadMiddleware.js';
 const router = express.Router();
 
 router.get('/', getReviews);
-router.post('/', requireAuth, upload.single('image'), createReview);
-router.put('/:id', requireAuth, upload.single('image'), updateReview);
+router.post('/', requireAuth, upload.array('images', 10), createReview);
+router.put('/:id', requireAuth, upload.array('images', 10), updateReview);
 router.delete('/:id', requireAuth, deleteReview);
 
 export default router;

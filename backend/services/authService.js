@@ -1,4 +1,5 @@
 import User from '../models/User.js';
+import Review from '../models/Review.js';
 import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_reviewpedia_key_2026';
@@ -20,7 +21,8 @@ export const registerUser = async (data) => {
         username: newUser.username,
         email: newUser.email,
         role: newUser.role,
-        profilePic: newUser.profilePic
+        profilePic: newUser.profilePic,
+        totalMediaBytes: newUser.totalMediaBytes || 0
     };
 };
 
@@ -40,7 +42,8 @@ export const loginUser = async (email, password) => {
         username: user.username,
         email: user.email,
         role: user.role,
-        profilePic: user.profilePic
+        profilePic: user.profilePic,
+        totalMediaBytes: user.totalMediaBytes || 0
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
@@ -57,10 +60,17 @@ export const updateProfile = async (userId, data) => {
         throw new Error('User not found');
     }
 
+    const oldUsername = user.username;
     if (data.username && data.username !== user.username) {
         const existingUsername = await User.findOne({ username: data.username });
         if (existingUsername) throw new Error('Username already taken');
         user.username = data.username;
+
+        // Cascade username update to user's existing reviews
+        await Review.updateMany(
+            { $or: [{ 'user.id': user._id.toString() }, { 'user.id': user._id }, { 'user.name': oldUsername }] },
+            { $set: { 'user.name': data.username } }
+        );
     }
 
     if (data.email && data.email !== user.email) {
@@ -80,7 +90,8 @@ export const updateProfile = async (userId, data) => {
         username: user.username,
         email: user.email,
         role: user.role,
-        profilePic: user.profilePic
+        profilePic: user.profilePic,
+        totalMediaBytes: user.totalMediaBytes || 0
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
@@ -92,7 +103,8 @@ export const updateProfile = async (userId, data) => {
             username: user.username,
             email: user.email,
             role: user.role,
-            profilePic: user.profilePic
+            profilePic: user.profilePic,
+            totalMediaBytes: user.totalMediaBytes || 0
         }
     };
 };

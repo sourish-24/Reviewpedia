@@ -79,6 +79,14 @@ export const uploadChatMedia = async (req, res, next) => {
         if (!req.file) {
             return res.status(400).json({ error: { message: "No file uploaded" } });
         }
+
+        const fileSize = req.file.size || req.file.bytes || 0;
+        const userDoc = await User.findById(req.user.id);
+        const MAX_MEDIA_LIMIT = 128 * 1024 * 1024; // 128 MB
+
+        if (userDoc && (userDoc.totalMediaBytes || 0) + fileSize > MAX_MEDIA_LIMIT) {
+            return res.status(400).json({ error: { message: "Storage limit reached! You have reached the 128 MB media upload limit. Please delete some reviews or chat media to free up space." } });
+        }
         
         let mediaType = 'none';
         if (req.file.mimetype.startsWith('image/')) mediaType = 'image';
@@ -87,7 +95,8 @@ export const uploadChatMedia = async (req, res, next) => {
         res.json({ 
             success: true, 
             mediaUrl: req.file.path,
-            mediaType 
+            mediaType,
+            mediaSize: fileSize
         });
     } catch (err) {
         next(err);
@@ -97,7 +106,7 @@ export const uploadChatMedia = async (req, res, next) => {
 // Send a new message
 export const sendMessage = async (req, res, next) => {
     try {
-        const { conversationId, text, mediaUrl, mediaType, receiverId, location } = req.body;
+        const { conversationId, text, mediaUrl, mediaType, mediaSize, receiverId, location } = req.body;
         const senderId = req.user.id;
 
         const message = await Message.create({
@@ -106,8 +115,13 @@ export const sendMessage = async (req, res, next) => {
             text,
             mediaUrl,
             mediaType,
+            mediaSize: mediaSize || 0,
             location
         });
+
+        if (mediaSize) {
+            await User.findByIdAndUpdate(senderId, { $inc: { totalMediaBytes: mediaSize } });
+        }
 
         const populatedMessage = await message.populate('sender', 'username _id profilePic');
 
@@ -151,6 +165,13 @@ export const deleteConversation = async (req, res, next) => {
         const messages = await Message.find({ conversationId });
         for (const msg of messages) {
             if (msg.mediaUrl) {
+                if (msg.mediaSize && msg.sender) {
+                    const userDoc = await User.findById(msg.sender);
+                    if (userDoc) {
+                        const newTotal = Math.max(0, (userDoc.totalMediaBytes || 0) - msg.mediaSize);
+                        await User.findByIdAndUpdate(userDoc._id, { totalMediaBytes: newTotal });
+                    }
+                }
                 try {
                     // Extract public ID from Cloudinary URL (assumes folder structure is present)
                     const parts = msg.mediaUrl.split('/');
@@ -195,6 +216,13 @@ export const deleteMessage = async (req, res, next) => {
 
         // Delete from Cloudinary if media exists
         if (message.mediaUrl) {
+            if (message.mediaSize) {
+                const userDoc = await User.findById(message.sender);
+                if (userDoc) {
+                    const newTotal = Math.max(0, (userDoc.totalMediaBytes || 0) - message.mediaSize);
+                    await User.findByIdAndUpdate(userDoc._id, { totalMediaBytes: newTotal });
+                }
+            }
             try {
                 const parts = message.mediaUrl.split('/');
                 const filename = parts.pop().split('.')[0];

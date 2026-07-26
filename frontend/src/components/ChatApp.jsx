@@ -81,7 +81,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     return (
         <div style={{
             position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            backgroundColor: 'var(--surface-lowest)', zIndex: 9000, display: 'flex',
+            backgroundColor: '#161E2E', zIndex: 9000, display: 'flex',
             animation: 'fadeIn 0.2s ease-out'
         }}>
             <ChatSidebar 
@@ -99,11 +99,14 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
                     onMessageSent={fetchConversations}
                 />
             ) : (
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--surface-lowest)' }}>
-                    <div style={{ textAlign: 'center', color: 'var(--on-surface-variant)' }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '20px' }}>💬</div>
-                        <h2 style={{ fontFamily: 'var(--font-display)', color: 'var(--on-surface)' }}>Your Messages</h2>
-                        <p style={{ fontFamily: 'var(--font-body)' }}>Select a conversation or start a new one to begin chatting.</p>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#161E2E', fontFamily: 'var(--font-body)' }}>
+                    <div style={{ textAlign: 'center', padding: '0 24px' }}>
+                        <h2 style={{ fontFamily: 'var(--font-display)', color: '#ffffff', fontSize: '1.8rem', fontWeight: 600, margin: '0 0 16px 0', letterSpacing: '-0.02em' }}>
+                            Your Messages
+                        </h2>
+                        <p style={{ fontFamily: 'var(--font-body)', color: '#94a3b8', fontSize: '0.95rem', lineHeight: 1.8, margin: 0, maxWidth: 360 }}>
+                            Select a conversation or start a new one to begin chatting with local reviewers.
+                        </p>
                     </div>
                 </div>
             )}

@@ -24,6 +24,10 @@ const MessageSchema = new mongoose.Schema({
     enum: ['image', 'video', 'location', 'none'],
     default: 'none'
   },
+  mediaSize: {
+    type: Number,
+    default: 0
+  },
   location: {
     lat: Number,
     lng: Number,

@@ -9,27 +9,27 @@ export default function ChatSidebar({ conversations, activeConversation, onSelec
     return (
         <div style={{ 
             width: '350px', 
-            borderRight: '1px solid var(--outline-variant)', 
+            borderRight: '1px solid rgba(255, 255, 255, 0.08)', 
             display: 'flex', 
             flexDirection: 'column', 
-            backgroundColor: 'var(--surface-lowest)',
-            height: '100%'
+            backgroundColor: '#161E2E',
+            height: '100%',
+            fontFamily: 'var(--font-body)'
         }}>
             <div style={{ 
                 height: '72px',
                 padding: '0 24px',
                 boxSizing: 'border-box',
-                borderBottom: '1px solid var(--outline-variant)', 
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)', 
                 display: 'flex', 
-                alignItems: 'center', 
-                gap: '15px' 
+                alignItems: 'center'
             }}>
-                <h2 style={{ margin: 0, fontSize: '1.25rem', color: 'var(--on-surface)' }}>Chats</h2>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', color: '#ffffff', fontFamily: 'var(--font-display)', fontWeight: 600 }}>Chats</h2>
             </div>
             
             <div style={{ flex: 1, overflowY: 'auto' }}>
                 {conversations.length === 0 ? (
-                    <div style={{ padding: '20px', textAlign: 'center', color: 'var(--on-surface-variant)', fontSize: '0.9rem' }}>
+                    <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
                         No active conversations yet.
                     </div>
                 ) : (
@@ -42,15 +42,18 @@ export default function ChatSidebar({ conversations, activeConversation, onSelec
                                 key={convo._id}
                                 onClick={() => onSelectConversation(convo)}
                                 style={{
-                                    padding: '15px 20px',
+                                    padding: '18px 20px',
                                     display: 'flex',
                                     gap: '15px',
                                     alignItems: 'center',
                                     cursor: 'pointer',
-                                    backgroundColor: isActive ? 'var(--surface-highest)' : 'transparent',
-                                    borderBottom: '1px solid var(--outline-variant)',
-                                    transition: 'background-color 0.2s'
+                                    backgroundColor: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                                    borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+                                    transition: 'background-color 0.2s',
+                                    borderLeft: isActive ? '3px solid #0ea5e9' : '3px solid transparent'
                                 }}
+                                onMouseOver={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.04)'; }}
+                                onMouseOut={(e) => { if (!isActive) e.currentTarget.style.backgroundColor = 'transparent'; }}
                             >
                                 {otherUser.profilePic ? (
                                     <img 
@@ -61,7 +64,7 @@ export default function ChatSidebar({ conversations, activeConversation, onSelec
                                 ) : (
                                     <div style={{ 
                                         width: '48px', height: '48px', borderRadius: '50%', 
-                                        backgroundColor: 'var(--primary)', color: 'white',
+                                        backgroundColor: '#0ea5e9', color: '#ffffff',
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontWeight: 'bold', fontSize: '1.2rem', flexShrink: 0
                                     }}>
@@ -70,14 +73,14 @@ export default function ChatSidebar({ conversations, activeConversation, onSelec
                                 )}
                                 <div style={{ flex: 1, overflow: 'hidden' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                                        <h4 style={{ margin: 0, color: 'var(--on-surface)', fontSize: '1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <h4 style={{ margin: 0, color: '#ffffff', fontSize: '0.95rem', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                             {otherUser.username}
                                         </h4>
-                                        <span style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)' }}>
+                                        <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
                                             {new Date(convo.lastMessageAt).toLocaleDateString()}
                                         </span>
                                     </div>
-                                    <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--on-surface-variant)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    <p style={{ margin: 0, fontSize: '0.85rem', color: '#94a3b8', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                         {convo.lastMessage || 'Started a conversation'}
                                     </p>
                                 </div>

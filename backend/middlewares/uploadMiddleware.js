@@ -14,8 +14,8 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: 'reviewpedia',
-    allowedFormats: ['jpg', 'png', 'jpeg', 'webp'],
-    transformation: [{ width: 800, height: 800, crop: 'limit' }]
+    resource_type: 'auto',
+    allowedFormats: ['jpg', 'png', 'jpeg', 'webp', 'mp4', 'mov', 'avi']
   }
 });
 

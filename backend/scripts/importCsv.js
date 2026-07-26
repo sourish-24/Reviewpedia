@@ -78,7 +78,7 @@ const importData = async () => {
                     name: row.name === '?' ? 'Anonymous User' : row.name
                 },
                 source: {
-                    platform: "flipkart",
+                    platform: "Flipkart",
                     isScraped: true
                 },
                 location: {

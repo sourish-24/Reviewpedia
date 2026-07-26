@@ -29,6 +29,10 @@ const UserSchema = new mongoose.Schema({
   profilePic: {
     type: String,
     default: ''
+  },
+  totalMediaBytes: {
+    type: Number,
+    default: 0
   }
 }, { timestamps: true });
 

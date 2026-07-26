@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX } from 'lucide-react';
 
 export default function MyProfilePage({ user, onBack, onUserUpdate }) {
   const [username, setUsername] = useState(user?.username || '');
@@ -11,6 +11,13 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
   const [message, setMessage] = useState({ type: '', text: '' });
   
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+  useEffect(() => {
+    if (message.text) {
+      const timer = setTimeout(() => setMessage({ type: '', text: '' }), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [message]);
 
   const handleFileChange = (e) => {
     if (!isEditing) return;
@@ -67,122 +74,193 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
 
   return (
     <div style={{
-      position: 'absolute', top: 0, left: 0, width: '100%', height: '100vh',
-      backgroundColor: '#030303', zIndex: 9999, display: 'flex', flexDirection: 'column',
-      fontFamily: 'var(--font-body)', color: '#ffffff', overflowY: 'auto', overflowX: 'hidden'
+      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+      backgroundImage: "url('/windora_bg.jpg')",
+      backgroundSize: 'cover', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat',
+      zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+      fontFamily: 'var(--font-body)', color: '#ffffff', overflowY: 'auto', padding: '24px', boxSizing: 'border-box'
     }}>
-      {/* Glow Effect */}
-      <div className="landing-dark-glow-bg"></div>
+      {/* Top Floating Notification */}
+      {message.text && (
+        <div style={{
+          position: 'fixed', top: '24px', left: '50%', transform: 'translateX(-50%)',
+          zIndex: 10000, display: 'flex', alignItems: 'center', gap: '10px',
+          padding: '12px 24px', borderRadius: '9999px',
+          background: message.type === 'error' ? 'rgba(239, 68, 68, 0.95)' : 'rgba(14, 165, 233, 0.95)',
+          backdropFilter: 'blur(12px)', color: '#ffffff', fontWeight: 600, fontSize: '0.9rem',
+          boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)', border: '1px solid rgba(255, 255, 255, 0.2)'
+        }}>
+          {message.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
+          <span>{message.text}</span>
+        </div>
+      )}
 
-      {/* Content */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '2rem' }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '500px', padding: '2.5rem', background: 'var(--surface-lowest)', position: 'relative', zIndex: 2 }}>
-              
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12, marginBottom: '2rem', position: 'relative' }}>
-                  <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2rem', margin: 0, textAlign: 'center', color: '#ffffff' }}>Account Settings</h1>
-                  {!isEditing && (
-                      <button 
-                          onClick={() => setIsEditing(true)} 
-                          style={{ position: 'absolute', right: 0, background: 'transparent', border: 'none', color: 'var(--on-surface-variant)', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
-                          onMouseOver={(e) => e.currentTarget.style.color = '#ffffff'}
-                          onMouseOut={(e) => e.currentTarget.style.color = 'var(--on-surface-variant)'}
-                          title="Edit Profile"
-                      >
-                          <Edit2 size={20} />
-                      </button>
-                  )}
-              </div>
-              
-              {/* Profile Photo */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '2rem' }}>
-                  <label style={{ position: 'relative', cursor: isEditing ? 'pointer' : 'default' }} className="profile-photo-container">
-                      {previewUrl ? (
-                          <img src={previewUrl} alt="Profile" style={{ width: '100px', height: '100px', borderRadius: '50%', objectFit: 'cover', boxShadow: '0 4px 20px rgba(81, 56, 214, 0.4)' }} />
-                      ) : (
-                          <div style={{ 
-                              width: '100px', height: '100px', borderRadius: '50%', 
-                              backgroundColor: 'var(--primary)', color: 'white',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              fontWeight: 'bold', fontSize: '3rem', fontFamily: 'var(--font-display)',
-                              boxShadow: '0 4px 20px rgba(81, 56, 214, 0.4)'
-                          }}>
-                              {username ? username.charAt(0).toUpperCase() : '?'}
-                          </div>
-                      )}
-                      {isEditing && (
-                          <>
-                              <div style={{
-                                  position: 'absolute', bottom: 0, right: 0, width: '32px', height: '32px',
-                                  backgroundColor: 'var(--surface-high)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                  border: '2px solid var(--surface-lowest)', color: '#ffffff'
-                              }}>
-                                  <Camera size={16} />
-                              </div>
-                              <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
-                          </>
-                      )}
-                  </label>
-                  {isEditing && <p style={{ marginTop: '1rem', color: 'var(--on-surface-variant)', fontSize: '0.9rem' }}>Click to change photo</p>}
-              </div>
+      {/* Top Header Row with Friends (left), Blocked (middle), and Edit Profile (right) */}
+      {!isEditing && (
+        <div style={{ width: '100%', maxWidth: '520px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <button 
+                    onClick={() => alert("Friends list opening soon!")} 
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, height: '40px', padding: '0 20px',
+                      borderRadius: '9999px', background: '#28303E', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff',
+                      fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = '#0ea5e9'; e.currentTarget.style.color = '#0ea5e9'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'; e.currentTarget.style.color = '#ffffff'; }}
+                >
+                    <Users size={16} /> Friends
+                </button>
+                <button 
+                    onClick={() => alert("Blocked list opening soon!")} 
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8, height: '40px', padding: '0 20px',
+                      borderRadius: '9999px', background: '#28303E', border: '1px solid rgba(255, 255, 255, 0.12)', color: '#ffffff',
+                      fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => { e.currentTarget.style.borderColor = '#ef4444'; e.currentTarget.style.color = '#ef4444'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.12)'; e.currentTarget.style.color = '#ffffff'; }}
+                >
+                    <UserX size={16} /> Blocked
+                </button>
+            </div>
+            <button 
+                onClick={() => setIsEditing(true)} 
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 8, height: '40px', padding: '0 20px',
+                  borderRadius: '9999px', background: '#0ea5e9', border: 'none', color: '#ffffff',
+                  fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer', transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0284c7'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
+            >
+                <Edit2 size={16} /> Edit Profile
+            </button>
+        </div>
+      )}
 
-              {/* Form */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                  <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#a1a1aa', fontSize: '0.85rem', fontWeight: 500 }}>Full Name</label>
-                      <div style={{ display: 'flex', alignItems: 'center', background: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'transparent', border: isEditing ? '1px solid var(--outline-variant)' : '1px solid transparent', borderRadius: '8px', padding: '0 12px', transition: 'all 0.2s' }}>
-                          <UserIcon size={18} color="var(--on-surface-variant)" />
-                          <input 
-                              type="text" 
-                              value={username}
-                              onChange={(e) => setUsername(e.target.value)}
-                              readOnly={!isEditing}
-                              style={{ flex: 1, background: 'transparent', border: 'none', padding: '12px', color: '#ffffff', outline: 'none', fontSize: '1rem' }}
-                          />
-                      </div>
-                  </div>
-
-                  <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', color: '#a1a1aa', fontSize: '0.85rem', fontWeight: 500 }}>Email Address</label>
-                      <div style={{ display: 'flex', alignItems: 'center', background: isEditing ? 'rgba(255, 255, 255, 0.05)' : 'transparent', border: isEditing ? '1px solid var(--outline-variant)' : '1px solid transparent', borderRadius: '8px', padding: '0 12px', transition: 'all 0.2s' }}>
-                          <Mail size={18} color="var(--on-surface-variant)" />
-                          <input 
-                              type="email" 
-                              value={email}
-                              onChange={(e) => setEmail(e.target.value)}
-                              readOnly={!isEditing}
-                              style={{ flex: 1, background: 'transparent', border: 'none', padding: '12px', color: '#ffffff', outline: 'none', fontSize: '1rem' }}
-                          />
-                      </div>
-                  </div>
-
-                  {message.text && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px', borderRadius: '8px', background: message.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)', color: message.type === 'error' ? '#ef4444' : '#22c55e', fontSize: '0.9rem' }}>
-                          {message.type === 'error' ? <AlertCircle size={18} /> : <CheckCircle size={18} />}
-                          {message.text}
+      {/* Main Glass Card */}
+      <div style={{
+        width: '100%', maxWidth: '520px', padding: '36px',
+        background: '#161E2E', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
+        borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#ffffff', boxSizing: 'border-box',
+        display: 'flex', flexDirection: 'column', gap: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
+      }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', margin: 0, textAlign: 'center', color: '#ffffff', fontWeight: 600, letterSpacing: '-0.03em' }}>
+            Account Settings
+          </h1>
+          
+          {/* Profile Photo */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <label style={{ position: 'relative', cursor: isEditing ? 'pointer' : 'default', display: 'inline-block' }}>
+                  {previewUrl ? (
+                      <img src={previewUrl} alt="Profile" style={{ width: '110px', height: '110px', borderRadius: '50%', objectFit: 'cover', display: 'block', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} />
+                  ) : (
+                      <div style={{ 
+                          width: '110px', height: '110px', borderRadius: '50%', 
+                          backgroundColor: '#0ea5e9', color: '#ffffff',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontWeight: '600', fontSize: '3rem', fontFamily: 'var(--font-display)',
+                          border: '3px solid #0ea5e9', boxSizing: 'border-box',
+                          boxShadow: 'none'
+                      }}>
+                          {username ? username.charAt(0).toUpperCase() : '?'}
                       </div>
                   )}
-
                   {isEditing && (
-                      <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
-                          <button 
-                              onClick={handleCancel}
-                              disabled={saving}
-                              className="landing-btn-outline"
-                              style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '12px' }}
-                          >
-                              Cancel
-                          </button>
-                          <button 
-                              onClick={handleSave}
-                              disabled={saving || (!username || !email) || !isFormChanged}
-                              className="landing-btn-primary"
-                              style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, padding: '12px', opacity: (saving || (!username || !email) || !isFormChanged) ? 0.5 : 1 }}
-                          >
-                              {saving ? 'Saving...' : <><Save size={18} /> Save</>}
-                          </button>
-                      </div>
+                      <>
+                          <div style={{
+                              position: 'absolute', bottom: 0, right: 0, width: '36px', height: '36px',
+                              backgroundColor: '#0ea5e9', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              border: '3px solid #161E2E', color: '#ffffff', cursor: 'pointer'
+                          }}>
+                              <Camera size={18} />
+                          </div>
+                          <input type="file" accept="image/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                      </>
                   )}
+              </label>
+              {isEditing && <p style={{ marginTop: '10px', color: '#94a3b8', fontSize: '0.85rem' }}>Click photo to change avatar</p>}
+          </div>
+
+          {/* Form */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div>
+                  <label style={{ display: 'block', marginBottom: '6px', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Name</label>
+                  <div style={{ 
+                      display: 'flex', alignItems: 'center', 
+                      background: isEditing ? '#28303E' : 'transparent', 
+                      border: isEditing ? '1px solid #0ea5e9' : '1px solid transparent', 
+                      borderRadius: isEditing ? '9999px' : '0', 
+                      padding: isEditing ? '0 18px' : '0', 
+                      transition: 'all 0.2s' 
+                  }}>
+                      <UserIcon size={18} color={isEditing ? "#0ea5e9" : "#94a3b8"} />
+                      <input 
+                          type="text" 
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          readOnly={!isEditing}
+                          style={{ flex: 1, background: 'transparent', border: 'none', padding: isEditing ? '12px 14px' : '8px 10px', color: '#ffffff', outline: 'none', fontSize: '0.95rem', fontFamily: 'var(--font-body)' }}
+                      />
+                  </div>
               </div>
+
+              <div>
+                  <label style={{ display: 'block', marginBottom: '6px', color: '#94a3b8', fontSize: '0.8rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Address</label>
+                  <div style={{ 
+                      display: 'flex', alignItems: 'center', 
+                      background: isEditing ? '#28303E' : 'transparent', 
+                      border: isEditing ? '1px solid #0ea5e9' : '1px solid transparent', 
+                      borderRadius: isEditing ? '9999px' : '0', 
+                      padding: isEditing ? '0 18px' : '0', 
+                      transition: 'all 0.2s' 
+                  }}>
+                      <Mail size={18} color={isEditing ? "#0ea5e9" : "#94a3b8"} />
+                      <input 
+                          type="email" 
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          readOnly={!isEditing}
+                          style={{ flex: 1, background: 'transparent', border: 'none', padding: isEditing ? '12px 14px' : '8px 10px', color: '#ffffff', outline: 'none', fontSize: '0.95rem', fontFamily: 'var(--font-body)' }}
+                      />
+                  </div>
+              </div>
+
+              {isEditing && (
+                  <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
+                      <button 
+                          onClick={handleCancel}
+                          disabled={saving}
+                          style={{
+                            flex: 1, height: '42px', borderRadius: '9999px', background: 'none',
+                            border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600,
+                            cursor: saving ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            transition: 'color 0.2s'
+                          }}
+                          onMouseOver={(e) => { if(!saving) e.currentTarget.style.color = '#0ea5e9'; }}
+                          onMouseOut={(e) => { if(!saving) e.currentTarget.style.color = '#ffffff'; }}
+                      >
+                          Cancel
+                      </button>
+                      <button 
+                          onClick={handleSave}
+                          disabled={saving || (!username || !email) || !isFormChanged}
+                          style={{
+                            flex: 1, height: '42px', borderRadius: '9999px', background: '#0ea5e9',
+                            border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600,
+                            cursor: (saving || (!username || !email) || !isFormChanged) ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                            opacity: (saving || (!username || !email) || !isFormChanged) ? 0.5 : 1,
+                            transition: 'background-color 0.2s'
+                          }}
+                          onMouseOver={(e) => { if(!saving && username && email && isFormChanged) e.currentTarget.style.backgroundColor = '#0284c7'; }}
+                          onMouseOut={(e) => { if(!saving && username && email && isFormChanged) e.currentTarget.style.backgroundColor = '#0ea5e9'; }}
+                      >
+                          {saving ? 'Saving...' : <><Save size={18} /> Save Changes</>}
+                      </button>
+                  </div>
+              )}
           </div>
       </div>
     </div>

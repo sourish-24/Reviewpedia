@@ -1,51 +1,65 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
 import { AlertCircle } from 'lucide-react';
 
 export default function ConfirmModal({ isOpen, title, message, onConfirm, onCancel }) {
     if (!isOpen) return null;
 
-    return (
+    return ReactDOM.createPortal(
         <div style={{
             position: 'fixed',
             top: 0,
             left: 0,
             width: '100vw',
             height: '100vh',
-            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-            backdropFilter: 'blur(4px)',
-            zIndex: 999999, // Above lightbox
+            backgroundColor: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            zIndex: 10000000, // Highest z-index above MediaLightbox portal
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            padding: '20px',
+            boxSizing: 'border-box'
         }}>
             <div style={{
-                background: 'var(--surface)',
-                borderRadius: '16px',
-                padding: '24px',
-                width: '90%',
-                maxWidth: '400px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
-                border: '1px solid var(--outline-variant)'
+                background: '#161E2E',
+                borderRadius: '24px',
+                padding: '28px',
+                width: '100%',
+                maxWidth: '420px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                color: '#ffffff',
+                fontFamily: 'var(--font-body)'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px', color: '#ef4444' }}>
-                    <AlertCircle size={24} />
-                    <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--on-surface)' }}>{title}</h3>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <AlertCircle size={22} color="#ef4444" />
+                    </div>
+                    <h3 style={{ margin: 0, fontSize: '1.25rem', color: '#ffffff', fontFamily: 'var(--font-display)', fontWeight: 600 }}>{title}</h3>
                 </div>
-                <p style={{ margin: '0 0 24px 0', color: 'var(--on-surface-variant)', lineHeight: 1.5 }}>
+                
+                <p style={{ margin: '0 0 24px 0', color: '#94a3b8', lineHeight: 1.6, fontSize: '0.92rem' }}>
                     {message}
                 </p>
+                
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
                     <button 
                         onClick={onCancel}
                         style={{
-                            background: 'transparent',
-                            border: '1px solid var(--outline-variant)',
-                            color: 'var(--on-surface)',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
+                            background: 'rgba(255, 255, 255, 0.08)',
+                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            color: '#ffffff',
+                            padding: '10px 20px',
+                            borderRadius: '9999px',
                             cursor: 'pointer',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            fontSize: '0.88rem',
+                            transition: 'background-color 0.2s'
                         }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'}
                     >
                         Cancel
                     </button>
@@ -54,17 +68,22 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
                         style={{
                             background: '#ef4444',
                             border: 'none',
-                            color: 'white',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
+                            color: '#ffffff',
+                            padding: '10px 20px',
+                            borderRadius: '9999px',
                             cursor: 'pointer',
-                            fontWeight: 600
+                            fontWeight: 600,
+                            fontSize: '0.88rem',
+                            transition: 'background-color 0.2s'
                         }}
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#ef4444'}
                     >
                         Confirm Delete
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
