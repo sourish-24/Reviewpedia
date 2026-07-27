@@ -28,7 +28,7 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
                 padding: '28px',
                 width: '100%',
                 maxWidth: '420px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
+                boxShadow: 'none',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
                 color: '#ffffff',
                 fontFamily: 'var(--font-body)'
@@ -44,28 +44,33 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
                     {message}
                 </p>
                 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                     <button 
                         onClick={onCancel}
                         style={{
-                            background: 'rgba(255, 255, 255, 0.08)',
-                            border: '1px solid rgba(255, 255, 255, 0.15)',
+                            flex: 1,
+                            background: '#161E2E',
+                            border: 'none',
                             color: '#ffffff',
                             padding: '10px 20px',
                             borderRadius: '9999px',
                             cursor: 'pointer',
                             fontWeight: 600,
                             fontSize: '0.88rem',
-                            transition: 'background-color 0.2s'
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'color 0.2s'
                         }}
-                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
-                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'}
+                        onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
                     >
                         Cancel
                     </button>
                     <button 
                         onClick={onConfirm}
                         style={{
+                            flex: 1,
                             background: '#ef4444',
                             border: 'none',
                             color: '#ffffff',
@@ -74,6 +79,9 @@ export default function ConfirmModal({ isOpen, title, message, onConfirm, onCanc
                             cursor: 'pointer',
                             fontWeight: 600,
                             fontSize: '0.88rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             transition: 'background-color 0.2s'
                         }}
                         onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#dc2626'}

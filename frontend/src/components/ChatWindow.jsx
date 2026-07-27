@@ -604,7 +604,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     currentUser={currentUser}
                     onDelete={(id) => {
                         handleDeleteMessage(id, () => {
-                            if (mediaMessages.length === 1) {
+                            if (mediaMessages.length <= 1) {
                                 setLightboxData({ isOpen: false, initialIndex: 0 });
                             }
                         });

@@ -130,32 +130,38 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }} onClick={() => onUserClick(review.user?.name, review.user)}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+            <div 
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: (review.source?.isScraped || (review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post')) ? 'default' : 'pointer', flex: 1, minWidth: 0 }} 
+              onClick={() => {
+                const isScraped = review.source?.isScraped || (review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post');
+                if (!isScraped && onUserClick) {
+                  onUserClick(review.user?.name, review.user);
+                }
+              }}
+            >
               {review.user?.profilePic ? (
                 <img 
                   src={review.user.profilePic} 
                   alt={review.user?.name || 'User'} 
-                  style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} 
+                  style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
                 />
               ) : (
-                <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase' }}>
+                <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
                    {review.user?.name ? review.user.name[0] : '?'}
                 </div>
               )}
-              <div>
-                <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: 'var(--on-surface)' }}>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: 'var(--on-surface)', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                   {review.user?.name || 'Anonymous'} 
-                  {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" />}
+                  {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" style={{ flexShrink: 0 }} />}
                 </p>
                 <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-variant)', margin: 0 }}>Trust Score: {review.analytics?.trustScore || 0}%</p>
               </div>
             </div>
             
-            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-body)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Calendar size={12} /> {review.metadata?.date || 'Unknown Date'}
-              </div>
+            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+              <Calendar size={12} /> {review.metadata?.date || 'Unknown Date'}
             </div>
           </div>
 

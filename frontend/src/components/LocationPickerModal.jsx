@@ -54,16 +54,9 @@ export default function LocationPickerModal({ onClose, onConfirm, initialLocatio
             });
             
             if (!initialLocation && navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition((pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    setSelectedPos({ lat: latitude, lng: longitude });
-                    if (markerRef.current) {
-                        markerRef.current.setLatLng([latitude, longitude]);
-                    }
-                    if (mapInstance.current) {
-                        mapInstance.current.setView([latitude, longitude], 13);
-                    }
-                }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                setTimeout(() => {
+                    handleLocateMe(true);
+                }, 100);
             }
         }
         
@@ -75,7 +68,7 @@ export default function LocationPickerModal({ onClose, onConfirm, initialLocatio
         };
     }, []);
 
-    const handleLocateMe = () => {
+    const handleLocateMe = (silent = false) => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition((pos) => {
                 const { latitude, longitude } = pos.coords;
@@ -87,9 +80,11 @@ export default function LocationPickerModal({ onClose, onConfirm, initialLocatio
                     mapInstance.current.setView([latitude, longitude], 15);
                 }
             }, (err) => {
-                alert("Could not get your location: " + err.message);
+                if (!silent) {
+                    alert("Could not get your location: " + err.message);
+                }
             }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-        } else {
+        } else if (!silent) {
             alert("Geolocation is not supported by your browser");
         }
     };
@@ -156,9 +151,9 @@ export default function LocationPickerModal({ onClose, onConfirm, initialLocatio
                 <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#161E2E' }}>
                     <button 
                       onClick={onClose} 
-                      style={{ background: 'rgba(255, 255, 255, 0.08)', border: '1px solid rgba(255, 255, 255, 0.15)', color: '#ffffff', padding: '10px 22px', borderRadius: '9999px', cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem', transition: 'background-color 0.2s' }}
-                      onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
-                      onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.08)'}
+                      style={{ background: '#161E2E', border: 'none', color: '#ffffff', padding: '10px 22px', borderRadius: '9999px', cursor: 'pointer', fontWeight: 600, fontSize: '0.88rem', transition: 'color 0.2s' }}
+                      onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                      onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
                     >
                         Cancel
                     </button>

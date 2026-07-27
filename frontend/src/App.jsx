@@ -95,71 +95,94 @@ function App() {
 
   if (appMode === 'landing') {
     return (
-      <div className="landing-dark">
+      <div 
+        className="landing-dark"
+        onMouseMove={(e) => {
+          const rect = e.currentTarget.getBoundingClientRect();
+          e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+          e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        }}
+      >
+        <div className="landing-grid-bg" />
+        <div className="landing-grid-glow" />
         {/* Header */}
         <header className="landing-dark-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
-              <div 
-                  className="landing-dark-logo" 
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  style={{ cursor: 'pointer' }}
-              >
-                 <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                     <Navigation size={20} color="#ffffff" />
-                 </div>
-                 Reviewpedia
-              </div>
-              <nav className="landing-dark-nav">
-                 <a href="#about">About</a>
-                 <div className="landing-dropdown">
-                    <a className="nav-dropdown-title">Products</a>
-                    <div className="landing-dropdown-menu">
-                       <div onClick={() => navigate('/browse')}>Browse Reviews</div>
-                       <div onClick={() => setShowEmailPrompt(true)}>Market Research</div>
-                    </div>
-                 </div>
-                 <a href="#contact">Contact Us</a>
-              </nav>
+          {/* Left: Logo */}
+          <div 
+              className="landing-dark-logo" 
+              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              style={{ cursor: 'pointer' }}
+          >
+             <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                 <Navigation size={20} color="#ffffff" />
+             </div>
+             Reviewpedia
           </div>
-          <div style={{ display: 'flex', gap: '1.75rem', alignItems: 'center' }}>
-             <button 
-                 onClick={() => { if (!user) setShowAuthModal('login'); else navigate('/chat'); }}
-                 style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s' }}
-                 onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                 onMouseOut={(e) => e.currentTarget.style.color = '#475569'}
-                 title="Chat Messages"
-             >
-                 <MessageCircle size={26} />
-             </button>
+
+          {/* Center: Navigation Links */}
+          <nav className="landing-dark-nav" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '3rem', alignItems: 'center' }}>
+             <a href="#about" style={{ fontSize: '0.88rem' }}>About</a>
+             <a onClick={() => navigate('/browse')} style={{ fontSize: '0.88rem' }}>Browse Reviews</a>
+             <a onClick={() => setShowEmailPrompt(true)} style={{ fontSize: '0.88rem' }}>Research</a>
+             <a href="#contact" style={{ fontSize: '0.88rem' }}>Contact Us</a>
+          </nav>
+
+          {/* Right: User / Auth Controls */}
+          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
              {user ? (
-                <div className="landing-dropdown">
-                    {user.profilePic ? (
-                        <img 
-                            src={user.profilePic} 
-                            alt="Profile" 
-                            style={{ width: '42px', height: '42px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-                        />
-                    ) : (
-                        <div style={{ 
-                            width: '42px', height: '42px', borderRadius: '50%', 
-                            backgroundColor: '#0ea5e9', color: 'white',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            fontWeight: 'bold', fontSize: '1.15rem', cursor: 'pointer',
-                            border: '3px solid #0ea5e9', boxSizing: 'border-box',
-                            boxShadow: 'none'
-                        }}>
-                            {user.username[0].toUpperCase()}
-                        </div>
-                    )}
-                    <div className="landing-dropdown-menu" style={{ right: 0, left: 'auto' }}>
-                       <div onClick={() => navigate('/profile')}>My Profile</div>
-                       <div onClick={() => { logout(); navigate('/'); }} className="nav-logout-item">Logout</div>
-                    </div>
-                </div>
+                <>
+                   <button 
+                       onClick={() => navigate('/chat')}
+                       style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s', padding: 0 }}
+                       onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                       onMouseOut={(e) => e.currentTarget.style.color = '#475569'}
+                       title="Chat Messages"
+                   >
+                       <MessageCircle size={22} />
+                   </button>
+                   <div className="landing-dropdown">
+                       {user.profilePic ? (
+                           <img 
+                               src={user.profilePic} 
+                               alt="Profile" 
+                               style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '2px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
+                           />
+                       ) : (
+                           <div style={{ 
+                               width: '36px', height: '36px', borderRadius: '50%', 
+                               backgroundColor: '#0ea5e9', color: 'white',
+                               display: 'flex', alignItems: 'center', justifyContent: 'center',
+                               fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
+                               border: '2px solid #0ea5e9', boxSizing: 'border-box',
+                               boxShadow: 'none'
+                           }}>
+                               {user.username[0].toUpperCase()}
+                           </div>
+                       )}
+                       <div className="landing-dropdown-menu" style={{ right: 0, left: 'auto' }}>
+                          <div onClick={() => navigate('/profile')}>My Profile</div>
+                          <div onClick={() => { logout(); navigate('/'); }} className="nav-logout-item">Sign Out</div>
+                       </div>
+                   </div>
+                </>
              ) : (
-                <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
-                    <button className="landing-btn-outline" style={{ padding: '12px 28px', fontSize: '1rem' }} onClick={() => setShowAuthModal('login')}>Login</button>
-                    <button className="landing-btn-primary" style={{ padding: '12px 28px', fontSize: '1rem' }} onClick={() => setShowAuthModal('signup')}>Sign Up</button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <button 
+                        style={{ background: 'none', border: 'none', color: '#475569', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer', transition: 'color 0.2s', padding: '6px 12px' }} 
+                        onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                        onMouseOut={(e) => e.currentTarget.style.color = '#475569'}
+                        onClick={() => setShowAuthModal('login')}
+                    >
+                        Sign In
+                    </button>
+                    <button 
+                        style={{ background: '#0ea5e9', border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600, padding: '8px 20px', borderRadius: '9999px', cursor: 'pointer', transition: 'background-color 0.2s' }} 
+                        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0284c7'}
+                        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
+                        onClick={() => setShowAuthModal('signup')}
+                    >
+                        Sign Up
+                    </button>
                 </div>
              )}
           </div>
@@ -187,7 +210,7 @@ function App() {
         </div>
 
         {/* About Us Section */}
-        <section id="about" style={{ padding: '80px 4rem', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <section id="about" style={{ position: 'relative', zIndex: 2, padding: '80px 4rem', maxWidth: 1200, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
             <h2 style={{ fontSize: '2.5rem', fontWeight: 600, letterSpacing: '-0.03em', marginBottom: '1.5rem', color: '#0f172a', fontFamily: 'var(--font-display)' }}>Who We Are</h2>
             <p style={{ color: '#475569', fontSize: '1.15rem', lineHeight: 1.8, maxWidth: 800, marginBottom: '4rem' }}>
                 At Reviewpedia, we believe that transparency drives innovation. By combining geospatial intelligence with verified product reviews, we empower consumers and businesses to make deeply informed decisions.
@@ -211,7 +234,7 @@ function App() {
         </section>
 
         {/* Contact Us Section */}
-        <section id="contact" style={{ padding: '80px 4rem', backgroundColor: 'transparent' }}>
+        <section id="contact" style={{ position: 'relative', zIndex: 2, padding: '80px 4rem', backgroundColor: 'transparent' }}>
             <div style={{ maxWidth: 800, margin: '0 auto', textAlign: 'center' }}>
                 <h2 style={{ fontSize: '2.5rem', fontWeight: 600, letterSpacing: '-0.03em', marginBottom: '1rem', color: '#0f172a', fontFamily: 'var(--font-display)' }}>Get In Touch</h2>
                 <p style={{ color: '#475569', fontSize: '1.05rem', marginBottom: '2.5rem' }}>Partner with Reviewpedia to supercharge your market intelligence.</p>
@@ -238,6 +261,8 @@ function App() {
 
         {/* Windora Dark Slate Navy Footer */}
         <footer style={{
+            position: 'relative',
+            zIndex: 2,
             padding: '4rem 4rem 2rem 4rem',
             backgroundColor: '#161e2e',
             borderRadius: '32px 32px 0 0',
@@ -256,8 +281,8 @@ function App() {
                          </div>
                          Reviewpedia
                     </div>
-                    <p style={{ color: '#94a3b8', fontSize: '0.92rem', lineHeight: 1.6, margin: 0 }}>
-                        Reviewpedia Is A Visionary Geospatial Intelligence Company Focused On Mapping Physical Commerce And Real-Time Consumer Demand.
+                    <p style={{ color: '#94a3b8', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>
+                        Your own friendly neighbourhood social media platform, made in INDIA
                     </p>
                 </div>
 
@@ -284,51 +309,72 @@ function App() {
                 </div>
             </div>
 
-            {/* Middle Section: Left Content (Browse/Explore) & Right Columns (Learn/Contact/Address) */}
+            {/* Middle Section: Left Content (Browse/Explore) & Right Columns (PRODUCTS / COMPANY / CONTACT & ADDRESS) */}
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '3rem', marginBottom: '3.5rem' }}>
                 {/* Left Topics & Highlights */}
-                <div style={{ flex: 1, maxWidth: 450, display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                <div style={{ flex: 1, maxWidth: 420, display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
                     <div>
                         <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Browse</span>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', margin: 0, lineHeight: 1.4 }}>
-                            Topics: Products, Hardware, Tech & Local Services
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: '#ffffff', margin: 0, lineHeight: 1.4 }}>
+                            Products, hardware, tech, appliances &amp; local services
                         </h3>
                     </div>
                     <div>
                         <span style={{ color: '#64748b', fontSize: '0.9rem', fontWeight: 500, display: 'block', marginBottom: '4px' }}>Explore</span>
-                        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', margin: 0, lineHeight: 1.4 }}>
-                            Real-time Geospatial Reviews & Demand Statistics
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 600, color: '#ffffff', margin: 0, lineHeight: 1.4 }}>
+                            Real time geospatial data for market analysis &amp; demand statistics
                         </h3>
                     </div>
                 </div>
 
-                {/* Right Nav Links & Address */}
-                <div style={{ display: 'flex', gap: '3.5rem', flexWrap: 'wrap' }}>
+                {/* Right Columns Container (Right-aligned) */}
+                <div style={{ display: 'flex', gap: '4.5rem', flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 'auto' }}>
+                    {/* Column 1: PRODUCTS */}
                     <div>
-                        <div style={{ color: '#ffffff', fontWeight: 600, marginBottom: '1rem', fontSize: '0.95rem' }}>Learn</div>
+                        <div style={{ color: '#ffffff', fontWeight: 700, marginBottom: '1rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>PRODUCTS</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.88rem', color: '#94a3b8' }}>
-                            <span style={{ cursor: 'pointer' }} onClick={() => navigate('/browse')}>Browse Reviews</span>
-                            <span style={{ cursor: 'pointer' }} onClick={() => setShowEmailPrompt(true)}>Market Research</span>
-                            <a href="#about" style={{ color: 'inherit', textDecoration: 'none' }}>Our Mission</a>
-                            <span style={{ cursor: 'pointer' }}>Blog</span>
+                            <span style={{ cursor: 'pointer' }} onClick={() => navigate('/browse')}>Browse reviews</span>
+                            <span style={{ cursor: 'pointer' }} onClick={() => navigate('/chat')}>Message</span>
                         </div>
                     </div>
 
+                    {/* Column 2: COMPANY */}
                     <div>
-                        <div style={{ color: '#ffffff', fontWeight: 600, marginBottom: '1rem', fontSize: '0.95rem' }}>Contact</div>
+                        <div style={{ color: '#ffffff', fontWeight: 700, marginBottom: '1rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>COMPANY</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.88rem', color: '#94a3b8' }}>
-                            <span>Community</span>
-                            <span>Knowledge Base</span>
-                            <span>Academy</span>
-                            <span>Support</span>
+                            <span style={{ cursor: 'pointer' }}>Partner</span>
+                            <span style={{ cursor: 'pointer' }} onClick={() => setShowEmailPrompt(true)}>Market research</span>
+                            <span style={{ cursor: 'pointer' }}>Integrations</span>
+                            <span style={{ cursor: 'pointer' }}>Pricing</span>
+                            <span style={{ cursor: 'pointer' }}>Request Demo</span>
                         </div>
                     </div>
 
-                    <div style={{ maxWidth: 220 }}>
-                        <div style={{ color: '#ffffff', fontWeight: 600, marginBottom: '1rem', fontSize: '0.95rem' }}>Address</div>
-                        <p style={{ color: '#94a3b8', fontSize: '0.88rem', lineHeight: 1.6, margin: 0 }}>
-                            475 Cherry Dr, Troy, Michigan 48083 United States ( (248) 823-3200 )
-                        </p>
+                    {/* Column 3: CONTACT & ADDRESS */}
+                    <div style={{ maxWidth: 215 }}>
+                        <div style={{ marginBottom: '1.75rem' }}>
+                            <div style={{ color: '#ffffff', fontWeight: 700, marginBottom: '1rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>CONTACT</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', fontSize: '0.88rem', color: '#94a3b8' }}>
+                                <div>
+                                    <a href="mailto:careers@reviewpedia.co.in" style={{ color: '#0ea5e9', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                                        <Mail size={13} color="#0ea5e9" style={{ flexShrink: 0 }} /> careers@reviewpedia.co.in
+                                    </a>
+                                    <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block', marginTop: '2px' }}>for career info</span>
+                                </div>
+                                <div style={{ marginTop: '4px' }}>
+                                    <a href="mailto:support@reviewpedia.co.in" style={{ color: '#0ea5e9', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 500 }}>
+                                        <Mail size={13} color="#0ea5e9" style={{ flexShrink: 0 }} /> support@reviewpedia.co.in
+                                    </a>
+                                    <span style={{ fontSize: '0.78rem', color: '#64748b', display: 'block', marginTop: '2px' }}>for customer support</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style={{ color: '#ffffff', fontWeight: 700, marginBottom: '1rem', fontSize: '0.95rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ADDRESS</div>
+                            <p style={{ color: '#94a3b8', fontSize: '0.88rem', lineHeight: 1.6, margin: 0, display: 'flex', alignItems: 'flex-start', gap: '6px' }}>
+                                <MapPin size={14} color="#0ea5e9" style={{ flexShrink: 0, marginTop: '3px' }} /> A-10, Sector-62, Noida, Uttar Pradesh, 201309, India
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -341,21 +387,21 @@ function App() {
                     <span style={{ cursor: 'pointer' }}>Privacy</span>
                     <span style={{ cursor: 'pointer' }}>Cookies</span>
                     <span style={{ cursor: 'pointer' }}>Legal</span>
-                    <span style={{ cursor: 'pointer' }}>Recalls</span>
+                    <span style={{ cursor: 'pointer' }}>Blogs</span>
                 </div>
 
                 {/* Right Social Media Icon Circles */}
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                    <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#ffffff', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="YouTube">
+                    <a href="https://youtube.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#F8F4F0', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="YouTube">
                         <Youtube size={18} />
                     </a>
-                    <a href="https://linkedin.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#ffffff', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="LinkedIn">
+                    <a href="https://linkedin.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#F8F4F0', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="LinkedIn">
                         <Linkedin size={18} />
                     </a>
-                    <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#ffffff', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="Instagram">
+                    <a href="https://instagram.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#F8F4F0', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="Instagram">
                         <Instagram size={18} />
                     </a>
-                    <a href="https://facebook.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#ffffff', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="Facebook">
+                    <a href="https://facebook.com" target="_blank" rel="noreferrer" style={{ width: 38, height: 38, borderRadius: '50%', background: '#F8F4F0', color: '#0f172a', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', transition: 'transform 0.2s' }} title="Facebook">
                         <Facebook size={18} />
                     </a>
                 </div>
@@ -364,13 +410,24 @@ function App() {
 
         {/* Existing Auth / Email Prompt overlay */}
         {showEmailPrompt && (
-             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(12px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000 }}>
-                 <div style={{ padding: '3rem', display: 'flex', flexDirection: 'column', gap: '2rem', width: 450, background: 'rgba(3, 3, 3, 0.75)', backdropFilter: 'blur(12px)', border: 'none', borderRadius: '24px', boxShadow: 'none', color: '#ffffff' }}>
-                     <h3 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: 10, fontSize: '1.5rem', color: '#ffffff' }}><Mail color="#0ea5e9" size={24} /> Identity Verification</h3>
-                     <p style={{ fontSize: '1rem', color: '#ffffff', margin: 0, fontFamily: 'var(--font-body)', lineHeight: 1.5, opacity: 0.9 }}>Enter your email address to securely route AI-generated intelligence briefings and automated sales outreach directly to your inbox for verification.</p>
+             <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px', boxSizing: 'border-box' }}>
+                 <div style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', maxWidth: '440px', background: '#161E2E', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', boxShadow: 'none', color: '#ffffff', fontFamily: 'var(--font-body)', boxSizing: 'border-box' }}>
+                     {/* Title Row with Cyan Icon Badge */}
+                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                         <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: 'rgba(14, 165, 233, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                             <Mail size={22} color="#0ea5e9" />
+                         </div>
+                         <h3 style={{ margin: 0, fontSize: '1.35rem', color: '#ffffff', fontFamily: 'var(--font-display)', fontWeight: 600 }}>Identity Verification</h3>
+                     </div>
+
+                     {/* Subtitle / Description */}
+                     <p style={{ fontSize: '0.92rem', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                         Enter your email address to securely route AI-generated intelligence briefings and automated sales outreach directly to your inbox for verification.
+                     </p>
                      
-                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                         <label style={{ fontSize: '0.75rem', color: '#ffffff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', opacity: 0.8 }}>Work Email</label>
+                     {/* Input Box Container */}
+                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                         <label style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Work Email</label>
                          <input 
                              type="email" 
                              value={marketResearchEmail} 
@@ -378,18 +435,59 @@ function App() {
                              placeholder="you@example.com"
                              autoFocus
                              onKeyDown={(e) => e.key === 'Enter' && startBusinessMode()}
-                             style={{ padding: '12px 0', border: 'none', borderBottom: '2px solid rgba(255, 255, 255, 0.3)', background: 'transparent', outline: 'none', fontSize: '1.1rem', fontFamily: 'var(--font-body)', transition: 'border-color 0.2s', color: '#ffffff' }}
-                             onFocus={(e) => e.target.style.borderBottomColor = '#0ea5e9'}
-                             onBlur={(e) => e.target.style.borderBottomColor = 'rgba(255, 255, 255, 0.3)'}
+                             style={{ padding: '12px 16px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '12px', background: '#1f293d', outline: 'none', fontSize: '0.95rem', fontFamily: 'var(--font-body)', transition: 'all 0.2s', color: '#ffffff', boxSizing: 'border-box' }}
+                             onFocus={(e) => { e.target.style.borderColor = '#0ea5e9'; e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.2)'; }}
+                             onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'; e.target.style.boxShadow = 'none'; }}
                          />
                      </div>
-                     <div style={{ display: 'flex', gap: 10, marginTop: '1rem' }}>
+
+                     {/* Equal Width Action Buttons */}
+                     <div style={{ display: 'flex', gap: '12px', marginTop: '8px', alignItems: 'center' }}>
                          <button 
-                            onClick={() => setShowEmailPrompt(false)} 
-                            className="landing-btn-outline"
-                            style={{ flex: 1, display: 'flex', justifyContent: 'center', color: '#ffffff' }}
-                         >Cancel</button>
-                         <button className="landing-btn-primary" onClick={startBusinessMode} style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}>Initialize <ArrowRight size={16}/></button>
+                             onClick={() => setShowEmailPrompt(false)} 
+                             style={{
+                                 flex: 1,
+                                 height: '42px',
+                                 background: '#161E2E',
+                                 border: 'none',
+                                 color: '#ffffff',
+                                 borderRadius: '9999px',
+                                 cursor: 'pointer',
+                                 fontWeight: 600,
+                                 fontSize: '0.88rem',
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 justifyContent: 'center',
+                                 transition: 'color 0.2s'
+                             }}
+                             onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                             onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
+                         >
+                             Cancel
+                         </button>
+                         <button 
+                             onClick={startBusinessMode}
+                             style={{
+                                 flex: 1,
+                                 height: '42px',
+                                 background: '#0ea5e9',
+                                 border: 'none',
+                                 color: '#ffffff',
+                                 borderRadius: '9999px',
+                                 cursor: 'pointer',
+                                 fontWeight: 600,
+                                 fontSize: '0.88rem',
+                                 display: 'flex',
+                                 alignItems: 'center',
+                                 justifyContent: 'center',
+                                 gap: '8px',
+                                 transition: 'background-color 0.2s'
+                             }}
+                             onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0284c7'}
+                             onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
+                         >
+                             Initialize <ArrowRight size={16}/>
+                         </button>
                      </div>
                  </div>
              </div>
@@ -620,9 +718,9 @@ function App() {
 
                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
                  
-                 {/* Third row: Logout */}
+                 {/* Third row: Sign Out */}
                  <div onClick={logout} className="nav-logout-item" style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Logout</span>
+                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Sign Out</span>
                  </div>
              </div>
              
@@ -660,7 +758,10 @@ function App() {
         <ReviewCard 
           review={selectedReview} 
           onClose={() => setSelectedReview(null)} 
-          onUserClick={(u, userObj) => { setSelectedUser(userObj || u); }}
+          onUserClick={(u, userObj) => {
+            const isScraped = selectedReview.source?.isScraped || (selectedReview.source?.platform && selectedReview.source.platform.toLowerCase() !== 'reviewpedia' && selectedReview.source.platform.toLowerCase() !== 'local post');
+            if (!isScraped) setSelectedUser(userObj || u);
+          }}
           currentUser={user}
           onDeleteSuccess={() => {
             setSelectedReview(null);
@@ -702,7 +803,6 @@ function App() {
           onDeleteSuccess={(deletedId) => {
             const remaining = myReviewsList.filter(r => r.id !== deletedId);
             setMyReviewsList(remaining);
-            if (remaining.length === 0) setIsMyReviewsOpen(false);
             setMapUpdateTrigger(prev => prev + 1);
           }}
           onEdit={(rev) => {

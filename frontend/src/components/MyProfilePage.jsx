@@ -73,13 +73,23 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
   const isFormChanged = username !== user?.username || email !== user?.email || profilePicFile !== null;
 
   return (
-    <div style={{
-      position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
-      backgroundImage: "url('/windora_bg.jpg')",
-      backgroundSize: 'cover', backgroundPosition: 'center top', backgroundRepeat: 'no-repeat',
-      zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      fontFamily: 'var(--font-body)', color: '#ffffff', overflowY: 'auto', padding: '24px', boxSizing: 'border-box'
-    }}>
+    <div 
+      className="landing-dark"
+      style={{
+        position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+        backgroundColor: '#F8F4F0',
+        zIndex: 9999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'var(--font-body)', color: '#0f172a', overflowY: 'auto', padding: '24px', boxSizing: 'border-box'
+      }}
+      onMouseMove={(e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+      }}
+    >
+      <div className="landing-grid-bg" />
+      <div className="landing-grid-glow" />
+
       {/* Top Floating Notification */}
       {message.text && (
         <div style={{
@@ -97,7 +107,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
 
       {/* Top Header Row with Friends (left), Blocked (middle), and Edit Profile (right) */}
       {!isEditing && (
-        <div style={{ width: '100%', maxWidth: '520px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div style={{ position: 'relative', zIndex: 2, width: '100%', maxWidth: '520px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <button 
                     onClick={() => alert("Friends list opening soon!")} 
@@ -141,6 +151,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
 
       {/* Main Glass Card */}
       <div style={{
+        position: 'relative', zIndex: 2,
         width: '100%', maxWidth: '520px', padding: '36px',
         background: '#161E2E', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#ffffff', boxSizing: 'border-box',

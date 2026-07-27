@@ -20,7 +20,8 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
       });
   };
 
-  if (!reviews || reviews.length === 0) return null;
+  if (!reviews) return null;
+  if (!isMyReviews && reviews.length === 0) return null;
 
   const handleDelete = (reviewId) => {
     requestConfirm(
@@ -68,7 +69,17 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
         </div>
 
         <div style={{ overflowY: 'auto', flex: 1, paddingRight: 8, display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {reviews.map((review) => (
+            {reviews.length === 0 ? (
+                <div style={{
+                    flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    textAlign: 'center', padding: '32px 16px', color: '#ffffff'
+                }}>
+                    <p style={{ margin: 0, fontSize: '0.95rem', lineHeight: 1.6, fontFamily: 'var(--font-body)', color: 'rgba(255, 255, 255, 0.8)' }}>
+                        Click on <span style={{ color: '#0ea5e9', fontWeight: 600 }}>"add a review"</span> to post a review
+                    </p>
+                </div>
+            ) : (
+                reviews.map((review) => (
                 <div key={review.id} style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '20px', backgroundColor: '#F8F4F0', borderRadius: '12px', border: '1px solid #e4e4e7', color: '#18181b', position: 'relative' }}>
                     {currentUser && (
                         currentUser.username === review.user?.name ||
@@ -139,33 +150,39 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '8px', borderTop: '1px solid #e4e4e7' }}>
                         <div style={{
-                            display: 'flex', alignItems: 'center', justifyContent: 'space-between'
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', minWidth: 0 }} onClick={() => onUserClick && onUserClick(review.user?.name, review.user)}>
-                                {review.user?.profilePic ? (
-                                    <img 
-                                        src={review.user.profilePic} 
-                                        alt={review.user?.name || 'User'} 
-                                        style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
-                                    />
-                                ) : (
-                                    <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
-                                    {review.user?.name ? review.user.name[0] : '?'}
-                                    </div>
-                                )}
-                                <div style={{ minWidth: 0 }}>
-                                    <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b', wordBreak: 'break-word' }}>
-                                        {review.user?.name || 'Anonymous'} 
-                                        {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" />}
-                                    </p>
-                                </div>
-                            </div>
-                            <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-body)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
-                                </div>
-                            </div>
-                        </div>
+                            <div 
+                              style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: (review.source?.isScraped || (review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post')) ? 'default' : 'pointer', flex: 1, minWidth: 0 }} 
+                              onClick={() => {
+                                const isScraped = review.source?.isScraped || (review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post');
+                                if (!isScraped && onUserClick) {
+                                  onUserClick(review.user?.name, review.user);
+                                }
+                              }}
+                            >
+                                 {review.user?.profilePic ? (
+                                     <img 
+                                         src={review.user.profilePic} 
+                                         alt={review.user?.name || 'User'} 
+                                         style={{ width: 32, height: 32, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} 
+                                     />
+                                 ) : (
+                                     <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
+                                     {review.user?.name ? review.user.name[0] : '?'}
+                                     </div>
+                                 )}
+                                 <div style={{ minWidth: 0 }}>
+                                     <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                                         {review.user?.name || 'Anonymous'} 
+                                         {(review.analytics?.trustScore || 0) > 80 && <CheckCircle size={14} color="var(--primary)" style={{ flexShrink: 0 }} />}
+                                     </p>
+                                 </div>
+                             </div>
+                             <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                                 <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
+                             </div>
+                         </div>
 
                         {review.source?.platform && review.source.platform.toLowerCase() !== 'reviewpedia' && review.source.platform.toLowerCase() !== 'local post' && (
                           <div style={{ 
@@ -177,7 +194,8 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                         )}
                     </div>
                 </div>
-            ))}
+            ))
+            )}
         </div>
       </div>
       

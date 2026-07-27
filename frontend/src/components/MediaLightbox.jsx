@@ -3,7 +3,15 @@ import ReactDOM from 'react-dom';
 import { X, ChevronLeft, ChevronRight, Trash2 } from 'lucide-react';
 
 export default function MediaLightbox({ mediaMessages, initialIndex, onClose, currentUser, onDelete }) {
-    const [currentIndex, setCurrentIndex] = React.useState(initialIndex);
+    const [currentIndex, setCurrentIndex] = React.useState(initialIndex || 0);
+
+    useEffect(() => {
+        if (!mediaMessages || mediaMessages.length === 0) {
+            onClose();
+        } else if (currentIndex >= mediaMessages.length) {
+            setCurrentIndex(Math.max(0, mediaMessages.length - 1));
+        }
+    }, [mediaMessages, currentIndex, onClose]);
 
     useEffect(() => {
         const handleKeyDown = (e) => {
@@ -13,19 +21,23 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [currentIndex]);
+    }, [currentIndex, mediaMessages]);
 
     const handleNext = () => {
+        if (!mediaMessages || mediaMessages.length === 0) return;
         setCurrentIndex((prev) => (prev + 1) % mediaMessages.length);
     };
 
     const handlePrev = () => {
+        if (!mediaMessages || mediaMessages.length === 0) return;
         setCurrentIndex((prev) => (prev - 1 + mediaMessages.length) % mediaMessages.length);
     };
 
     if (!mediaMessages || mediaMessages.length === 0) return null;
 
-    const currentMedia = mediaMessages[currentIndex];
+    const safeIndex = Math.min(Math.max(0, currentIndex), mediaMessages.length - 1);
+    const currentMedia = mediaMessages[safeIndex];
+    if (!currentMedia) return null;
 
     return ReactDOM.createPortal(
         <div style={{

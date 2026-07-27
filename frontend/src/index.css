@@ -131,19 +131,48 @@ h1, h2, h3, h4, h5, h6 {
   gap: 4px;
 }
 
-/* Landing Page Sky Blue Theme Styles (Windora Reference) */
+/* Landing Page Theme with Interactive Glowing Square Mesh Grid */
 .landing-dark {
-  background-color: #f0f7ff;
-  background-image: url('/windora_bg.jpg');
-  background-size: cover;
-  background-position: center top;
-  background-repeat: no-repeat;
+  background-color: #F8F4F0;
   color: #0f172a;
   height: 100vh;
   position: relative;
   overflow-x: hidden;
   overflow-y: auto;
   font-family: var(--font-body);
+}
+
+/* Base Subtle Square Mesh Grid Layer */
+.landing-grid-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.045) 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.045) 0.5px, transparent 0.5px);
+  background-size: 50px 50px;
+  z-index: 0;
+}
+
+/* Hover-activated Glowing Blue Grid Lines (Borders only) */
+.landing-grid-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background-image: 
+    linear-gradient(to right, rgba(14, 165, 233, 0.65) 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, rgba(14, 165, 233, 0.65) 0.5px, transparent 0.5px);
+  background-size: 50px 50px;
+  -webkit-mask-image: radial-gradient(260px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
+  mask-image: radial-gradient(260px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
+  z-index: 0;
+  opacity: 0.45;
 }
 
 .landing-dark-header {
@@ -250,14 +279,16 @@ h1, h2, h3, h4, h5, h6 {
 .landing-dark-nav a {
   color: #334155;
   text-decoration: none;
-  font-size: 1.05rem;
+  font-size: 0.88rem;
   font-weight: 500;
-  transition: color 0.2s;
+  transition: transform 0.2s ease, color 0.2s ease;
   cursor: pointer;
+  display: inline-block;
 }
 
-.landing-dark-nav a:hover, .nav-dropdown-menu div:hover {
-  color: #ffffff;
+.landing-dark-nav a:hover {
+  color: #0ea5e9 !important;
+  transform: scale(1.08);
 }
 
 .nav-dropdown {
@@ -360,6 +391,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .landing-card {
+  position: relative;
+  z-index: 2;
   background: #ffffff;
   border: 1px solid rgba(2, 132, 199, 0.15);
   border-radius: 20px;
