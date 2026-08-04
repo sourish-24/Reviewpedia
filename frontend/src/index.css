@@ -193,69 +193,6 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: none !important;
 }
 
-/* ===== HOMEPAGE-SPECIFIC DROPDOWN (decoupled from app header) ===== */
-.landing-dropdown {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 96px;
-}
-
-.landing-dropdown:hover .landing-dropdown-menu {
-  display: flex;
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.landing-dropdown-menu {
-  position: absolute;
-  top: 80px;
-  left: -20px;
-  background: rgba(3, 3, 3, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 16px;
-  padding: 0.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-  min-width: 180px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(10px);
-  transition: all 0.2s ease;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  box-shadow: none;
-  margin-top: 0;
-  color: #ffffff;
-}
-
-.landing-dropdown-menu div {
-  padding: 10px 16px;
-  color: #ffffff;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-  border-radius: 8px;
-  transition: color 0.2s ease;
-  background: transparent;
-}
-
-.landing-dropdown-menu div:hover {
-  background: transparent !important;
-  color: #0ea5e9 !important;
-}
-
-.landing-dropdown-menu div.nav-logout-item {
-  color: #ef4444 !important;
-}
-
-.landing-dropdown-menu div.nav-logout-item:hover {
-  background: transparent !important;
-  color: #ef4444 !important;
-}
-
 /* ===== APP HEADER DROPDOWN (browse reviews / market research) ===== */
 
 .landing-dark-logo {

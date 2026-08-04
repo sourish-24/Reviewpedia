@@ -4,7 +4,25 @@ import * as h3 from 'h3-js';
 
 import { MapPin, Info, RefreshCw, Crosshair, X } from 'lucide-react';
 
-const DEFAULT_CENTER = [28.7041, 77.1025]; // New Delhi as fallback
+const getReliableUserLocation = (onSuccess, onError) => {
+  if (!navigator.geolocation) {
+    if (onError) onError(new Error("Geolocation not supported"));
+    return;
+  }
+  // Try fast IP/Wi-Fi geolocation first (instant on desktop browsers)
+  navigator.geolocation.getCurrentPosition(
+    (pos) => onSuccess([pos.coords.latitude, pos.coords.longitude]),
+    () => {
+      // Fallback try with high accuracy if standard fails (for mobile devices with GPS)
+      navigator.geolocation.getCurrentPosition(
+        (pos) => onSuccess([pos.coords.latitude, pos.coords.longitude]),
+        (err2) => { if (onError) onError(err2); },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
+      );
+    },
+    { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 }
+  );
+};
 
 const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, viewMode, currentUser, hexResolution }, ref) => {
   const mapRef = useRef(null);
@@ -15,7 +33,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
   
   const [userLocation, setUserLocation] = useState(null);
   const [reviews, setReviews] = useState([]);
-  const [loadingMsg, setLoadingMsg] = useState("Waiting for location access...");
+  const [loadingMsg, setLoadingMsg] = useState(null);
   
   const [selectedHexagon, setSelectedHexagon] = useState(null);
   const [hexSummary, setHexSummary] = useState(null);
@@ -64,38 +82,44 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
       };
     }
 
-    // 2. Request Geolocation or Restore State
+    // 2. Restore map view state or request user geolocation
     const storedStateStr = sessionStorage.getItem('mapState');
     const storedUserLocStr = sessionStorage.getItem('userLoc');
 
+    if (storedUserLocStr) {
+      try {
+        const parsedLoc = JSON.parse(storedUserLocStr);
+        if (parsedLoc && Array.isArray(parsedLoc) && parsedLoc.length === 2 && (parsedLoc[0] !== 28.7041 || parsedLoc[1] !== 77.1025)) {
+          setUserLocation(parsedLoc);
+        } else {
+          sessionStorage.removeItem('userLoc');
+        }
+      } catch (e) {}
+    }
+
     if (storedStateStr) {
-      const state = JSON.parse(storedStateStr);
-      if (storedUserLocStr) setUserLocation(JSON.parse(storedUserLocStr));
-      else setUserLocation([state.lat, state.lng]);
-      
-      mapInstance.current.setView([state.lat, state.lng], state.zoom);
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = [position.coords.latitude, position.coords.longitude];
+      try {
+        const state = JSON.parse(storedStateStr);
+        mapInstance.current.setView([state.lat, state.lng], state.zoom);
+      } catch (e) {
+        mapInstance.current.setView([20, 0], 2);
+      }
+    } else {
+      // First visit: try reliable geolocation to center map on user's real location
+      getReliableUserLocation(
+        (loc) => {
           setUserLocation(loc);
           sessionStorage.setItem('userLoc', JSON.stringify(loc));
-          mapInstance.current.setView(loc, 12);
+          if (mapInstance.current) {
+            mapInstance.current.setView(loc, 13);
+          }
         },
-        (error) => {
-          console.warn("Geolocation denied or error:", error);
-          setLoadingMsg("Location denied. Showing default area.");
-          const loc = DEFAULT_CENTER;
-          setUserLocation(loc);
-          mapInstance.current.setView(loc, 12);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        () => {
+          if (mapInstance.current) {
+            mapInstance.current.setView([20, 0], 2);
+          }
+        }
       );
-    } else {
-      setLoadingMsg("Geolocation not supported by browser.");
-      const loc = DEFAULT_CENTER;
-      setUserLocation(loc);
-      mapInstance.current.setView(loc, 12);
     }
 
     return () => {
@@ -111,40 +135,34 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
   }));
 
   const locateUser = () => {
-    if (navigator.geolocation) {
-      setLoadingMsg("Locating...");
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const loc = [position.coords.latitude, position.coords.longitude];
-          setUserLocation(loc);
-          sessionStorage.setItem('userLoc', JSON.stringify(loc));
-          sessionStorage.setItem('mapState', JSON.stringify({ lat: loc[0], lng: loc[1], zoom: 14 }));
-          showUserDotRef.current = true;
-          if (mapInstance.current) {
-             mapInstance.current.flyTo(loc, 14);
-             updateLayout();
-          }
-          setLoadingMsg(null);
-          setTimeout(() => {
-              showUserDotRef.current = false;
-              updateLayout();
-          }, 10000);
-        },
-        (error) => {
-          console.warn("Geolocation error:", error);
-          setLoadingMsg("Location denied or unavailable.");
-          setTimeout(() => setLoadingMsg(null), 2000);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-    }
+    setLoadingMsg("Locating your position...");
+    getReliableUserLocation(
+      (loc) => {
+        setUserLocation(loc);
+        sessionStorage.setItem('userLoc', JSON.stringify(loc));
+        sessionStorage.setItem('mapState', JSON.stringify({ lat: loc[0], lng: loc[1], zoom: 14 }));
+        showUserDotRef.current = true;
+        if (mapInstance.current) {
+           mapInstance.current.flyTo(loc, 14);
+           updateLayout();
+        }
+        setLoadingMsg(null);
+        setTimeout(() => {
+            showUserDotRef.current = false;
+            updateLayout();
+        }, 10000);
+      },
+      (error) => {
+        console.warn("Geolocation error:", error);
+        setLoadingMsg("Location access denied or unavailable.");
+        setTimeout(() => setLoadingMsg(null), 3000);
+      }
+    );
   };
 
   useEffect(() => {
-    if (userLocation) {
-      initData(userLocation[0], userLocation[1]);
-    }
-  }, [searchQuery, mapUpdateTrigger, userLocation]);
+    initData();
+  }, [searchQuery, mapUpdateTrigger]);
 
   const initData = async (lat, lng) => {
     try {

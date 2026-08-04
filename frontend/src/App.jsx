@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook } from 'lucide-react';
+import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut } from 'lucide-react';
 import AppMap from './components/Map';
 import ReviewCard from './components/ReviewCard';
 import MultiReviewCard from './components/MultiReviewCard';
@@ -43,6 +43,19 @@ function App() {
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, logout, setUser } = useAuth();
+
+  const homepageProfileRef = useRef(null);
+  const [isHomepageProfileOpen, setIsHomepageProfileOpen] = useState(false);
+
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (homepageProfileRef.current && !homepageProfileRef.current.contains(e.target)) {
+        setIsHomepageProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   React.useEffect(() => {
     // Reset all review windows on route change
@@ -130,41 +143,92 @@ function App() {
           {/* Right: User / Auth Controls */}
           <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
              {user ? (
-                <>
-                   <button 
-                       onClick={() => navigate('/chat')}
-                       style={{ background: 'transparent', border: 'none', color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'color 0.2s', padding: 0 }}
-                       onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                       onMouseOut={(e) => e.currentTarget.style.color = '#475569'}
-                       title="Chat Messages"
-                   >
-                       <MessageCircle size={22} />
-                   </button>
-                   <div className="landing-dropdown">
-                       {user.profilePic ? (
-                           <img 
-                               src={user.profilePic} 
-                               alt="Profile" 
-                               style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '2px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-                           />
-                       ) : (
-                           <div style={{ 
-                               width: '36px', height: '36px', borderRadius: '50%', 
-                               backgroundColor: '#0ea5e9', color: 'white',
-                               display: 'flex', alignItems: 'center', justifyContent: 'center',
-                               fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
-                               border: '2px solid #0ea5e9', boxSizing: 'border-box',
-                               boxShadow: 'none'
-                           }}>
-                               {user.username[0].toUpperCase()}
-                           </div>
-                       )}
-                       <div className="landing-dropdown-menu" style={{ right: 0, left: 'auto' }}>
-                          <div onClick={() => navigate('/profile')}>My Profile</div>
-                          <div onClick={() => { logout(); navigate('/'); }} className="nav-logout-item">Sign Out</div>
-                       </div>
-                   </div>
-                </>
+                    <div ref={homepageProfileRef} style={{ position: 'relative' }}>
+                        <div 
+                            onClick={() => setIsHomepageProfileOpen(prev => !prev)}
+                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        >
+                            {user.profilePic ? (
+                                <img 
+                                    src={user.profilePic} 
+                                    alt="Profile" 
+                                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
+                                />
+                            ) : (
+                                <div style={{ 
+                                    width: '40px', height: '40px', borderRadius: '50%', 
+                                    backgroundColor: '#0ea5e9', color: 'white',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
+                                    border: '3px solid #0ea5e9', boxSizing: 'border-box',
+                                    boxShadow: 'none'
+                                }}>
+                                    {user.username[0].toUpperCase()}
+                                </div>
+                            )}
+                        </div>
+
+                        {isHomepageProfileOpen && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '48px',
+                                right: '-12px',
+                                left: 'auto',
+                                minWidth: '180px',
+                                background: 'rgba(3, 3, 3, 0.6)',
+                                border: 'none',
+                                borderRadius: '16px',
+                                padding: '12px',
+                                backdropFilter: 'blur(12px)',
+                                WebkitBackdropFilter: 'blur(12px)',
+                                boxShadow: 'none',
+                                zIndex: 1000,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '0.25rem',
+                                color: '#ffffff'
+                            }}>
+                                {/* Top Segment: Username and Email (Always White) */}
+                                <div style={{ padding: '2px 12px 6px 12px', cursor: 'default' }}>
+                                    <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        {user.username}
+                                    </div>
+                                    <div style={{ color: '#ffffff', fontSize: '0.78rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+                                        {user.email}
+                                    </div>
+                                </div>
+
+                                <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
+
+                                <div 
+                                    onClick={() => { setIsHomepageProfileOpen(false); navigate('/profile'); }} 
+                                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
+                                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
+                                >
+                                    <span>My Profile</span>
+                                </div>
+
+                                <div 
+                                    onClick={() => { setIsHomepageProfileOpen(false); navigate('/chat'); }} 
+                                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
+                                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
+                                >
+                                    <span>Chats</span>
+                                </div>
+
+                                <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
+
+                                <div 
+                                    onClick={() => { setIsHomepageProfileOpen(false); logout(); navigate('/'); }} 
+                                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ef4444', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px' }}
+                                >
+                                    <span>Sign Out</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
              ) : (
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <button 
@@ -190,9 +254,6 @@ function App() {
 
         {/* Hero Content */}
         <div className="landing-dark-content">
-          <div className="landing-pill">
-             Continuous Geospatial Intelligence & Product Reviews
-          </div>
           <h1 className="landing-title">
              Greener, Smarter Future With Geospatial Intelligence
           </h1>

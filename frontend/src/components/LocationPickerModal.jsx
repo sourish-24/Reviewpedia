@@ -83,7 +83,7 @@ export default function LocationPickerModal({ onClose, onConfirm, initialLocatio
                 if (!silent) {
                     alert("Could not get your location: " + err.message);
                 }
-            }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+            }, { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 });
         } else if (!silent) {
             alert("Geolocation is not supported by your browser");
         }

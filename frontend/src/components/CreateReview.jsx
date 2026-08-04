@@ -60,18 +60,41 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
 
     setLoading(true);
 
+    const getFallbackLoc = () => {
+      const storedLoc = sessionStorage.getItem('userLoc');
+      if (storedLoc) {
+        try {
+          const parsed = JSON.parse(storedLoc);
+          if (parsed && Array.isArray(parsed) && parsed.length === 2) return { lat: parsed[0], lng: parsed[1] };
+        } catch(e) {}
+      }
+      const storedState = sessionStorage.getItem('mapState');
+      if (storedState) {
+        try {
+          const parsed = JSON.parse(storedState);
+          if (parsed && parsed.lat && parsed.lng) return { lat: parsed.lat, lng: parsed.lng };
+        } catch(e) {}
+      }
+      return { lat: 28.7041, lng: 77.1025 };
+    };
+
     if (editingReview) {
-      const lat = editingReview.location?.lat || 28.7041;
-      const lng = editingReview.location?.lng || 77.1025;
+      const fallback = getFallbackLoc();
+      const lat = editingReview.location?.lat || fallback.lat;
+      const lng = editingReview.location?.lng || fallback.lng;
       await postReview(lat, lng);
     } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (pos) => await postReview(pos.coords.latitude, pos.coords.longitude),
-        async (err) => await postReview(28.7041, 77.1025),
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        async () => {
+          const fallback = getFallbackLoc();
+          await postReview(fallback.lat, fallback.lng);
+        },
+        { enableHighAccuracy: false, timeout: 5000, maximumAge: 30000 }
       );
     } else {
-      await postReview(28.7041, 77.1025);
+      const fallback = getFallbackLoc();
+      await postReview(fallback.lat, fallback.lng);
     }
   };
 
