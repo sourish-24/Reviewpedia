@@ -8,7 +8,7 @@ export default function UserProfile({ username, userProfilePic, onClose, onChatC
 
   useEffect(() => {
     if (!profilePic && username) {
-      const API_URL = import.meta.env.VITE_API_URL || '';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
       fetch(`${API_URL}/api/auth/user/${encodeURIComponent(username)}`)
         .then(res => res.json())
         .then(data => {

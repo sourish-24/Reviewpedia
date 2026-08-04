@@ -15,7 +15,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
 
   const handleDeleteAccountConfirm = async () => {
     if (confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()) {

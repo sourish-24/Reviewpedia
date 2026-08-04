@@ -74,7 +74,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
 
     const fetchMessages = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/messages/${conversation._id}`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
@@ -92,7 +92,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
 
         setIsSending(true);
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             
             // Send text message first if it exists
             if (text.trim()) {
@@ -179,7 +179,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
         setIsSending(true);
         const { lat, lng } = position;
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const payload = {
                 conversationId: conversation._id,
                 receiverId: otherUser._id,
@@ -303,7 +303,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             async () => {
                 setIsDeleting(true);
                 try {
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const res = await fetch(`${API_URL}/api/chat/conversations/${conversation._id}`, {
                         method: 'DELETE',
                         credentials: 'include'
@@ -332,7 +332,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             "Are you sure you want to permanently delete this message? Any attached media will be deleted.",
             async () => {
                 try {
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const res = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
                         method: 'DELETE',
                         credentials: 'include'
@@ -359,7 +359,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             `Are you sure you want to permanently delete ${group.messages.length > 1 ? 'these ' + group.messages.length + ' messages' : 'this message'}? Any attached media will be deleted.`,
             async () => {
                 try {
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const messageIds = group.messages.map(m => m._id);
                     
                     for (const messageId of messageIds) {

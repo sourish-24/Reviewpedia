@@ -29,7 +29,7 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
       "Are you sure you want to permanently delete this review?",
       async () => {
         try {
-          const API_URL = import.meta.env.VITE_API_URL || '';
+          const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
           const res = await fetch(`${API_URL}/api/reviews/${reviewId}`, {
             method: 'DELETE',
             credentials: 'include'

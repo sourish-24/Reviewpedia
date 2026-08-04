@@ -33,7 +33,7 @@ Select an autonomous workflow below to trigger the LLM to search the database an
 
     try {
       const endpoint = type === 'prospecting' ? '/api/agents/prospecting' : '/api/agents/deal-intelligence';
-      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
       const res = await fetch(`${API_URL}${endpoint}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
