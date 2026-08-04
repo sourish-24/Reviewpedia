@@ -1,6 +1,11 @@
 node_modules/
 .env
+.env.*
+!.env.example
+scratch/
+backend/scratch/
 dist/
 dist-ssr/
 *.local
 .vscode/
+

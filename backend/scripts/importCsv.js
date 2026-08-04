@@ -33,7 +33,7 @@ function parseCSVLine(line) {
 const importData = async () => {
     try {
         await mongoose.connect(MONGODB_URI);
-        console.log(`Connected to MongoDB at ${MONGODB_URI}`);
+        console.log(`Connected to MongoDB database successfully`);
 
         const csvPath = path.join(process.cwd(), '../final_cleaned_reviews.csv');
         const fileContent = fs.readFileSync(csvPath, 'utf-8');

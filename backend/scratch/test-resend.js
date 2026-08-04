@@ -1,4 +1,12 @@
-const apiKey = 're_NbfoqqfF_4xV9Ewagc4XVjKaDS9SneDwa';
+import 'dotenv/config';
+
+const apiKey = process.env.RESEND_API_KEY;
+
+if (!apiKey) {
+  console.error("RESEND_API_KEY environment variable is not defined.");
+  process.exit(1);
+}
+
 fetch('https://api.resend.com/emails', {
   method: 'POST',
   headers: {

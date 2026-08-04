@@ -2,7 +2,13 @@ import User from '../models/User.js';
 import Review from '../models/Review.js';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'supersecret_reviewpedia_key_2026';
+const getJwtSecret = () => {
+    if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+    if (process.env.NODE_ENV === 'production') {
+        throw new Error('FATAL: JWT_SECRET environment variable is required in production.');
+    }
+    return 'development_only_jwt_secret_key_change_in_env';
+};
 
 export const registerUser = async (data) => {
     const { username, email, password } = data;
@@ -46,7 +52,7 @@ export const loginUser = async (email, password) => {
         totalMediaBytes: user.totalMediaBytes || 0
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 
     return {
         token,
@@ -94,7 +100,7 @@ export const updateProfile = async (userId, data) => {
         totalMediaBytes: user.totalMediaBytes || 0
     };
 
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
 
     return {
         token,
