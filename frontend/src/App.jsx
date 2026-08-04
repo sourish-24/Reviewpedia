@@ -1,4 +1,3 @@
-// Trigger redeploy for latest production fixes
 import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut } from 'lucide-react';
@@ -83,7 +82,7 @@ function App() {
   const handleOpenMyReviews = async () => {
       if (!user) return;
       try {
-          const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+          const API_URL = import.meta.env.VITE_API_URL || '';
           const res = await fetch(`${API_URL}/api/reviews`);
           if (res.ok) {
               const data = await res.json();

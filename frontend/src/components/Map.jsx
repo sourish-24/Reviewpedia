@@ -57,8 +57,8 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
         zoomControl: false,
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      L.tileLayer('https://tiles.stadiamaps.com/tiles/osm_bright/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; Stadia Maps, &copy; OpenMapTiles &copy; OpenStreetMap contributors',
         maxZoom: 20
       }).addTo(mapInstance.current);
 
@@ -167,7 +167,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
   const initData = async (lat, lng) => {
     try {
       setLoadingMsg("Fetching reviews...");
-      const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+      const API_URL = import.meta.env.VITE_API_URL || '';
       let url = `${API_URL}/api/reviews`;
       if (searchQuery) url += `?search=${encodeURIComponent(searchQuery)}`;
       const res = await fetch(url);
@@ -184,7 +184,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
       setHexLoading(true);
       setHexSummary(null);
       try {
-          const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+          const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
           const res = await fetch(`${API_URL}/api/agents/hexagon-summary`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },

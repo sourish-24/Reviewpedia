@@ -100,7 +100,7 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
 
   const postReview = async (lat, lng) => {
     try {
-      const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
       
       const existingMedia = mediaItems.filter(m => m.isExisting).map(m => ({ type: m.type, url: m.url, size: m.size }));
       const newFiles = mediaItems.filter(m => !m.isExisting && m.file);
