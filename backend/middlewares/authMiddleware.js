@@ -9,8 +9,12 @@ const getJwtSecret = () => {
 };
 
 export const requireAuth = (req, res, next) => {
-    // Check cookies for token
-    const token = req.cookies?.token;
+    // Check cookies for token, or Authorization header as fallback
+    let token = req.cookies?.token;
+
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
 
     if (!token) {
         return res.status(401).json({ success: false, error: 'Access denied. No token provided.' });
