@@ -82,7 +82,7 @@ function App() {
   const handleOpenMyReviews = async () => {
       if (!user) return;
       try {
-          const API_URL = import.meta.env.VITE_API_URL || '';
+          const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
           const res = await fetch(`${API_URL}/api/reviews`);
           if (res.ok) {
               const data = await res.json();
