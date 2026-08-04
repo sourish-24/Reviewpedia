@@ -81,3 +81,17 @@ export const getUserByUsername = async (req, res) => {
         res.status(500).json({ success: false, error: error.message });
     }
 };
+
+export const deleteAccount = async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({ success: false, error: 'Email confirmation is required' });
+        }
+        await authService.deleteAccount(req.user.id, email);
+        res.clearCookie('token');
+        res.status(200).json({ success: true, message: 'Account deleted successfully' });
+    } catch (error) {
+        res.status(400).json({ success: false, error: error.message });
+    }
+};

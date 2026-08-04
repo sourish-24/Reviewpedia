@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX } from 'lucide-react';
 
-export default function MyProfilePage({ user, onBack, onUserUpdate }) {
+export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAccount }) {
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [profilePicFile, setProfilePicFile] = useState(null);
@@ -10,7 +10,42 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [confirmEmailInput, setConfirmEmailInput] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  
+  const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+
+  const handleDeleteAccountConfirm = async () => {
+    if (confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()) {
+      setDeleteError('Email address does not match.');
+      return;
+    }
+
+    setDeleting(true);
+    setDeleteError('');
+    try {
+      const res = await fetch(`${API_URL}/api/auth/account`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: confirmEmailInput.trim() }),
+        credentials: 'include'
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        setShowDeleteModal(false);
+        if (onDeleteAccount) onDeleteAccount();
+      } else {
+        throw new Error(data.error || 'Failed to delete account');
+      }
+    } catch (err) {
+      setDeleteError(err.message || 'Failed to delete account');
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   useEffect(() => {
     if (message.text) {
@@ -272,8 +307,129 @@ export default function MyProfilePage({ user, onBack, onUserUpdate }) {
                       </button>
                   </div>
               )}
+
+              {/* Danger Zone: Delete Account Option */}
+              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'center' }}>
+                  <button
+                      type="button"
+                      onClick={() => { setShowDeleteModal(true); setConfirmEmailInput(''); setDeleteError(''); }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        color: '#ef4444',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '6px 12px',
+                        transition: 'opacity 0.2s'
+                      }}
+                      onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
+                      onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                      <UserX size={16} /> Delete Account
+                  </button>
+              </div>
           </div>
       </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {showDeleteModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 20000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px', boxSizing: 'border-box'
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '440px', background: '#161E2E',
+            border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px',
+            padding: '28px', color: '#ffffff', display: 'flex', flexDirection: 'column',
+            gap: '16px', boxSizing: 'border-box'
+          }}>
+            {/* Badge Icon & Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(239, 68, 68, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <UserX size={22} color="#ef4444" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', fontFamily: 'var(--font-display)' }}>Delete Account</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>This action is permanent and cannot be undone.</p>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.88rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+              To confirm deletion of your account and all associated reviews, please re-type your email address below:
+            </p>
+
+            {/* Input field */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <input 
+                type="email"
+                placeholder="Re-type your email address"
+                value={confirmEmailInput}
+                onChange={(e) => { setConfirmEmailInput(e.target.value); setDeleteError(''); }}
+                style={{
+                  width: '100%', padding: '12px 16px', background: '#1f293d',
+                  border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '12px',
+                  color: '#ffffff', fontSize: '0.9rem', outline: 'none', boxSizing: 'border-box'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#0ea5e9'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'; }}
+              />
+              {deleteError && (
+                <p style={{ margin: 0, color: '#ef4444', fontSize: '0.8rem', fontWeight: 500 }}>{deleteError}</p>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={() => { setShowDeleteModal(false); setConfirmEmailInput(''); setDeleteError(''); }}
+                disabled={deleting}
+                style={{
+                  flex: 1, height: '42px', borderRadius: '9999px', background: '#161E2E',
+                  border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600,
+                  cursor: deleting ? 'not-allowed' : 'pointer', transition: 'color 0.2s'
+                }}
+                onMouseOver={(e) => { if (!deleting) e.currentTarget.style.color = '#0ea5e9'; }}
+                onMouseOut={(e) => { if (!deleting) e.currentTarget.style.color = '#ffffff'; }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDeleteAccountConfirm}
+                disabled={deleting || confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()}
+                style={{
+                  flex: 1, height: '42px', borderRadius: '9999px', background: '#ef4444',
+                  border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600,
+                  cursor: (deleting || confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()) ? 'not-allowed' : 'pointer',
+                  opacity: (deleting || confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()) ? 0.4 : 1,
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  if (!deleting && confirmEmailInput.trim().toLowerCase() === user?.email?.toLowerCase()) {
+                    e.currentTarget.style.backgroundColor = '#dc2626';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!deleting && confirmEmailInput.trim().toLowerCase() === user?.email?.toLowerCase()) {
+                    e.currentTarget.style.backgroundColor = '#ef4444';
+                  }
+                }}
+              >
+                {deleting ? 'Deleting...' : 'Delete Account'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

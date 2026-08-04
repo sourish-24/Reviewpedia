@@ -1,5 +1,7 @@
 import User from '../models/User.js';
 import Review from '../models/Review.js';
+import Conversation from '../models/Conversation.js';
+import Message from '../models/Message.js';
 import jwt from 'jsonwebtoken';
 
 const getJwtSecret = () => {
@@ -113,4 +115,35 @@ export const updateProfile = async (userId, data) => {
             totalMediaBytes: user.totalMediaBytes || 0
         }
     };
+};
+
+export const deleteAccount = async (userId, confirmEmail) => {
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new Error('User not found');
+    }
+
+    if (!confirmEmail || confirmEmail.trim().toLowerCase() !== user.email.toLowerCase()) {
+        throw new Error('Email address does not match');
+    }
+
+    // Delete user's reviews
+    await Review.deleteMany({
+        $or: [{ 'user.id': user._id.toString() }, { 'user.id': user._id }]
+    });
+
+    // Delete conversations and messages associated with this user
+    const userConvos = await Conversation.find({ participants: userId });
+    const userConvoIds = userConvos.map(c => c._id);
+    if (userConvoIds.length > 0) {
+        await Message.deleteMany({
+            $or: [{ conversationId: { $in: userConvoIds } }, { sender: userId }]
+        });
+        await Conversation.deleteMany({ participants: userId });
+    }
+
+    // Delete user document
+    await User.findByIdAndDelete(userId);
+
+    return { success: true, message: 'Account deleted successfully' };
 };

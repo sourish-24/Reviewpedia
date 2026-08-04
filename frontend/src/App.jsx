@@ -911,6 +911,10 @@ function App() {
            user={user} 
            onBack={() => navigate('/')}
            onUserUpdate={(updatedUser) => setUser(updatedUser)} 
+           onDeleteAccount={() => {
+             logout();
+             navigate('/');
+           }}
         />
       )}
     </div>

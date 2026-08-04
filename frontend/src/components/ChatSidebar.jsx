@@ -3,7 +3,9 @@ import { ArrowLeft, User as UserIcon } from 'lucide-react';
 
 export default function ChatSidebar({ conversations, activeConversation, onSelectConversation, onClose, currentUser }) {
     const getOtherParticipant = (convo) => {
-        return convo.participants.find(p => p.username !== currentUser.username) || { username: 'Unknown' };
+        if (!convo || !Array.isArray(convo.participants)) return { username: 'Deleted User', profilePic: null };
+        const found = convo.participants.find(p => p && p.username && p.username !== currentUser?.username);
+        return found || { username: 'Deleted User', profilePic: null };
     };
 
     return (
@@ -68,7 +70,7 @@ export default function ChatSidebar({ conversations, activeConversation, onSelec
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         fontWeight: 'bold', fontSize: '1.2rem', flexShrink: 0
                                     }}>
-                                        {otherUser.username[0].toUpperCase()}
+                                        {(otherUser.username ? otherUser.username[0] : 'D').toUpperCase()}
                                     </div>
                                 )}
                                 <div style={{ flex: 1, overflow: 'hidden' }}>

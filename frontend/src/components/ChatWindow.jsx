@@ -31,7 +31,13 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
         });
     };
 
-    const otherUser = conversation.participants.find(p => p.username !== currentUser.username) || { username: 'Unknown' };
+    const otherUser = React.useMemo(() => {
+        if (!conversation || !Array.isArray(conversation.participants)) {
+            return { username: 'Deleted User', profilePic: null };
+        }
+        const found = conversation.participants.find(p => p && p.username && p.username !== currentUser?.username);
+        return found || { username: 'Deleted User', profilePic: null };
+    }, [conversation, currentUser]);
 
     useEffect(() => {
         fetchMessages();
@@ -68,7 +74,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
 
     const fetchMessages = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/messages/${conversation._id}`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
@@ -86,7 +92,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
 
         setIsSending(true);
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             
             // Send text message first if it exists
             if (text.trim()) {
@@ -173,7 +179,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
         setIsSending(true);
         const { lat, lng } = position;
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const payload = {
                 conversationId: conversation._id,
                 receiverId: otherUser._id,
@@ -217,13 +223,14 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
 
         for (const msg of messages) {
             const isMediaOnly = !msg.text && (msg.mediaType === 'image' || msg.mediaType === 'video');
+            const senderName = msg.sender?.username || ((msg.sender === currentUser?.id || msg.sender?._id === currentUser?.id) ? currentUser?.username : 'Deleted User');
             
-            if (currentGroup && currentGroup.senderUsername === msg.sender.username && isMediaOnly && currentGroup.isMediaOnlyGroup) {
+            if (currentGroup && currentGroup.senderUsername === senderName && isMediaOnly && currentGroup.isMediaOnlyGroup) {
                 currentGroup.messages.push(msg);
             } else {
                 if (currentGroup) groups.push(currentGroup);
                 currentGroup = {
-                    senderUsername: msg.sender.username,
+                    senderUsername: senderName,
                     isMediaOnlyGroup: isMediaOnly,
                     messages: [msg],
                     createdAt: msg.createdAt,
@@ -233,7 +240,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
         }
         if (currentGroup) groups.push(currentGroup);
         return groups;
-    }, [messages]);
+    }, [messages, currentUser]);
 
     const handleMediaClick = (msg) => {
         const index = mediaMessages.findIndex(m => m._id === msg._id);
@@ -296,7 +303,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             async () => {
                 setIsDeleting(true);
                 try {
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const res = await fetch(`${API_URL}/api/chat/conversations/${conversation._id}`, {
                         method: 'DELETE',
                         credentials: 'include'
@@ -325,7 +332,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             "Are you sure you want to permanently delete this message? Any attached media will be deleted.",
             async () => {
                 try {
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const res = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
                         method: 'DELETE',
                         credentials: 'include'
@@ -352,7 +359,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             `Are you sure you want to permanently delete ${group.messages.length > 1 ? 'these ' + group.messages.length + ' messages' : 'this message'}? Any attached media will be deleted.`,
             async () => {
                 try {
-                    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+                    const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const messageIds = group.messages.map(m => m._id);
                     
                     for (const messageId of messageIds) {
@@ -392,7 +399,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontWeight: 'bold', fontSize: '1.2rem'
                         }}>
-                            {otherUser.username[0].toUpperCase()}
+                            {(otherUser.username ? otherUser.username[0] : 'D').toUpperCase()}
                         </div>
                     )}
                     <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#ffffff', fontFamily: 'var(--font-display)', fontWeight: 600 }}>{otherUser.username}</h3>

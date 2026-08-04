@@ -7,9 +7,15 @@ import { cloudinaryInstance } from '../middlewares/uploadMiddleware.js';
 export const getConversations = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const conversations = await Conversation.find({ participants: userId })
+        const rawConversations = await Conversation.find({ participants: userId })
             .populate('participants', 'username _id profilePic')
             .sort({ updatedAt: -1 });
+
+        const conversations = rawConversations.map(convo => {
+            const doc = convo.toObject();
+            doc.participants = (doc.participants || []).map(p => p || { username: 'Deleted User', profilePic: null });
+            return doc;
+        });
 
         res.json({ success: true, conversations });
     } catch (err) {
@@ -53,7 +59,10 @@ export const createOrGetConversation = async (req, res, next) => {
             conversation = await Conversation.findById(conversation._id).populate('participants', 'username _id profilePic');
         }
 
-        res.json({ success: true, conversation });
+        const doc = conversation.toObject();
+        doc.participants = (doc.participants || []).map(p => p || { username: 'Deleted User', profilePic: null });
+
+        res.json({ success: true, conversation: doc });
     } catch (err) {
         next(err);
     }
@@ -63,9 +72,17 @@ export const createOrGetConversation = async (req, res, next) => {
 export const getMessages = async (req, res, next) => {
     try {
         const { conversationId } = req.params;
-        const messages = await Message.find({ conversationId })
+        const rawMessages = await Message.find({ conversationId })
             .populate('sender', 'username _id profilePic')
             .sort({ createdAt: 1 });
+
+        const messages = rawMessages.map(msg => {
+            const doc = msg.toObject();
+            if (!doc.sender) {
+                doc.sender = { username: 'Deleted User', profilePic: null };
+            }
+            return doc;
+        });
 
         res.json({ success: true, messages });
     } catch (err) {

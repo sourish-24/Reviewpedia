@@ -10,7 +10,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const [isConnected, setIsConnected] = useState(false);
 
     useEffect(() => {
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+        const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
         const newSocket = io(API_URL, {
             withCredentials: true,
         });
@@ -38,7 +38,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
 
     const fetchConversations = async () => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/conversations`, { credentials: 'include' });
             const data = await res.json();
             if (data.success) {
@@ -61,7 +61,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
 
     const startConversation = async (targetUsername) => {
         try {
-            const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+            const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/conversations`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

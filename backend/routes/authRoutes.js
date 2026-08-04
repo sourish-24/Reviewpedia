@@ -1,5 +1,5 @@
 import express from 'express';
-import { register, login, logout, getMe, updateProfile, getUserByUsername } from '../controllers/authController.js';
+import { register, login, logout, getMe, updateProfile, getUserByUsername, deleteAccount } from '../controllers/authController.js';
 import { requireAuth } from '../middlewares/authMiddleware.js';
 import { upload } from '../middlewares/uploadMiddleware.js';
 
@@ -11,5 +11,6 @@ router.post('/logout', logout);
 router.get('/me', requireAuth, getMe);
 router.get('/user/:username', getUserByUsername);
 router.put('/profile', requireAuth, upload.single('profilePic'), updateProfile);
+router.delete('/account', requireAuth, deleteAccount);
 
 export default router;
