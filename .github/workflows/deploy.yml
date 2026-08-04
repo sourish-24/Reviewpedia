@@ -40,7 +40,11 @@ jobs:
     steps:
       - name: Trigger Render Backend Deploy Webhook
         run: |
-          curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          if [ -n "${{ secrets.RENDER_DEPLOY_HOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          else
+            echo "RENDER_DEPLOY_HOOK_URL secret is not set in GitHub. Skipping webhook deploy."
+          fi
 
   deploy-frontend:
     needs: build-and-verify
@@ -49,4 +53,8 @@ jobs:
     steps:
       - name: Trigger Vercel Deploy Webhook
         run: |
-          curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+          if [ -n "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}" ]; then
+            curl -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
+          else
+            echo "VERCEL_DEPLOY_HOOK_URL secret is not set in GitHub. Skipping webhook deploy."
+          fi
