@@ -1,13 +1,5 @@
 import * as authService from '../services/authService.js';
-
-export const register = async (req, res) => {
-    try {
-        const user = await authService.registerUser(req.body);
-        res.status(201).json({ success: true, user });
-    } catch (error) {
-        res.status(400).json({ success: false, error: error.message });
-    }
-};
+import User from '../models/User.js';
 
 const isProduction = process.env.NODE_ENV === 'production' || !!process.env.RENDER;
 
@@ -48,8 +40,6 @@ export const logout = (req, res) => {
     });
     res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
-
-import User from '../models/User.js';
 
 export const getMe = async (req, res) => {
     try {
