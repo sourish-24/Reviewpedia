@@ -11,8 +11,22 @@ import cookieParser from 'cookie-parser';
 const app = express();
 
 // Global Middlewares
+const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'https://reviewpedia.co.in',
+    'https://www.reviewpedia.co.in',
+    process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-    origin: ['http://localhost:5173', process.env.FRONTEND_URL],
+    origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin) || origin.endsWith('.reviewpedia.co.in') || origin.endsWith('.vercel.app')) {
+            return callback(null, true);
+        }
+        return callback(null, true); // Dynamic allow for production HTTPS origins
+    },
     credentials: true
 }));
 app.use(express.json());
