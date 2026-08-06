@@ -98,24 +98,24 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Standard Button */
 .btn-primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background: #0ea5e9;
   color: #ffffff;
   border: none;
   border-radius: 9999px;
   font-family: var(--font-body);
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: background-color 0.2s ease;
 }
 
 .btn-primary:active {
-  transform: scale(0.98);
+  transform: none;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+  background: #0284c7;
+  box-shadow: none;
 }
 
 /* Chips/Pills */
@@ -317,14 +317,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .landing-title {
-  font-size: 3.5rem;
-  font-weight: 600;
-  line-height: 1.1;
+  font-size: 4.8rem;
+  font-weight: 900;
+  line-height: 1.15;
   text-align: center;
-  color: #0f172a;
+  color: #161E2E;
   letter-spacing: -0.04em;
   margin-bottom: 1.5rem;
-  max-width: 850px;
+  max-width: 1080px;
 }
 
 .landing-card {
@@ -334,24 +334,24 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid rgba(2, 132, 199, 0.15);
   border-radius: 20px;
   padding: 2.2rem;
-  transition: transform 0.3s, background 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition: border-color 0.2s ease;
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(2, 132, 199, 0.06);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
 }
 
 .landing-card:hover {
-  transform: translateY(-5px);
+  transform: none;
   background: #ffffff;
   border-color: #0ea5e9;
-  box-shadow: 0 20px 40px rgba(2, 132, 199, 0.15), 0 0 15px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 4px 15px rgba(15, 23, 42, 0.03);
 }
 
 .landing-btn-primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  background: #0ea5e9;
   color: white;
   border: none;
   padding: 12px 28px;
@@ -359,22 +359,22 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   font-size: 0.95rem;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
-  transition: all 0.2s ease;
+  box-shadow: none;
+  transition: background-color 0.2s ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
 }
 
 .landing-btn-primary:hover {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.45);
+  background: #0284c7;
+  transform: none;
+  box-shadow: none;
 }
 
 .landing-btn-outline {
   background: rgba(14, 165, 233, 0.08);
-  color: #0f172a;
+  color: #161E2E;
   border: 1px solid rgba(2, 132, 199, 0.3);
   padding: 12px 28px;
   border-radius: 9999px;
