@@ -3,6 +3,7 @@ import { Star, X, MapPin, Calendar, CheckCircle, Image as ImageIcon, Trash2, Pen
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
+import { formatDate } from '../utils/dateUtils';
 
 export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, isMyReviews }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
@@ -180,7 +181,7 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                                  </div>
                              </div>
                              <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-                                 <Calendar size={12} /> {review.metadata?.date || 'Unknown'}
+                                 <Calendar size={12} /> {formatDate(review.metadata?.date, 'Unknown')}
                              </div>
                          </div>
 

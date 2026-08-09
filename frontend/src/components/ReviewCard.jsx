@@ -3,6 +3,7 @@ import { Star, X, MapPin, Calendar, CheckCircle, Trash2, Pencil } from 'lucide-r
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
+import { formatDate } from '../utils/dateUtils';
 
 export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
@@ -161,7 +162,7 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
             </div>
             
             <div style={{ textAlign: 'right', fontSize: '0.75rem', color: 'var(--on-surface-variant)', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
-              <Calendar size={12} /> {review.metadata?.date || 'Unknown Date'}
+              <Calendar size={12} /> {formatDate(review.metadata?.date, 'Unknown Date')}
             </div>
           </div>
 

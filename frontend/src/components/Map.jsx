@@ -263,7 +263,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
            const size = cluster.length > 9 ? 26 : 22;
            const icon = L.divIcon({
               className: 'custom-marker',
-              html: `<div style="background-color: ${bgColor}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 1px solid white; box-shadow: 0 10px 20px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${cluster.length > 9 ? 10 : 11}px">${cluster.length}</div>`,
+              html: `<div style="background-color: ${bgColor}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 1px solid white; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: ${cluster.length > 9 ? 10 : 11}px">${cluster.length}</div>`,
               iconSize: [size, size],
               iconAnchor: [size/2, size/2]
            });

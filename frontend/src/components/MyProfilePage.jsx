@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX } from 'lucide-react';
+import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX, Crop } from 'lucide-react';
+import AvatarCropModal from './AvatarCropModal';
 
 export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAccount }) {
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [profilePicFile, setProfilePicFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(user?.profilePic || '');
+  const [pendingCropFile, setPendingCropFile] = useState(null);
+  const [showCropModal, setShowCropModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -58,9 +61,16 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
     if (!isEditing) return;
     const file = e.target.files[0];
     if (file) {
-      setProfilePicFile(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setPendingCropFile(file);
+      setShowCropModal(true);
+      e.target.value = '';
     }
+  };
+
+  const handleCropComplete = (croppedFile) => {
+    setProfilePicFile(croppedFile);
+    setPreviewUrl(URL.createObjectURL(croppedFile));
+    setShowCropModal(false);
   };
 
   const handleSave = async () => {
@@ -86,6 +96,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
         setProfilePicFile(null);
+        setPendingCropFile(null);
       } else {
         throw new Error(data.error || 'Failed to update profile');
       }
@@ -101,6 +112,8 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
     setUsername(user?.username || '');
     setEmail(user?.email || '');
     setProfilePicFile(null);
+    setPendingCropFile(null);
+    setShowCropModal(false);
     setPreviewUrl(user?.profilePic || '');
     setMessage({ type: '', text: '' });
   };
@@ -187,7 +200,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
       {/* Main Glass Card */}
       <div style={{
         position: 'relative', zIndex: 2,
-        width: '100%', maxWidth: '520px', padding: '36px',
+        width: '100%', maxWidth: '520px', padding: '36px 36px 20px 36px',
         background: '#161E2E', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)',
         borderRadius: '24px', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#ffffff', boxSizing: 'border-box',
         display: 'flex', flexDirection: 'column', gap: '24px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
@@ -226,7 +239,34 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
                       </>
                   )}
               </label>
-              {isEditing && <p style={{ marginTop: '10px', color: '#94a3b8', fontSize: '0.85rem' }}>Click photo to change avatar</p>}
+              {isEditing && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', marginTop: '10px' }}>
+                  <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem' }}>Click photo to upload avatar</p>
+                  {(previewUrl || pendingCropFile) && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCropModal(true)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        boxShadow: 'none',
+                        outline: 'none',
+                        color: '#0ea5e9',
+                        padding: '4px 0',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        marginTop: '2px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Crop size={14} /> crop or position photo
+                    </button>
+                  )}
+                </div>
+              )}
           </div>
 
           {/* Form */}
@@ -309,7 +349,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
               )}
 
               {/* Danger Zone: Delete Account Option */}
-              <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'center' }}>
+              <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid rgba(255, 255, 255, 0.1)', display: 'flex', justifyContent: 'center' }}>
                   <button
                       type="button"
                       onClick={() => { setShowDeleteModal(true); setConfirmEmailInput(''); setDeleteError(''); }}
@@ -323,7 +363,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        padding: '6px 12px',
+                        padding: '4px 12px',
                         transition: 'opacity 0.2s'
                       }}
                       onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
@@ -429,6 +469,18 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
             </div>
           </div>
         </div>
+      )}
+
+      {/* Avatar Crop & Position Modal */}
+      {showCropModal && (pendingCropFile || previewUrl) && (
+        <AvatarCropModal
+          imageFile={pendingCropFile}
+          imageSrcUrl={!pendingCropFile ? previewUrl : null}
+          onCropComplete={handleCropComplete}
+          onCancel={() => {
+            setShowCropModal(false);
+          }}
+        />
       )}
     </div>
   );

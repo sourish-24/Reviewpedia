@@ -11,6 +11,7 @@ import MyProfilePage from './components/MyProfilePage';
 import AuthModal from './components/AuthModal';
 import ChatApp from './components/ChatApp';
 import { useAuth } from './context/AuthContext';
+import { formatDate } from './utils/dateUtils';
 import './index.css';
 
 function App() {
@@ -467,7 +468,7 @@ function App() {
                 </div>
 
                 <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0 }}>
-                  <Calendar size={13} /> 2026-08-05
+                  <Calendar size={13} /> {formatDate('2026-08-05')}
                 </div>
               </div>
             </div>
@@ -514,7 +515,7 @@ function App() {
                 </div>
 
                 <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0 }}>
-                  <Calendar size={13} /> 2026-08-03
+                  <Calendar size={13} /> {formatDate('2026-08-03')}
                 </div>
               </div>
             </div>
@@ -561,7 +562,7 @@ function App() {
                 </div>
 
                 <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0 }}>
-                  <Calendar size={13} /> 2026-07-28
+                  <Calendar size={13} /> {formatDate('2026-07-28')}
                 </div>
               </div>
             </div>
