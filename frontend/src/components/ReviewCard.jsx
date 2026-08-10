@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Star, X, MapPin, Calendar, CheckCircle, Trash2, Pencil } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, X, MapPin, Calendar, CheckCircle, Trash2, Pencil, Heart, Image as ImageIcon } from 'lucide-react';
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
@@ -8,20 +8,59 @@ import { formatDate } from '../utils/dateUtils';
 export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [localReview, setLocalReview] = useState(review);
 
-  const requestConfirm = (title, message, onConfirmAction) => {
-      setConfirmModal({
-          isOpen: true,
-          title,
-          message,
-          onConfirm: async () => {
-              setConfirmModal(prev => ({ ...prev, isOpen: false }));
-              await onConfirmAction();
-          }
-      });
-  };
+  useEffect(() => {
+    setLocalReview(review);
+  }, [review]);
 
   if (!review) return null;
+
+  const currentReview = localReview || review;
+  const likesArray = Array.isArray(currentReview.likes) ? currentReview.likes : [];
+  const currentUserId = currentUser ? (currentUser.id?.toString() || currentUser._id?.toString() || currentUser.username) : null;
+  const isLiked = currentUserId ? likesArray.includes(currentUserId) : false;
+  const likesCount = likesArray.length;
+
+  const handleToggleLike = async (e) => {
+    if (e) e.stopPropagation();
+    if (!currentUser) {
+      alert("Please sign in to like reviews!");
+      return;
+    }
+
+    const reviewId = currentReview.id || currentReview._id;
+    if (!reviewId) return;
+
+    const updatedLikes = isLiked
+      ? likesArray.filter(id => id !== currentUserId)
+      : [...likesArray, currentUserId];
+
+    setLocalReview(prev => ({
+      ...prev,
+      likes: updatedLikes
+    }));
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.likes) {
+          setLocalReview(prev => ({
+            ...prev,
+            likes: data.likes
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
 
   const handleDelete = () => {
     requestConfirm(
@@ -87,32 +126,63 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
                 </div>
             )}
 
-            <div style={{ display: 'flex', gap: 16 }}>
-                {review.review?.media && review.review.media.length > 0 && (
+            <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 72 }}>
                     <div 
                         style={{ 
                             width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
                             borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                            color: '#71717a', flexShrink: 0, overflow: 'hidden', cursor: 'pointer', position: 'relative' 
+                            color: '#71717a', flexShrink: 0, overflow: 'hidden', 
+                            cursor: (currentReview.review?.media && currentReview.review.media.length > 0) ? 'pointer' : 'default',
+                            position: 'relative' 
                         }}
-                        onClick={() => setLightboxIndex(0)}
+                        onClick={() => {
+                            if (currentReview.review?.media && currentReview.review.media.length > 0) {
+                                setLightboxIndex(0);
+                            }
+                        }}
                     >
-                        {review.review.media[0].type === 'video' ? (
-                            <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        {currentReview.review?.media && currentReview.review.media.length > 0 ? (
+                            <>
+                                {currentReview.review.media[0].type === 'video' ? (
+                                    <video src={currentReview.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                    <img src={currentReview.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                )}
+                                {currentReview.review.media.length > 1 && (
+                                    <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
+                                        +{currentReview.review.media.length - 1}
+                                    </div>
+                                )}
+                            </>
                         ) : (
-                            <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                        )}
-                        {review.review.media.length > 1 && (
-                            <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
-                                +{review.review.media.length - 1}
-                            </div>
+                            <ImageIcon size={32} />
                         )}
                     </div>
-                )}
+
+                    <button
+                        onClick={handleToggleLike}
+                        style={{
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                            background: isLiked ? 'rgba(239, 68, 68, 0.12)' : '#ffffff',
+                            border: isLiked ? '1px solid #ef4444' : '1px solid #d4d4d8',
+                            borderRadius: '9999px', padding: '3px 8px', width: '100%',
+                            cursor: 'pointer', transition: 'all 0.15s ease',
+                            color: isLiked ? '#ef4444' : '#71717a',
+                            fontSize: '0.75rem', fontWeight: 600,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                        }}
+                        title={isLiked ? "Unlike review" : "Like review"}
+                    >
+                        <Heart size={14} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : '#71717a'} />
+                        <span>{likesCount}</span>
+                    </button>
+                </div>
+
                 <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
                     <div style={{ display: 'flex', gap: '2px' }}>
                     {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={15} fill={i < (review.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (review.review?.rating || 0) ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
+                        <Star key={i} size={15} fill={i < (currentReview.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (currentReview.review?.rating || 0) ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
                     ))}
                     </div>
                 </div>

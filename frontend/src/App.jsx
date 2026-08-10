@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut, ShieldAlert, MessageSquare, XCircle, Layers, Users, Star, CheckCircle2, Calendar } from 'lucide-react';
+import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut, ShieldAlert, MessageSquare, XCircle, Layers, Users, Star, CheckCircle2, Calendar, Heart } from 'lucide-react';
 import AppMap from './components/Map';
 import ReviewCard from './components/ReviewCard';
 import MultiReviewCard from './components/MultiReviewCard';
@@ -429,8 +429,21 @@ function App() {
             {/* Review Card 1 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/sony-wh1000xm5.jpg" alt="Sony WH-1000XM5" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 76 }}>
+                  <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                    <img src="/sony-wh1000xm5.jpg" alt="Sony WH-1000XM5" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <button
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                      background: '#ffffff', border: '1px solid #d4d4d8', borderRadius: '9999px',
+                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <Heart size={14} fill="none" color="#71717a" />
+                    <span>12</span>
+                  </button>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
@@ -476,8 +489,21 @@ function App() {
             {/* Review Card 2 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/macbook m2.jpg" alt="MacBook Air M2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 76 }}>
+                  <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                    <img src="/macbook m2.jpg" alt="MacBook Air M2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <button
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                      background: '#ffffff', border: '1px solid #d4d4d8', borderRadius: '9999px',
+                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <Heart size={14} fill="none" color="#71717a" />
+                    <span>19</span>
+                  </button>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
@@ -523,8 +549,21 @@ function App() {
             {/* Review Card 3 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/nike air max.jpg" alt="Nike Air Max" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 76 }}>
+                  <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                    <img src="/nike air max.jpg" alt="Nike Air Max" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <button
+                    style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                      background: '#ffffff', border: '1px solid #d4d4d8', borderRadius: '9999px',
+                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    <Heart size={14} fill="none" color="#71717a" />
+                    <span>8</span>
+                  </button>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>

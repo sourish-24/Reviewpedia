@@ -33,6 +33,7 @@ export const getReviews = async (req, res, next) => {
         const normalized = reviews.map(r => {
             const obj = r.toObject();
             obj.id = obj._id.toString();
+            obj.likes = obj.likes || [];
             const pic = (obj.user?.id && userMap[obj.user.id.toString()]) || (obj.user?.name && userMap[obj.user.name]) || '';
             obj.user = {
                 ...obj.user,
@@ -247,6 +248,44 @@ export const updateReview = async (req, res, next) => {
         rObj.id = rObj._id.toString();
 
         res.json(rObj);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const toggleLikeReview = async (req, res, next) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+
+        if (!review.likes) {
+            review.likes = [];
+        }
+
+        const userId = req.user?.id?.toString() || req.user?.username || req.body?.userId || req.body?.username;
+        if (!userId) {
+            return res.status(401).json({ error: 'User authentication required' });
+        }
+
+        const index = review.likes.indexOf(userId);
+        let isLiked = false;
+        if (index > -1) {
+            review.likes.splice(index, 1);
+            isLiked = false;
+        } else {
+            review.likes.push(userId);
+            isLiked = true;
+        }
+
+        await review.save();
+        res.json({
+            success: true,
+            likes: review.likes,
+            likesCount: review.likes.length,
+            isLiked
+        });
     } catch (err) {
         next(err);
     }

@@ -39,7 +39,8 @@ const ReviewSchema = new mongoose.Schema({
     sentimentScore: { type: Number, default: 0 },
     trustScore: { type: Number, default: 0 },
     demandSignals: { type: Number, default: 0 }
-  }
+  },
+  likes: { type: [String], default: [] }
 });
 
 ReviewSchema.index({ "product.name": "text", "product.brand": "text", "review.text": "text", "review.title": "text", "location.city": "text" });

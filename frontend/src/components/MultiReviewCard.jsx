@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Star, X, MapPin, Calendar, CheckCircle, Image as ImageIcon, Trash2, Pencil } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Star, X, MapPin, Calendar, CheckCircle, Image as ImageIcon, Trash2, Pencil, Heart } from 'lucide-react';
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
@@ -8,6 +8,63 @@ import { formatDate } from '../utils/dateUtils';
 export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, isMyReviews }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [activeLightbox, setActiveLightbox] = useState(null);
+  const [likesState, setLikesState] = useState({});
+
+  useEffect(() => {
+    if (Array.isArray(reviews)) {
+      const initialState = {};
+      reviews.forEach(r => {
+        const id = r.id || r._id;
+        initialState[id] = Array.isArray(r.likes) ? r.likes : [];
+      });
+      setLikesState(initialState);
+    }
+  }, [reviews]);
+
+  const handleToggleLike = async (review, e) => {
+    if (e) e.stopPropagation();
+    if (!currentUser) {
+      alert("Please sign in to like reviews!");
+      return;
+    }
+
+    const reviewId = review.id || review._id;
+    if (!reviewId) return;
+
+    const currentUserId = currentUser.id?.toString() || currentUser._id?.toString() || currentUser.username;
+    if (!currentUserId) return;
+
+    const currentLikes = likesState[reviewId] || (Array.isArray(review.likes) ? review.likes : []);
+    const isLiked = currentLikes.includes(currentUserId);
+    const updatedLikes = isLiked
+      ? currentLikes.filter(id => id !== currentUserId)
+      : [...currentLikes, currentUserId];
+
+    setLikesState(prev => ({
+      ...prev,
+      [reviewId]: updatedLikes
+    }));
+
+    try {
+      const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/like`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.likes) {
+          setLikesState(prev => ({
+            ...prev,
+            [reviewId]: data.likes
+          }));
+        }
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
 
   const requestConfirm = (title, message, onConfirmAction) => {
       setConfirmModal({
@@ -80,8 +137,15 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                     </p>
                 </div>
             ) : (
-                reviews.map((review) => (
-                <div key={review.id} style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '20px', backgroundColor: '#F8F4F0', borderRadius: '12px', border: '1px solid #e4e4e7', color: '#18181b', position: 'relative' }}>
+                reviews.map((review) => {
+                  const reviewId = review.id || review._id;
+                  const currentLikes = likesState[reviewId] || (Array.isArray(review.likes) ? review.likes : []);
+                  const currentUserId = currentUser ? (currentUser.id?.toString() || currentUser._id?.toString() || currentUser.username) : null;
+                  const isLiked = currentUserId ? currentLikes.includes(currentUserId) : false;
+                  const likesCount = currentLikes.length;
+
+                  return (
+                <div key={reviewId} style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: '20px', backgroundColor: '#F8F4F0', borderRadius: '12px', border: '1px solid #e4e4e7', color: '#18181b', position: 'relative' }}>
                     {currentUser && (
                         currentUser.username === review.user?.name ||
                         (currentUser.id && review.user?.id && (currentUser.id === review.user.id || currentUser.id.toString() === review.user.id.toString())) ||
@@ -93,42 +157,62 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                                     <Pencil size={15} />
                                 </button>
                             )}
-                            <button onClick={() => handleDelete(review.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '2px', display: 'flex' }} title="Delete Review">
+                            <button onClick={() => handleDelete(reviewId)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', padding: '2px', display: 'flex' }} title="Delete Review">
                                 <Trash2 size={16} />
                             </button>
                         </div>
                     )}
                     
-                    <div style={{ display: 'flex', gap: 16 }}>
-                        <div 
-                            style={{ 
-                                width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
-                                borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                color: '#71717a', flexShrink: 0, overflow: 'hidden', 
-                                cursor: review.review?.media?.length ? 'pointer' : 'default', position: 'relative' 
-                            }}
-                            onClick={() => {
-                                if (review.review?.media?.length) {
-                                    setActiveLightbox({ review, initialIndex: 0 });
-                                }
-                            }}
-                        >
-                            {review.review?.media && review.review.media.length > 0 ? (
-                                <>
-                                    {review.review.media[0].type === 'video' ? (
-                                        <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    )}
-                                    {review.review.media.length > 1 && (
-                                        <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
-                                            +{review.review.media.length - 1}
-                                        </div>
-                                    )}
-                                </>
-                            ) : (
-                                <ImageIcon size={32} />
-                            )}
+                    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 72 }}>
+                            <div 
+                                style={{ 
+                                    width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                                    borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                    color: '#71717a', flexShrink: 0, overflow: 'hidden', 
+                                    cursor: review.review?.media?.length ? 'pointer' : 'default', position: 'relative' 
+                                }}
+                                onClick={() => {
+                                    if (review.review?.media?.length) {
+                                        setActiveLightbox({ review, initialIndex: 0 });
+                                    }
+                                }}
+                            >
+                                {review.review?.media && review.review.media.length > 0 ? (
+                                    <>
+                                        {review.review.media[0].type === 'video' ? (
+                                            <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        ) : (
+                                            <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        )}
+                                        {review.review.media.length > 1 && (
+                                            <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
+                                                +{review.review.media.length - 1}
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <ImageIcon size={32} />
+                                )}
+                            </div>
+
+                            <button
+                                onClick={(e) => handleToggleLike(review, e)}
+                                style={{
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                                    background: isLiked ? 'rgba(239, 68, 68, 0.12)' : '#ffffff',
+                                    border: isLiked ? '1px solid #ef4444' : '1px solid #d4d4d8',
+                                    borderRadius: '9999px', padding: '3px 8px', width: '100%',
+                                    cursor: 'pointer', transition: 'all 0.15s ease',
+                                    color: isLiked ? '#ef4444' : '#71717a',
+                                    fontSize: '0.75rem', fontWeight: 600,
+                                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                                }}
+                                title={isLiked ? "Unlike review" : "Like review"}
+                            >
+                                <Heart size={14} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : '#71717a'} />
+                                <span>{likesCount}</span>
+                            </button>
                         </div>
                         <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
                             <h3 style={{ fontSize: '1.125rem', margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{review.product?.name}</h3>
@@ -195,7 +279,8 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                         )}
                     </div>
                 </div>
-            ))
+              );
+            })
             )}
         </div>
       </div>
