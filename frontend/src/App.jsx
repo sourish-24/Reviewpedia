@@ -78,6 +78,39 @@ function App() {
     }
   };
 
+  const handleLikeToggle = (reviewId, newLikes) => {
+    setSelectedReview(prev => {
+      if (prev && (prev.id === reviewId || prev._id === reviewId || prev.id?.toString() === reviewId?.toString())) {
+        return { ...prev, likes: newLikes };
+      }
+      return prev;
+    });
+
+    setSelectedLocationReviews(prevList => {
+      if (!Array.isArray(prevList)) return prevList;
+      return prevList.map(r => {
+        const id = r.id || r._id;
+        if (id === reviewId || id?.toString() === reviewId?.toString()) {
+          return { ...r, likes: newLikes };
+        }
+        return r;
+      });
+    });
+
+    setMyReviewsList(prevList => {
+      if (!Array.isArray(prevList)) return prevList;
+      return prevList.map(r => {
+        const id = r.id || r._id;
+        if (id === reviewId || id?.toString() === reviewId?.toString()) {
+          return { ...r, likes: newLikes };
+        }
+        return r;
+      });
+    });
+
+    mapComponentRef.current?.updateReviewLikes(reviewId, newLikes);
+  };
+
   const handleSearch = () => setQuery(searchInput);
 
   const handleOpenMyReviews = async () => {
@@ -1131,6 +1164,7 @@ function App() {
             setEditingReviewData(rev);
             setIsCreatingReview(true);
           }}
+          onLikeToggle={handleLikeToggle}
         />
       )}
 
@@ -1150,6 +1184,7 @@ function App() {
             setEditingReviewData(rev);
             setIsCreatingReview(true);
           }}
+          onLikeToggle={handleLikeToggle}
         />
       )}
 
@@ -1169,6 +1204,7 @@ function App() {
             setEditingReviewData(rev);
             setIsCreatingReview(true);
           }}
+          onLikeToggle={handleLikeToggle}
         />
       )}
 

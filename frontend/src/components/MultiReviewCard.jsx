@@ -5,7 +5,7 @@ import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
 import { formatDate } from '../utils/dateUtils';
 
-export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, isMyReviews }) {
+export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, isMyReviews, onLikeToggle }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [activeLightbox, setActiveLightbox] = useState(null);
   const [likesState, setLikesState] = useState({});
@@ -35,15 +35,25 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
     if (!currentUserId) return;
 
     const currentLikes = likesState[reviewId] || (Array.isArray(review.likes) ? review.likes : []);
-    const isLiked = currentLikes.includes(currentUserId);
+    const isLiked = currentUserId ? (
+      currentLikes.includes(currentUserId) ||
+      (currentUser?.id && currentLikes.includes(currentUser.id.toString())) ||
+      (currentUser?._id && currentLikes.includes(currentUser._id.toString())) ||
+      (currentUser?.username && currentLikes.includes(currentUser.username))
+    ) : false;
+
     const updatedLikes = isLiked
-      ? currentLikes.filter(id => id !== currentUserId)
+      ? currentLikes.filter(id => id !== currentUserId && id !== currentUser.id?.toString() && id !== currentUser._id?.toString() && id !== currentUser.username)
       : [...currentLikes, currentUserId];
 
     setLikesState(prev => ({
       ...prev,
       [reviewId]: updatedLikes
     }));
+
+    if (onLikeToggle) {
+      onLikeToggle(reviewId, updatedLikes);
+    }
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
@@ -59,6 +69,9 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
             ...prev,
             [reviewId]: data.likes
           }));
+          if (onLikeToggle) {
+            onLikeToggle(reviewId, data.likes);
+          }
         }
       }
     } catch (err) {
@@ -141,7 +154,12 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                   const reviewId = review.id || review._id;
                   const currentLikes = likesState[reviewId] || (Array.isArray(review.likes) ? review.likes : []);
                   const currentUserId = currentUser ? (currentUser.id?.toString() || currentUser._id?.toString() || currentUser.username) : null;
-                  const isLiked = currentUserId ? currentLikes.includes(currentUserId) : false;
+                  const isLiked = currentUserId ? (
+                    currentLikes.includes(currentUserId) ||
+                    (currentUser?.id && currentLikes.includes(currentUser.id.toString())) ||
+                    (currentUser?._id && currentLikes.includes(currentUser._id.toString())) ||
+                    (currentUser?.username && currentLikes.includes(currentUser.username))
+                  ) : false;
                   const likesCount = currentLikes.length;
 
                   return (

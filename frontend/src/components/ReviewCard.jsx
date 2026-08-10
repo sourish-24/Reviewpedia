@@ -5,7 +5,7 @@ import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
 import { formatDate } from '../utils/dateUtils';
 
-export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit }) {
+export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, onLikeToggle }) {
   const [confirmModal, setConfirmModal] = useState({ isOpen: false, title: '', message: '', onConfirm: null });
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [localReview, setLocalReview] = useState(review);
@@ -19,7 +19,12 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
   const currentReview = localReview || review;
   const likesArray = Array.isArray(currentReview.likes) ? currentReview.likes : [];
   const currentUserId = currentUser ? (currentUser.id?.toString() || currentUser._id?.toString() || currentUser.username) : null;
-  const isLiked = currentUserId ? likesArray.includes(currentUserId) : false;
+  const isLiked = currentUserId ? (
+    likesArray.includes(currentUserId) ||
+    (currentUser?.id && likesArray.includes(currentUser.id.toString())) ||
+    (currentUser?._id && likesArray.includes(currentUser._id.toString())) ||
+    (currentUser?.username && likesArray.includes(currentUser.username))
+  ) : false;
   const likesCount = likesArray.length;
 
   const handleToggleLike = async (e) => {
@@ -33,13 +38,17 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
     if (!reviewId) return;
 
     const updatedLikes = isLiked
-      ? likesArray.filter(id => id !== currentUserId)
+      ? likesArray.filter(id => id !== currentUserId && id !== currentUser.id?.toString() && id !== currentUser._id?.toString() && id !== currentUser.username)
       : [...likesArray, currentUserId];
 
     setLocalReview(prev => ({
       ...prev,
       likes: updatedLikes
     }));
+
+    if (onLikeToggle) {
+      onLikeToggle(reviewId, updatedLikes);
+    }
 
     try {
       const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
@@ -55,6 +64,9 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
             ...prev,
             likes: data.likes
           }));
+          if (onLikeToggle) {
+            onLikeToggle(reviewId, data.likes);
+          }
         }
       }
     } catch (err) {

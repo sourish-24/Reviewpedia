@@ -131,8 +131,20 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
     };
   }, []);
 
+  const updateReviewLikes = (reviewId, newLikes) => {
+    setReviews(prevReviews => prevReviews.map(r => {
+      const id = r.id || r._id;
+      if (id === reviewId || id?.toString() === reviewId?.toString()) {
+        return { ...r, likes: newLikes };
+      }
+      return r;
+    }));
+  };
+
   useImperativeHandle(ref, () => ({
-    locateUser
+    locateUser,
+    updateReviewLikes,
+    refetchReviews: initData
   }));
 
   const locateUser = () => {

@@ -260,31 +260,36 @@ export const toggleLikeReview = async (req, res, next) => {
             return res.status(404).json({ error: 'Review not found' });
         }
 
-        if (!review.likes) {
-            review.likes = [];
-        }
-
-        const userId = req.user?.id?.toString() || req.user?.username || req.body?.userId || req.body?.username;
+        const userId = req.user?.id?.toString() || req.user?._id?.toString() || req.user?.username || req.body?.userId || req.body?.username;
         if (!userId) {
             return res.status(401).json({ error: 'User authentication required' });
         }
 
-        const index = review.likes.indexOf(userId);
-        let isLiked = false;
-        if (index > -1) {
-            review.likes.splice(index, 1);
-            isLiked = false;
+        const currentLikes = Array.isArray(review.likes) ? review.likes : [];
+        const hasLiked = currentLikes.includes(userId);
+
+        let updatedReview;
+        if (hasLiked) {
+            updatedReview = await Review.findByIdAndUpdate(
+                req.params.id,
+                { $pull: { likes: userId } },
+                { new: true }
+            );
         } else {
-            review.likes.push(userId);
-            isLiked = true;
+            updatedReview = await Review.findByIdAndUpdate(
+                req.params.id,
+                { $addToSet: { likes: userId } },
+                { new: true }
+            );
         }
 
-        await review.save();
+        const updatedLikes = updatedReview ? (updatedReview.likes || []) : [];
+
         res.json({
             success: true,
-            likes: review.likes,
-            likesCount: review.likes.length,
-            isLiked
+            likes: updatedLikes,
+            likesCount: updatedLikes.length,
+            isLiked: !hasLiked
         });
     } catch (err) {
         next(err);
