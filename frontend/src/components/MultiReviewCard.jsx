@@ -218,13 +218,12 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                                 onClick={(e) => handleToggleLike(review, e)}
                                 style={{
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                                    background: isLiked ? 'rgba(239, 68, 68, 0.12)' : '#ffffff',
-                                    border: isLiked ? '1px solid #ef4444' : '1px solid #d4d4d8',
-                                    borderRadius: '9999px', padding: '3px 8px', width: '100%',
-                                    cursor: 'pointer', transition: 'all 0.15s ease',
-                                    color: isLiked ? '#ef4444' : '#71717a',
-                                    fontSize: '0.75rem', fontWeight: 600,
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                                    background: 'none',
+                                    border: 'none',
+                                    padding: '3px 8px', width: '100%',
+                                    cursor: 'pointer',
+                                    color: '#71717a',
+                                    fontSize: '0.75rem', fontWeight: 600
                                 }}
                                 title={isLiked ? "Unlike review" : "Like review"}
                             >

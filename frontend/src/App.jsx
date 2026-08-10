@@ -469,9 +469,8 @@ function App() {
                   <button
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                      background: '#ffffff', border: '1px solid #d4d4d8', borderRadius: '9999px',
-                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                      background: 'none', border: 'none',
+                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
                     }}
                   >
                     <Heart size={14} fill="none" color="#71717a" />
@@ -529,9 +528,8 @@ function App() {
                   <button
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                      background: '#ffffff', border: '1px solid #d4d4d8', borderRadius: '9999px',
-                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                      background: 'none', border: 'none',
+                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
                     }}
                   >
                     <Heart size={14} fill="none" color="#71717a" />
@@ -589,9 +587,8 @@ function App() {
                   <button
                     style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                      background: '#ffffff', border: '1px solid #d4d4d8', borderRadius: '9999px',
-                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+                      background: 'none', border: 'none',
+                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
                     }}
                   >
                     <Heart size={14} fill="none" color="#71717a" />
