@@ -181,58 +181,40 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                         </div>
                     )}
                     
-                    <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 72 }}>
-                            <div 
-                                style={{ 
-                                    width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
-                                    borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                    color: '#71717a', flexShrink: 0, overflow: 'hidden', 
-                                    cursor: review.review?.media?.length ? 'pointer' : 'default', position: 'relative' 
-                                }}
-                                onClick={() => {
-                                    if (review.review?.media?.length) {
-                                        setActiveLightbox({ review, initialIndex: 0 });
-                                    }
-                                }}
-                            >
-                                {review.review?.media && review.review.media.length > 0 ? (
-                                    <>
-                                        {review.review.media[0].type === 'video' ? (
-                                            <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        ) : (
-                                            <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        )}
-                                        {review.review.media.length > 1 && (
-                                            <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
-                                                +{review.review.media.length - 1}
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <ImageIcon size={32} />
-                                )}
-                            </div>
-
-                            <button
-                                onClick={(e) => handleToggleLike(review, e)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                                    background: 'none',
-                                    border: 'none',
-                                    padding: '3px 8px', width: '100%',
-                                    cursor: 'pointer',
-                                    color: '#71717a',
-                                    fontSize: '0.75rem', fontWeight: 600
-                                }}
-                                title={isLiked ? "Unlike review" : "Like review"}
-                            >
-                                <Heart size={14} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : '#71717a'} />
-                                <span>{likesCount}</span>
-                            </button>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                        <div 
+                            style={{ 
+                                width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                                borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                color: '#71717a', flexShrink: 0, overflow: 'hidden', 
+                                cursor: review.review?.media?.length ? 'pointer' : 'default', position: 'relative' 
+                            }}
+                            onClick={() => {
+                                if (review.review?.media?.length) {
+                                    setActiveLightbox({ review, initialIndex: 0 });
+                                }
+                            }}
+                        >
+                            {review.review?.media && review.review.media.length > 0 ? (
+                                <>
+                                    {review.review.media[0].type === 'video' ? (
+                                        <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    )}
+                                    {review.review.media.length > 1 && (
+                                        <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
+                                            +{review.review.media.length - 1}
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <ImageIcon size={32} />
+                            )}
                         </div>
+
                         <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
-                            <h3 style={{ fontSize: '1.125rem', margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>{review.product?.name}</h3>
+                            <h3 style={{ fontSize: '1.125rem', margin: 0, color: '#18181b', wordBreak: 'word-word', overflowWrap: 'anywhere' }}>{review.product?.name}</h3>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
                                 {review.product?.brand && <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>{review.product.brand}</span>}
                                 <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>{review.product?.category}</span>
@@ -250,7 +232,28 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                     "{review.review?.text || review.review?.title}"
                     </p>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '8px', borderTop: '1px solid #e4e4e7' }}>
+                    {/* Heart button right above horizontal rule */}
+                    <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+                        <button
+                            onClick={(e) => handleToggleLike(review, e)}
+                            style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                                background: 'none',
+                                border: 'none',
+                                padding: '3px 8px',
+                                cursor: 'pointer',
+                                color: '#71717a',
+                                fontSize: '0.75rem', fontWeight: 600
+                            }}
+                            title={isLiked ? "Unlike review" : "Like review"}
+                        >
+                            <Heart size={14} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : '#71717a'} />
+                            <span>{likesCount}</span>
+                        </button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '16px', borderTop: '1px solid #e4e4e7', marginTop: '4px' }}>
+
                         <div style={{
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px'
                         }}>

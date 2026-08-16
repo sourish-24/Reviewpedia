@@ -239,34 +239,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
                       </>
                   )}
               </label>
-              {isEditing && (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', marginTop: '10px' }}>
-                  <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.85rem' }}>Click photo to upload avatar</p>
-                  {(previewUrl || pendingCropFile) && (
-                    <button
-                      type="button"
-                      onClick={() => setShowCropModal(true)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        boxShadow: 'none',
-                        outline: 'none',
-                        color: '#0ea5e9',
-                        padding: '4px 0',
-                        fontSize: '0.85rem',
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        marginTop: '2px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                      }}
-                    >
-                      <Crop size={14} /> crop or position photo
-                    </button>
-                  )}
-                </div>
-              )}
+              {isEditing && <p style={{ marginTop: '10px', color: '#94a3b8', fontSize: '0.85rem' }}>Click photo to change avatar</p>}
           </div>
 
           {/* Form */}
@@ -472,13 +445,13 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
       )}
 
       {/* Avatar Crop & Position Modal */}
-      {showCropModal && (pendingCropFile || previewUrl) && (
+      {showCropModal && pendingCropFile && (
         <AvatarCropModal
           imageFile={pendingCropFile}
-          imageSrcUrl={!pendingCropFile ? previewUrl : null}
           onCropComplete={handleCropComplete}
           onCancel={() => {
             setShowCropModal(false);
+            setPendingCropFile(null);
           }}
         />
       )}

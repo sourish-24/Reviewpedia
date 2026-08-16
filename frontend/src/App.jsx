@@ -462,20 +462,8 @@ function App() {
             {/* Review Card 1 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 76 }}>
-                  <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                    <img src="/sony-wh1000xm5.jpg" alt="Sony WH-1000XM5" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <button
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                      background: 'none', border: 'none',
-                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
-                    }}
-                  >
-                    <Heart size={14} fill="none" color="#71717a" />
-                    <span>12</span>
-                  </button>
+                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                  <img src="/sony-wh1000xm5.jpg" alt="Sony WH-1000XM5" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
@@ -497,7 +485,21 @@ function App() {
                 "Noise cancellation is incredible for commuting in Delhi Metro. Battery easily lasts 30+ hours."
               </p>
 
-              <div style={{ paddingTop: '14px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              {/* Heart button right above horizontal rule */}
+              <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    background: 'none', border: 'none',
+                    padding: '3px 8px', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
+                  }}
+                >
+                  <Heart size={14} fill="none" color="#71717a" />
+                  <span>12</span>
+                </button>
+              </div>
+
+              <div style={{ paddingTop: '16px', marginTop: '4px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
                     R
@@ -521,20 +523,8 @@ function App() {
             {/* Review Card 2 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 76 }}>
-                  <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                    <img src="/macbook m2.jpg" alt="MacBook Air M2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <button
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                      background: 'none', border: 'none',
-                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
-                    }}
-                  >
-                    <Heart size={14} fill="none" color="#71717a" />
-                    <span>19</span>
-                  </button>
+                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                  <img src="/macbook m2.jpg" alt="MacBook Air M2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
@@ -556,7 +546,21 @@ function App() {
                 "Super lightweight for work. Keyboard feels solid and display is super bright."
               </p>
 
-              <div style={{ paddingTop: '14px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              {/* Heart button right above horizontal rule */}
+              <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    background: 'none', border: 'none',
+                    padding: '3px 8px', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
+                  }}
+                >
+                  <Heart size={14} fill="none" color="#71717a" />
+                  <span>19</span>
+                </button>
+              </div>
+
+              <div style={{ paddingTop: '16px', marginTop: '4px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
                     P
@@ -580,20 +584,8 @@ function App() {
             {/* Review Card 3 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
               <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', flexShrink: 0, width: 76 }}>
-                  <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                    <img src="/nike air max.jpg" alt="Nike Air Max" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                  <button
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
-                      background: 'none', border: 'none',
-                      padding: '3px 8px', width: '100%', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
-                    }}
-                  >
-                    <Heart size={14} fill="none" color="#71717a" />
-                    <span>8</span>
-                  </button>
+                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
+                  <img src="/nike air max.jpg" alt="Nike Air Max" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
@@ -615,7 +607,21 @@ function App() {
                 "Great arch support for daily running. Bought online at a discount — feel free to DM for size tips!"
               </p>
 
-              <div style={{ paddingTop: '14px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+              {/* Heart button right above horizontal rule */}
+              <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    background: 'none', border: 'none',
+                    padding: '3px 8px', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
+                  }}
+                >
+                  <Heart size={14} fill="none" color="#71717a" />
+                  <span>8</span>
+                </button>
+              </div>
+
+              <div style={{ paddingTop: '16px', marginTop: '4px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
                     A
