@@ -306,15 +306,9 @@ function App() {
 
         {/* Section 1: The Online Shopping Dilemma */}
         <section id="problem" style={{ position: 'relative', zIndex: 2, padding: '180px 2rem 150px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', padding: '8px 20px', borderRadius: '9999px', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
-            <ShieldAlert size={18} /> The Online Shopping Dilemma
-          </div>
-          <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '1.25rem', fontFamily: 'var(--font-display)' }}>
+          <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '4rem', fontFamily: 'var(--font-display)' }}>
             Why Traditional Reviews Fail You
           </h2>
-          <p style={{ color: '#475569', fontSize: '1.25rem', maxWidth: '850px', margin: '0 auto 4rem auto', lineHeight: 1.65 }}>
-            Shopping online shouldn't feel like rolling dice. From paid 5-star bots to silent influencers, current platforms don't connect you with real buyers.
-          </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left' }}>
             <div className="landing-card" style={{ padding: '2.2rem', alignItems: 'flex-start', textAlign: 'left' }}>
@@ -349,15 +343,9 @@ function App() {
 
         {/* Section 2: Core Pillars */}
         <section id="features" style={{ position: 'relative', zIndex: 2, padding: '150px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', padding: '8px 20px', borderRadius: '9999px', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
-            <Navigation size={18} /> Built For Real People
-          </div>
-          <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '1.25rem', fontFamily: 'var(--font-display)' }}>
+          <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '4rem', fontFamily: 'var(--font-display)' }}>
             How Reviewpedia Empowers You
           </h2>
-          <p style={{ color: '#475569', fontSize: '1.25rem', maxWidth: '820px', margin: '0 auto 4rem auto', lineHeight: 1.65 }}>
-            We combine hyper-local geospatial mapping with 1-on-1 social messaging so you can buy with total confidence.
-          </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left' }}>
             <div className="landing-card" style={{ padding: '2.5rem', alignItems: 'flex-start', textAlign: 'left' }}>
@@ -411,38 +399,38 @@ function App() {
               <tbody>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Location-Based Reviews</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>✅ City Name Only</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>✅ Hyper-Local Pins</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>City Name Only</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Hyper-Local Pins</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>1-on-1 Chat with Reviewer</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ Unresponsive DMs</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>✅ Public Threads</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>✅ Direct 1-on-1 DM</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Unresponsive DMs</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>Public Threads</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Direct 1-on-1 DM</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Make Friends</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>✅ Yes</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>✅ Yes</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>Yes</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Yes</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Centralized Cross-Site Ratings</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ Platform Only</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No Ratings</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ No Ratings</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>✅ Multi-Platform Aggregated</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Platform Only</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No Ratings</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No Ratings</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Multi-Platform Aggregated</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Protection from Paid/Bot Reviews</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ High Fake Rate</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ Paid Sponsorships</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>❌ Anonymous Noise</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>✅ Literally Your Neighbours</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>High Fake Rate</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Paid Sponsorships</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Anonymous Noise</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Literally Your Neighbours</td>
                 </tr>
               </tbody>
             </table>

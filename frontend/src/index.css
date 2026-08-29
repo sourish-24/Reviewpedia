@@ -142,7 +142,7 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-body);
 }
 
-/* Base Subtle Square Mesh Grid Layer */
+/* Base Square Mesh Grid Layer (Matches background #F8F4F0, invisible by default) */
 .landing-grid-bg {
   position: fixed;
   top: 0;
@@ -151,13 +151,13 @@ h1, h2, h3, h4, h5, h6 {
   bottom: 0;
   pointer-events: none;
   background-image: 
-    linear-gradient(to right, rgba(0, 0, 0, 0.045) 0.5px, transparent 0.5px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.045) 0.5px, transparent 0.5px);
+    linear-gradient(to right, #F8F4F0 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, #F8F4F0 0.5px, transparent 0.5px);
   background-size: 50px 50px;
   z-index: 0;
 }
 
-/* Hover-activated Glowing Blue Grid Lines (Borders only) */
+/* Hover-activated Glowing Blue Grid Lines */
 .landing-grid-glow {
   position: fixed;
   top: 0;
@@ -166,13 +166,13 @@ h1, h2, h3, h4, h5, h6 {
   bottom: 0;
   pointer-events: none;
   background-image: 
-    linear-gradient(to right, rgba(14, 165, 233, 0.65) 0.5px, transparent 0.5px),
-    linear-gradient(to bottom, rgba(14, 165, 233, 0.65) 0.5px, transparent 0.5px);
+    linear-gradient(to right, rgba(14, 165, 233, 0.8) 0.5px, transparent 0.5px),
+    linear-gradient(to bottom, rgba(14, 165, 233, 0.8) 0.5px, transparent 0.5px);
   background-size: 50px 50px;
   -webkit-mask-image: radial-gradient(260px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
   mask-image: radial-gradient(260px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
   z-index: 0;
-  opacity: 0.45;
+  opacity: 0.75;
 }
 
 .landing-dark-header {
