@@ -17,7 +17,10 @@ export default function LocationPickerModal({ onClose, onConfirm, initialLocatio
                 zoomControl: false,
             });
 
-            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            const cartoKey = import.meta.env.VITE_CARTO_API_KEY;
+            const tileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png${cartoKey ? `?key=${cartoKey}` : ''}`;
+
+            L.tileLayer(tileUrl, {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
                 subdomains: 'abcd',
                 maxZoom: 20
