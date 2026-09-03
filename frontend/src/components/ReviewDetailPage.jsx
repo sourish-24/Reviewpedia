@@ -25,6 +25,10 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
   const [copied, setCopied] = useState(false);
   const [localLikes, setLocalLikes] = useState([]);
   const [commentCount, setCommentCount] = useState(0);
+  const [isBackHovered, setIsBackHovered] = useState(false);
+  const [isLikeHovered, setIsLikeHovered] = useState(false);
+  const [isCommentHovered, setIsCommentHovered] = useState(false);
+  const [isShareHovered, setIsShareHovered] = useState(false);
 
   const commentsRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -217,6 +221,8 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           if (window.history.length > 2) navigate(-1);
           else navigate('/browse');
         }}
+        onMouseEnter={() => setIsBackHovered(true)}
+        onMouseLeave={() => setIsBackHovered(false)}
         style={{
           position: 'fixed',
           top: 32,
@@ -227,21 +233,18 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           display: 'flex',
           alignItems: 'center',
           gap: 8,
-          backgroundColor: '#0f172a',
-          border: 'none',
-          color: '#ffffff',
+          backgroundColor: '#F8F4F0',
+          border: '1px solid #e5e0da',
+          color: isBackHovered ? '#0ea5e9' : '#334155',
           borderRadius: '9999px',
           fontWeight: 600,
           fontSize: '0.88rem',
           cursor: 'pointer',
-          transition: 'background-color 0.2s',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+          transition: 'color 0.15s ease'
         }}
-        onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
-        onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0f172a'}
         title="Back"
       >
-        <ArrowLeft size={18} color="#ffffff" />
+        <ArrowLeft size={18} color={isBackHovered ? '#0ea5e9' : '#334155'} />
         <span>Back</span>
       </button>
 
@@ -580,6 +583,8 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
               {/* Like / Heart Button */}
               <button
                 onClick={handleLike}
+                onMouseEnter={() => setIsLikeHovered(true)}
+                onMouseLeave={() => setIsLikeHovered(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -591,18 +596,27 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                   cursor: 'pointer',
                   fontWeight: 600,
                   fontSize: '0.88rem',
-                  transition: 'all 0.15s'
+                  transition: 'color 0.15s ease'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ede8e3'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F8F4F0'}
               >
-                <Heart size={16} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : '#64748b'} />
-                <span style={{ color: isLiked ? '#ef4444' : '#334155' }}>{localLikes.length}</span>
+                <Heart
+                  size={16}
+                  fill={isLiked ? '#ef4444' : 'none'}
+                  color={isLiked ? '#ef4444' : (isLikeHovered ? '#0ea5e9' : '#64748b')}
+                />
+                <span style={{
+                  color: isLiked ? '#ef4444' : (isLikeHovered ? '#0ea5e9' : '#334155'),
+                  transition: 'color 0.15s ease'
+                }}>
+                  {localLikes.length}
+                </span>
               </button>
 
               {/* Comments count button */}
               <button
                 onClick={scrollToComments}
+                onMouseEnter={() => setIsCommentHovered(true)}
+                onMouseLeave={() => setIsCommentHovered(false)}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -612,16 +626,14 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                   padding: '8px 16px',
                   borderRadius: '9999px',
                   cursor: 'pointer',
-                  color: '#334155',
+                  color: isCommentHovered ? '#0ea5e9' : '#334155',
                   fontWeight: 600,
                   fontSize: '0.88rem',
-                  transition: 'all 0.15s'
+                  transition: 'color 0.15s ease'
                 }}
-                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ede8e3'}
-                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F8F4F0'}
                 title="Comments"
               >
-                <MessageSquare size={16} color="#64748b" />
+                <MessageSquare size={16} color={isCommentHovered ? '#0ea5e9' : '#64748b'} />
                 <span>{commentCount}</span>
               </button>
             </div>
@@ -629,6 +641,8 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
             {/* Share Link Button */}
             <button
               onClick={handleShare}
+              onMouseEnter={() => setIsShareHovered(true)}
+              onMouseLeave={() => setIsShareHovered(false)}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -638,15 +652,17 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                 padding: '8px 16px',
                 borderRadius: '9999px',
                 cursor: 'pointer',
-                color: copied ? '#10b981' : '#334155',
+                color: copied ? '#10b981' : (isShareHovered ? '#0ea5e9' : '#334155'),
                 fontWeight: 600,
                 fontSize: '0.88rem',
-                transition: 'all 0.15s'
+                transition: 'color 0.15s ease'
               }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ede8e3'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F8F4F0'}
             >
-              {copied ? <Check size={15} /> : <Share2 size={15} />}
+              {copied ? (
+                <Check size={15} color="#10b981" />
+              ) : (
+                <Share2 size={15} color={isShareHovered ? '#0ea5e9' : '#64748b'} />
+              )}
               <span>{copied ? 'Link Copied!' : 'Share'}</span>
             </button>
           </div>
