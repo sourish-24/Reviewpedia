@@ -255,7 +255,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
                 {currentUser.username?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
-            <span>Comment as <strong style={{ color: '#0ea5e9' }}>{currentUser.username}</strong></span>
+            <span>Comment as <strong style={{ color: '#0f172a', fontWeight: 600 }}>{currentUser.username}</strong></span>
           </div>
 
           <textarea

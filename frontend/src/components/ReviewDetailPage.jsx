@@ -584,19 +584,20 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  backgroundColor: isLiked ? 'rgba(239, 68, 68, 0.08)' : '#F8F4F0',
-                  border: isLiked ? '1px solid rgba(239, 68, 68, 0.25)' : '1px solid #e5e0da',
+                  backgroundColor: '#F8F4F0',
+                  border: '1px solid #e5e0da',
                   padding: '8px 16px',
                   borderRadius: '9999px',
                   cursor: 'pointer',
-                  color: isLiked ? '#ef4444' : '#334155',
                   fontWeight: 600,
                   fontSize: '0.88rem',
                   transition: 'all 0.15s'
                 }}
+                onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#ede8e3'}
+                onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#F8F4F0'}
               >
                 <Heart size={16} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : '#64748b'} />
-                <span>{localLikes.length}</span>
+                <span style={{ color: isLiked ? '#ef4444' : '#334155' }}>{localLikes.length}</span>
               </button>
 
               {/* Comments count button */}
