@@ -68,6 +68,12 @@ function App() {
     setSelectedReview(null);
     setSelectedLocationReviews(null);
     setIsMyReviewsOpen(false);
+
+    if (location.pathname.startsWith('/browse') || location.pathname.startsWith('/research')) {
+      setTimeout(() => {
+        mapComponentRef.current?.invalidateSize?.();
+      }, 50);
+    }
   }, [location.pathname]);
 
   const handleReviewSelect = (reviewsOrReview) => {
@@ -143,20 +149,42 @@ function App() {
      navigate('/research');
   };
 
-  if (appMode === 'landing') {
-    return (
-      <div 
-        className="landing-dark"
-        onMouseMove={(e) => {
-          const rect = e.currentTarget.getBoundingClientRect();
-          e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-          e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
-        }}
-      >
-        <div className="landing-grid-bg" />
-        <div className="landing-grid-glow" />
-        {/* Header */}
-        <header className="landing-dark-header">
+  return (
+    <div className="app-container">
+      {/* Permanently mounted map instance - keeps loaded map & tiles alive in memory */}
+      <AppMap 
+        ref={mapComponentRef} 
+        onReviewSelect={handleReviewSelect} 
+        searchQuery={query} 
+        mapUpdateTrigger={mapUpdateTrigger} 
+        viewMode={appMode} 
+        currentUser={user} 
+        hexResolution={hexResolution} 
+      />
+
+      {/* Landing Page Full-Screen Overlay */}
+      {appMode === 'landing' && (
+        <div 
+          className="landing-dark"
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 8000,
+            overflowY: 'auto'
+          }}
+          onMouseMove={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+          }}
+        >
+          <div className="landing-grid-bg" />
+          <div className="landing-grid-glow" />
+          {/* Header */}
+          <header className="landing-dark-header">
           {/* Left: Logo */}
           <div 
               className="landing-dark-logo" 
@@ -880,13 +908,11 @@ function App() {
              </div>
         )}
         {showAuthModal && <AuthModal initialMode={showAuthModal} onClose={() => setShowAuthModal(false)} />}
-      </div>
-    );
-  }
+        </div>
+      )}
 
-  return (
-    <div className="app-container">
-      {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
+      {/* Navigation Header for Consumer & Business Views */}
+      {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
         <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ position: 'relative', width: 'max-content', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
               <header style={{
@@ -1133,10 +1159,6 @@ function App() {
                  )}
              </div>
           </div>
-      )}
-
-      {appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
-        <AppMap ref={mapComponentRef} onReviewSelect={handleReviewSelect} searchQuery={query} mapUpdateTrigger={mapUpdateTrigger} viewMode={appMode} currentUser={user} hexResolution={hexResolution} />
       )}
 
       {appMode === 'business' && <AgentBox demoEmail={marketResearchEmail} isOpen={isAgentOpen} onClose={() => setIsAgentOpen(false)} />}

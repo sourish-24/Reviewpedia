@@ -24,6 +24,12 @@ const getReliableUserLocation = (onSuccess, onError) => {
   );
 };
 
+// Module-level in-memory cache that persists during SPA session and resets on hard page refresh
+let memoryReviewsCache = {
+  data: null,
+  query: null
+};
+
 const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, viewMode, currentUser, hexResolution }, ref) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
@@ -32,7 +38,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
   const userDotLayer = useRef(null);
   
   const [userLocation, setUserLocation] = useState(null);
-  const [reviews, setReviews] = useState([]);
+  const [reviews, setReviews] = useState(() => memoryReviewsCache.data || []);
   const [loadingMsg, setLoadingMsg] = useState(null);
   
   const [selectedHexagon, setSelectedHexagon] = useState(null);
@@ -135,19 +141,30 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
   }, []);
 
   const updateReviewLikes = (reviewId, newLikes) => {
-    setReviews(prevReviews => prevReviews.map(r => {
-      const id = r.id || r._id;
-      if (id === reviewId || id?.toString() === reviewId?.toString()) {
-        return { ...r, likes: newLikes };
+    setReviews(prevReviews => {
+      const updated = prevReviews.map(r => {
+        const id = r.id || r._id;
+        if (id === reviewId || id?.toString() === reviewId?.toString()) {
+          return { ...r, likes: newLikes };
+        }
+        return r;
+      });
+      if (memoryReviewsCache.data) {
+        memoryReviewsCache.data = updated;
       }
-      return r;
-    }));
+      return updated;
+    });
   };
 
   useImperativeHandle(ref, () => ({
     locateUser,
     updateReviewLikes,
-    refetchReviews: initData
+    invalidateSize: () => {
+      if (mapInstance.current) {
+        mapInstance.current.invalidateSize();
+      }
+    },
+    refetchReviews: () => initData(true)
   }));
 
   const locateUser = () => {
@@ -176,23 +193,49 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
     );
   };
 
+  const isInitialMount = useRef(true);
+
   useEffect(() => {
-    initData();
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      initData(false);
+    } else {
+      // If mapUpdateTrigger or searchQuery changed, fetch fresh data
+      initData(true);
+    }
   }, [searchQuery, mapUpdateTrigger]);
 
-  const initData = async (lat, lng) => {
+  const initData = async (forced = false) => {
+    // If we have cached reviews for this exact search query and not forced, use memory instantly
+    if (!forced && memoryReviewsCache.data && memoryReviewsCache.query === searchQuery) {
+      setReviews(memoryReviewsCache.data);
+      setLoadingMsg(null);
+      return;
+    }
+
     try {
-      setLoadingMsg("Fetching reviews...");
+      if (!memoryReviewsCache.data) {
+        setLoadingMsg("Fetching reviews...");
+      }
       const API_URL = import.meta.env.VITE_API_URL || '';
       let url = `${API_URL}/api/reviews`;
       if (searchQuery) url += `?search=${encodeURIComponent(searchQuery)}`;
       const res = await fetch(url);
       const data = await res.json();
-      setReviews(data);
+      
+      const reviewList = Array.isArray(data) ? data : [];
+      memoryReviewsCache = {
+        data: reviewList,
+        query: searchQuery
+      };
+
+      setReviews(reviewList);
       setLoadingMsg(null);
     } catch (error) {
       console.error("Fetch error:", error);
-      setLoadingMsg("Error loading reviews.");
+      if (!memoryReviewsCache.data) {
+        setLoadingMsg("Error loading reviews.");
+      }
     }
   };
 
