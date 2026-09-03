@@ -10,8 +10,10 @@ import UserProfile from './components/UserProfile';
 import MyProfilePage from './components/MyProfilePage';
 import AuthModal from './components/AuthModal';
 import ChatApp from './components/ChatApp';
+import ReviewDetailPage from './components/ReviewDetailPage';
 import { useAuth } from './context/AuthContext';
 import { formatDate } from './utils/dateUtils';
+import { getReviewUrl } from './utils/urlUtils';
 import './index.css';
 
 function App() {
@@ -24,6 +26,7 @@ function App() {
   else if (location.pathname.startsWith('/research')) appMode = 'business';
   else if (location.pathname.startsWith('/profile')) appMode = 'myProfileSettings';
   else if (location.pathname.startsWith('/chat')) appMode = 'chat';
+  else if (location.pathname.startsWith('/reviews/') || location.pathname.startsWith('/review/')) appMode = 'reviewDetail';
   const [selectedLocationReviews, setSelectedLocationReviews] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -883,7 +886,7 @@ function App() {
 
   return (
     <div className="app-container">
-      {appMode !== 'chat' && appMode !== 'myProfileSettings' && (
+      {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
         <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ position: 'relative', width: 'max-content', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
               <header style={{
@@ -1068,7 +1071,7 @@ function App() {
         </div>
       )}
 
-      {appMode !== 'chat' && appMode !== 'myProfileSettings' && !user && (
+      {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && !user && (
           <div style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001 }}>
               <button 
                   style={{ 
@@ -1086,7 +1089,7 @@ function App() {
           </div>
       )}
 
-      {appMode !== 'chat' && appMode !== 'myProfileSettings' && user && (
+      {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && user && (
           <div className="nav-dropdown" style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001, height: '40px', width: '40px' }}>
              {/* The dropdown menu, positioned to align with header top (top: 20 -> relative top: -12) */}
              <div className="nav-dropdown-menu" style={{ top: '-12px', right: '-12px', left: 'auto', minWidth: '160px', borderRadius: '16px', border: 'none', padding: '12px', zIndex: 1, boxShadow: 'none' }}>
@@ -1132,7 +1135,7 @@ function App() {
           </div>
       )}
 
-      {appMode !== 'myProfileSettings' && (
+      {appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
         <AppMap ref={mapComponentRef} onReviewSelect={handleReviewSelect} searchQuery={query} mapUpdateTrigger={mapUpdateTrigger} viewMode={appMode} currentUser={user} hexResolution={hexResolution} />
       )}
 
@@ -1243,6 +1246,18 @@ function App() {
            }}
         />
       )}
+
+      {appMode === 'reviewDetail' && (
+        <ReviewDetailPage 
+          currentUser={user}
+          logout={logout}
+          onOpenMyReviews={handleOpenMyReviews}
+          onOpenAuth={(mode) => setShowAuthModal(mode || 'login')}
+          onLikeToggle={handleLikeToggle}
+          onUserClick={(u, userObj) => setSelectedUser(userObj || u)}
+        />
+      )}
+
     </div>
   );
 }

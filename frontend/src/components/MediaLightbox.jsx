@@ -39,6 +39,10 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
     const currentMedia = mediaMessages[safeIndex];
     if (!currentMedia) return null;
 
+    const mediaUrl = currentMedia.mediaUrl || currentMedia.url || (typeof currentMedia === 'string' ? currentMedia : '');
+    const mediaType = currentMedia.mediaType || currentMedia.type || (typeof mediaUrl === 'string' && mediaUrl.match(/\.(mp4|webm|mov|ogg)(\?.*)?$/i) ? 'video' : 'image');
+    const isImage = mediaType === 'image';
+
     return ReactDOM.createPortal(
         <div style={{
             position: 'fixed',
@@ -108,9 +112,9 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
 
             {/* Media Content */}
             <div style={{ maxWidth: '90vw', maxHeight: '90vh', position: 'relative' }}>
-                {currentMedia.mediaType === 'image' ? (
+                {isImage ? (
                     <img 
-                        src={currentMedia.mediaUrl} 
+                        src={mediaUrl} 
                         alt="attachment" 
                         style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }} 
                     />
@@ -120,7 +124,7 @@ export default function MediaLightbox({ mediaMessages, initialIndex, onClose, cu
                         autoPlay
                         style={{ maxWidth: '100%', maxHeight: '90vh', objectFit: 'contain', borderRadius: '8px', boxShadow: '0 10px 40px rgba(0,0,0,0.5)' }}
                     >
-                        <source src={currentMedia.mediaUrl} type="video/mp4" />
+                        <source src={mediaUrl} type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
                 )}

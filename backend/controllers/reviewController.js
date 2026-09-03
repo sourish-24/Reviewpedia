@@ -1,5 +1,6 @@
 import Review from '../models/Review.js';
 import User from '../models/User.js';
+import Comment from '../models/Comment.js';
 import { latLngToCell } from 'h3-js';
 import { cloudinaryInstance } from '../middlewares/uploadMiddleware.js';
 
@@ -14,15 +15,22 @@ export const getReviews = async (req, res, next) => {
         }
         const reviews = await Review.find(filter).sort({ _id: -1 }).limit(500);
 
+        const reviewIds = reviews.map(r => r._id);
         const userIds = reviews.map(r => r.user?.id).filter(Boolean);
         const userNames = reviews.map(r => r.user?.name).filter(Boolean);
 
-        const users = await User.find({
-            $or: [
-                { _id: { $in: userIds } },
-                { username: { $in: userNames } }
-            ]
-        }, 'username profilePic').lean();
+        const [users, commentCounts] = await Promise.all([
+            User.find({
+                $or: [
+                    { _id: { $in: userIds } },
+                    { username: { $in: userNames } }
+                ]
+            }, 'username profilePic').lean(),
+            Comment.aggregate([
+                { $match: { reviewId: { $in: reviewIds } } },
+                { $group: { _id: '$reviewId', count: { $sum: 1 } } }
+            ])
+        ]);
 
         const userMap = {};
         users.forEach(u => {
@@ -30,10 +38,16 @@ export const getReviews = async (req, res, next) => {
             if (u.username) userMap[u.username] = u.profilePic || '';
         });
 
+        const countMap = {};
+        commentCounts.forEach(c => {
+            if (c._id) countMap[c._id.toString()] = c.count;
+        });
+
         const normalized = reviews.map(r => {
             const obj = r.toObject();
             obj.id = obj._id.toString();
             obj.likes = obj.likes || [];
+            obj.commentsCount = countMap[obj.id] || 0;
             const pic = (obj.user?.id && userMap[obj.user.id.toString()]) || (obj.user?.name && userMap[obj.user.name]) || '';
             obj.user = {
                 ...obj.user,
@@ -295,3 +309,204 @@ export const toggleLikeReview = async (req, res, next) => {
         next(err);
     }
 };
+
+export const getReviewById = async (req, res, next) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+
+        let profilePic = '';
+        if (review.user?.id) {
+            const u = await User.findById(review.user.id, 'profilePic').lean();
+            if (u?.profilePic) profilePic = u.profilePic;
+        } else if (review.user?.name) {
+            const u = await User.findOne({ username: review.user.name }, 'profilePic').lean();
+            if (u?.profilePic) profilePic = u.profilePic;
+        }
+
+        const commentsCount = await Comment.countDocuments({ reviewId: review._id });
+
+        const obj = review.toObject();
+        obj.id = obj._id.toString();
+        obj.likes = obj.likes || [];
+        obj.commentsCount = commentsCount;
+        obj.user = {
+            ...obj.user,
+            profilePic: profilePic || obj.user?.profilePic || ''
+        };
+
+        res.json(obj);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getComments = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const comments = await Comment.find({ reviewId: id }).sort({ createdAt: 1 }).lean();
+
+        const userIds = comments.map(c => c.user?.id).filter(Boolean);
+        const userNames = comments.map(c => c.user?.name).filter(Boolean);
+
+        const users = await User.find({
+            $or: [
+                { _id: { $in: userIds } },
+                { username: { $in: userNames } }
+            ]
+        }, 'username profilePic').lean();
+
+        const userMap = {};
+        users.forEach(u => {
+            if (u._id) userMap[u._id.toString()] = u.profilePic || '';
+            if (u.username) userMap[u.username] = u.profilePic || '';
+        });
+
+        const normalized = comments.map(c => ({
+            ...c,
+            id: c._id.toString(),
+            reviewId: c.reviewId.toString(),
+            parentId: c.parentId ? c.parentId.toString() : null,
+            likes: c.likes || [],
+            user: {
+                ...c.user,
+                profilePic: (c.user?.id && userMap[c.user.id.toString()]) || (c.user?.name && userMap[c.user.name]) || c.user?.profilePic || ''
+            }
+        }));
+
+        res.json(normalized);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const addComment = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { text, parentId } = req.body;
+
+        if (!text || !text.trim()) {
+            return res.status(400).json({ error: 'Comment text is required' });
+        }
+
+        const review = await Review.findById(id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+
+        let validParentId = null;
+        if (parentId) {
+            const parentComment = await Comment.findById(parentId);
+            if (!parentComment) {
+                return res.status(404).json({ error: 'Parent comment not found' });
+            }
+            validParentId = parentComment._id;
+        }
+
+        const newComment = new Comment({
+            reviewId: review._id,
+            parentId: validParentId,
+            user: {
+                id: req.user.id,
+                name: req.user.username,
+                profilePic: req.user.profilePic || ''
+            },
+            text: text.trim(),
+            likes: []
+        });
+
+        await newComment.save();
+
+        const obj = newComment.toObject();
+        obj.id = obj._id.toString();
+        obj.reviewId = obj.reviewId.toString();
+        obj.parentId = obj.parentId ? obj.parentId.toString() : null;
+
+        res.status(201).json(obj);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const toggleLikeComment = async (req, res, next) => {
+    try {
+        const { commentId } = req.params;
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        const userId = req.user?.id?.toString() || req.user?._id?.toString() || req.user?.username;
+        if (!userId) {
+            return res.status(401).json({ error: 'User authentication required' });
+        }
+
+        const currentLikes = Array.isArray(comment.likes) ? comment.likes : [];
+        const hasLiked = currentLikes.includes(userId);
+
+        let updatedComment;
+        if (hasLiked) {
+            updatedComment = await Comment.findByIdAndUpdate(
+                commentId,
+                { $pull: { likes: userId } },
+                { new: true }
+            );
+        } else {
+            updatedComment = await Comment.findByIdAndUpdate(
+                commentId,
+                { $addToSet: { likes: userId } },
+                { new: true }
+            );
+        }
+
+        const updatedLikes = updatedComment ? (updatedComment.likes || []) : [];
+
+        res.json({
+            success: true,
+            likes: updatedLikes,
+            likesCount: updatedLikes.length,
+            isLiked: !hasLiked
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const deleteComment = async (req, res, next) => {
+    try {
+        const { commentId } = req.params;
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            return res.status(404).json({ error: 'Comment not found' });
+        }
+
+        const userId = req.user?.id?.toString() || req.user?._id?.toString();
+        const username = req.user?.username;
+
+        const isAuthor = (comment.user?.id && comment.user.id.toString() === userId) ||
+                         (comment.user?.name && comment.user.name === username) ||
+                         req.user?.role === 'admin';
+
+        if (!isAuthor) {
+            return res.status(403).json({ error: 'Not authorized to delete this comment' });
+        }
+
+        const deleteDescendants = async (parentId) => {
+            const children = await Comment.find({ parentId });
+            for (const child of children) {
+                await deleteDescendants(child._id);
+            }
+            await Comment.deleteMany({ parentId });
+        };
+
+        await deleteDescendants(comment._id);
+        await Comment.findByIdAndDelete(commentId);
+
+        res.json({ success: true, message: 'Comment deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
