@@ -55,7 +55,7 @@ button, input, select, textarea {
 }
 
 ::placeholder {
-  color: rgba(255, 255, 255, 0.5);
+  color: #94a3b8;
   opacity: 1;
 }
 
@@ -421,5 +421,10 @@ h1, h2, h3, h4, h5, h6 {
 
 .create-review-input::placeholder {
   color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
+}
+
+.comment-textarea::placeholder {
+  color: #94a3b8 !important;
   opacity: 1 !important;
 }

@@ -259,6 +259,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
           </div>
 
           <textarea
+            className="comment-textarea"
             value={topCommentText}
             onChange={(e) => setTopCommentText(e.target.value)}
             onFocus={(e) => {
@@ -722,6 +723,7 @@ function CommentNode({
               gap: '8px'
             }}>
               <textarea
+                className="comment-textarea"
                 value={replyText}
                 onChange={(e) => setReplyText(e.target.value)}
                 placeholder={`Reply to @${node.user?.name || 'User'}...`}
