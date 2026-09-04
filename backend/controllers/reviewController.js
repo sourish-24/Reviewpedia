@@ -233,11 +233,32 @@ export const updateReview = async (req, res, next) => {
             await User.findByIdAndUpdate(userDoc._id, { totalMediaBytes: newTotal });
         }
 
-        let updatedMediaArray = [...existingMedia];
-        for (const file of files) {
-            const fileSize = file.size || file.bytes || 0;
-            const isVideo = file.mimetype?.startsWith('video/') || file.path?.match(/\.(mp4|mov|avi|webm)$/i);
-            updatedMediaArray.push({ type: isVideo ? 'video' : 'image', url: file.path, size: fileSize });
+        let updatedMediaArray = [];
+        if (bodyData.mediaOrder && Array.isArray(bodyData.mediaOrder)) {
+            const newUploadedMedia = [];
+            for (const file of files) {
+                const fileSize = file.size || file.bytes || 0;
+                const isVideo = file.mimetype?.startsWith('video/') || file.path?.match(/\.(mp4|mov|avi|webm)$/i);
+                newUploadedMedia.push({ type: isVideo ? 'video' : 'image', url: file.path, size: fileSize });
+            }
+            let newFileIdx = 0;
+            for (const item of bodyData.mediaOrder) {
+                if (item.type === 'existing') {
+                    const found = existingMedia.find(m => m.url === item.url);
+                    if (found) updatedMediaArray.push(found);
+                } else if (item.type === 'new') {
+                    if (newFileIdx < newUploadedMedia.length) {
+                        updatedMediaArray.push(newUploadedMedia[newFileIdx++]);
+                    }
+                }
+            }
+        } else {
+            updatedMediaArray = [...existingMedia];
+            for (const file of files) {
+                const fileSize = file.size || file.bytes || 0;
+                const isVideo = file.mimetype?.startsWith('video/') || file.path?.match(/\.(mp4|mov|avi|webm)$/i);
+                updatedMediaArray.push({ type: isVideo ? 'video' : 'image', url: file.path, size: fileSize });
+            }
         }
 
         if (bodyData.product?.name) review.product.name = bodyData.product.name;

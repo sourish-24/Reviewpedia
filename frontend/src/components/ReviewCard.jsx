@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, X, MapPin, Calendar, CheckCircle, Trash2, Pencil, Heart, Image as ImageIcon, MessageSquare } from 'lucide-react';
+import { X, MapPin, Calendar, CheckCircle, Trash2, Pencil, Heart, Image as ImageIcon, MessageSquare } from 'lucide-react';
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
 import { formatDate } from '../utils/dateUtils';
 import { getReviewUrl } from '../utils/urlUtils';
+import ReviewClampedText from './ReviewClampedText';
+import StarRating from './StarRating';
 
 export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, onLikeToggle }) {
   const navigate = useNavigate();
@@ -127,7 +129,7 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
 
         <div 
           onClick={() => navigate(getReviewUrl(review))}
-          style={{ backgroundColor: '#F8F4F0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', border: '1px solid #e4e4e7', color: '#18181b' }}
+          style={{ backgroundColor: '#F8F4F0', borderRadius: '12px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative', border: '1px solid #e4e4e7', color: '#18181b', cursor: 'pointer' }}
         >
             {currentUser && (
                 currentUser.username === review.user?.name ||
@@ -172,17 +174,11 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
                     </div>
                 )}
                 <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
-                    <div style={{ display: 'flex', gap: '2px' }}>
-                    {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={15} fill={i < (currentReview.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (currentReview.review?.rating || 0) ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
-                    ))}
-                    </div>
+                    <StarRating rating={currentReview.review?.rating || 0} size={15} gap={2} />
                 </div>
             </div>
 
-            <p style={{ margin: 0, padding: '10px 0', lineHeight: 1.5, fontSize: '0.95rem', fontFamily: 'var(--font-body)', color: '#27272a', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
-            "{review.review?.text || review.review?.title}"
-            </p>
+            <ReviewClampedText text={review.review?.text || review.review?.title} />
 
             {/* Heart and comments button row right above horizontal rule */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 2px 0' }}>

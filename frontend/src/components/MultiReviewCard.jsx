@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Star, X, MapPin, Calendar, CheckCircle, Image as ImageIcon, Trash2, Pencil, Heart, MessageSquare } from 'lucide-react';
+import { X, MapPin, Calendar, CheckCircle, Image as ImageIcon, Trash2, Pencil, Heart, MessageSquare } from 'lucide-react';
 import '../index.css';
 import ConfirmModal from './ConfirmModal';
 import MediaLightbox from './MediaLightbox';
 import { formatDate } from '../utils/dateUtils';
 import { getReviewUrl } from '../utils/urlUtils';
+import ReviewClampedText from './ReviewClampedText';
+import StarRating from './StarRating';
 
 export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, isMyReviews, onLikeToggle }) {
   const navigate = useNavigate();
@@ -231,17 +233,13 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                             </div>
 
                             
-                            <div style={{ display: 'flex', gap: '3px', margin: '8px 0 0 0' }}>
-                            {[...Array(5)].map((_, i) => (
-                                <Star key={i} size={15} fill={i < (review.review?.rating || 0) ? "var(--golden-star)" : "none"} color={i < (review.review?.rating || 0) ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
-                            ))}
+                            <div style={{ margin: '8px 0 0 0' }}>
+                                <StarRating rating={review.review?.rating || 0} size={15} gap={2} />
                             </div>
                         </div>
                     </div>
 
-                    <p style={{ margin: '0', padding: '10px 0', lineHeight: 1.5, fontSize: '0.95rem', color: '#27272a', fontFamily: 'var(--font-body)', wordBreak: 'break-word', overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
-                    "{review.review?.text || review.review?.title}"
-                    </p>
+                    <ReviewClampedText text={review.review?.text || review.review?.title} />
 
                     {/* Heart and comments button row right above horizontal rule */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 2px 0' }}>

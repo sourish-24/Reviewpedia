@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, X, Star, Trash2 } from 'lucide-react';
+import { Camera, MapPin, X, Trash2 } from 'lucide-react';
 import BrandAutocomplete, { toPascalCase } from './BrandAutocomplete';
 import CategoryDropdown from './CategoryDropdown';
+import StarRating from './StarRating';
 
 export default function CreateReview({ onClose, onPostSuccess, editingReview }) {
   const [rating, setRating] = useState(editingReview?.review?.rating || 0);
@@ -23,6 +24,9 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
     return [];
   });
   const [activePreviewIndex, setActivePreviewIndex] = useState(0);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
+  const [isAccurateLocation, setIsAccurateLocation] = useState(true);
   const fileInputRef = React.useRef(null);
 
   const handleClear = () => {
@@ -33,12 +37,33 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
       setSummary('');
       setMediaItems([]);
       setActivePreviewIndex(0);
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      setIsAccurateLocation(true);
       if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   const handleCancel = () => {
       handleClear();
       if (onClose) onClose();
+  };
+
+  const handleDrop = (fromIdx, toIdx) => {
+      if (fromIdx === null || toIdx === null || fromIdx === toIdx) {
+          setDraggedIndex(null);
+          setDragOverIndex(null);
+          return;
+      }
+      setMediaItems(prev => {
+          const updated = [...prev];
+          const [moved] = updated.splice(fromIdx, 1);
+          updated.splice(toIdx, 0, moved);
+          return updated;
+      });
+      // The first image in order will be the main one on display
+      setActivePreviewIndex(0);
+      setDraggedIndex(null);
+      setDragOverIndex(null);
   };
 
   const handleSubmit = async () => {
@@ -105,13 +130,18 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
       
       const existingMedia = mediaItems.filter(m => m.isExisting).map(m => ({ type: m.type, url: m.url, size: m.size }));
       const newFiles = mediaItems.filter(m => !m.isExisting && m.file);
+      const mediaOrder = mediaItems.map(m => {
+          if (m.isExisting) return { type: 'existing', url: m.url };
+          return { type: 'new' };
+      });
 
       const payloadData = {
           product: { name: productName, brand: brandName, category },
           review: { title: summary.substring(0, 50), text: summary, rating },
           location: { lat, lng },
           source: { platform: "Reviewpedia", isScraped: false },
-          existingMedia
+          existingMedia,
+          mediaOrder
       };
 
       const formData = new FormData();
@@ -159,9 +189,10 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
       }));
       setMediaItems(prev => {
           const updated = [...prev, ...newItems];
-          setActivePreviewIndex(updated.length - 1);
           return updated;
       });
+      // The first image in order will be the main one on display
+      setActivePreviewIndex(0);
       if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -169,11 +200,9 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
       if (e) e.stopPropagation();
       setMediaItems(prev => {
           const updated = prev.filter((_, i) => i !== index);
-          if (activePreviewIndex >= updated.length) {
-              setActivePreviewIndex(Math.max(0, updated.length - 1));
-          }
           return updated;
       });
+      setActivePreviewIndex(0);
   };
 
   const inputStyle = {
@@ -183,11 +212,12 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
       borderRadius: '9999px', boxSizing: 'border-box'
   };
 
-  const currentActiveMedia = mediaItems[activePreviewIndex];
+  const currentActiveMedia = mediaItems[activePreviewIndex] || mediaItems[0];
 
   return (
     <div style={{ 
         width: '100%',
+        minWidth: '580px',
         height: 'calc(100vh - 120px)',
         maxHeight: 'calc(100vh - 120px)',
         overflow: 'hidden',
@@ -207,13 +237,13 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
             {editingReview ? 'Edit Review' : 'Create Review'}
         </h2>
 
-        <div style={{ display: 'flex', gap: 16, marginBottom: 20 }}>
+        <div style={{ display: 'flex', gap: 18, marginBottom: 20 }}>
           <div 
             style={{ 
-              width: 200, height: 200, flexShrink: 0, display: 'flex', flexDirection: 'column', 
+              width: 260, height: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', 
               alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', 
               background: 'rgba(255, 255, 255, 0.05)', border: mediaItems.length > 0 ? 'none' : '1px dashed rgba(255, 255, 255, 0.3)', 
-              borderRadius: '16px', overflow: 'hidden', position: 'relative' 
+              borderRadius: '18px', overflow: 'hidden', position: 'relative' 
             }}
             onClick={() => {
               if (mediaItems.length === 0) fileInputRef.current?.click();
@@ -227,37 +257,117 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
                         <img src={currentActiveMedia.url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     )}
                     
+                    {/* Top-left badge: Main Display */}
+                    {activePreviewIndex === 0 && (
+                        <div style={{
+                            position: 'absolute', top: 8, left: 8,
+                            background: 'rgba(14, 165, 233, 0.85)', color: '#ffffff',
+                            fontSize: '0.75rem', fontWeight: 700, padding: '3px 10px',
+                            borderRadius: '8px', backdropFilter: 'blur(4px)',
+                            display: 'flex', alignItems: 'center', gap: 4, zIndex: 10,
+                            letterSpacing: '0.02em', pointerEvents: 'none'
+                        }}>
+                            <span>Main Display</span>
+                        </div>
+                    )}
+
                     {/* Top overlay delete button */}
                     <button
                         onClick={(e) => handleRemoveMedia(activePreviewIndex, e)}
-                        style={{ position: 'absolute', top: 6, right: 6, background: 'rgba(0,0,0,0.6)', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4, borderRadius: '50%', display: 'flex', zIndex: 10 }}
+                        style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.6)', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 6, borderRadius: '50%', display: 'flex', zIndex: 10 }}
                         title="Remove Active Media"
                     >
-                        <Trash2 size={16} />
+                        <Trash2 size={18} />
                     </button>
 
-                    {/* Bottom strip of thumbnails + (+) button */}
-                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.7)', padding: '4px 6px', display: 'flex', gap: 6, alignItems: 'center', overflowX: 'auto', zIndex: 10 }}>
-                        {mediaItems.map((item, idx) => (
-                            <div 
-                                key={item.id}
-                                onClick={(e) => { e.stopPropagation(); setActivePreviewIndex(idx); }}
-                                style={{
-                                    width: 32, height: 32, borderRadius: 4, overflow: 'hidden', flexShrink: 0,
-                                    border: idx === activePreviewIndex ? '2px solid var(--primary)' : '1px solid rgba(255,255,255,0.3)',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                {item.type === 'video' ? (
-                                    <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                ) : (
-                                    <img src={item.url} alt={`thumb-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                )}
-                            </div>
-                        ))}
+                    {/* Bottom strip of thumbnails + (+) button with small scrollbar & drag-and-drop */}
+                    <div 
+                        className="media-thumbnail-scroll"
+                        onWheel={(e) => {
+                            if (e.deltaY !== 0) {
+                                e.currentTarget.scrollLeft += e.deltaY;
+                            }
+                        }}
+                        style={{ 
+                            position: 'absolute', bottom: 0, left: 0, right: 0, 
+                            backgroundColor: 'rgba(0,0,0,0.75)', padding: '6px 8px 6px 8px', 
+                            display: 'flex', gap: 8, alignItems: 'center', 
+                            overflowX: 'auto', zIndex: 10 
+                        }}
+                    >
+                        {mediaItems.map((item, idx) => {
+                            const isSelected = idx === activePreviewIndex;
+                            const isDragging = idx === draggedIndex;
+                            const isDragOver = idx === dragOverIndex;
+                            const isMain = idx === 0;
+
+                            return (
+                                <div 
+                                    key={item.id}
+                                    draggable={true}
+                                    onDragStart={(e) => {
+                                        setDraggedIndex(idx);
+                                        e.dataTransfer.effectAllowed = 'move';
+                                        e.dataTransfer.setData('text/plain', `${idx}`);
+                                    }}
+                                    onDragOver={(e) => {
+                                        e.preventDefault();
+                                        e.dataTransfer.dropEffect = 'move';
+                                        if (dragOverIndex !== idx) setDragOverIndex(idx);
+                                    }}
+                                    onDragLeave={(e) => {
+                                        if (dragOverIndex === idx) setDragOverIndex(null);
+                                    }}
+                                    onDrop={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleDrop(draggedIndex, idx);
+                                    }}
+                                    onDragEnd={() => {
+                                        setDraggedIndex(null);
+                                        setDragOverIndex(null);
+                                    }}
+                                    onClick={(e) => { e.stopPropagation(); setActivePreviewIndex(idx); }}
+                                    style={{
+                                        width: 44, height: 44, borderRadius: 8, overflow: 'hidden', flexShrink: 0,
+                                        position: 'relative', cursor: 'grab',
+                                        opacity: isDragging ? 0.35 : 1,
+                                        border: isDragOver 
+                                            ? '2px dashed #38bdf8' 
+                                            : isSelected 
+                                                ? '2px solid var(--primary)' 
+                                                : isMain 
+                                                    ? '1.5px solid rgba(14, 165, 233, 0.7)' 
+                                                    : '1px solid rgba(255,255,255,0.3)',
+                                        boxShadow: isDragOver ? '0 0 10px rgba(56, 189, 248, 0.7)' : 'none',
+                                        transform: isDragOver ? 'scale(1.08)' : 'scale(1)',
+                                        transition: 'transform 0.15s ease, border-color 0.15s ease, opacity 0.15s ease'
+                                    }}
+                                    title={isMain ? "Main display media (drag to reorder)" : "Drag to reorder"}
+                                >
+                                    {item.type === 'video' ? (
+                                        <video src={item.url} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
+                                    ) : (
+                                        <img src={item.url} alt={`thumb-${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} />
+                                    )}
+                                    {isMain && (
+                                        <div style={{
+                                            position: 'absolute', bottom: 0, left: 0, right: 0,
+                                            background: 'rgba(14, 165, 233, 0.9)', color: '#ffffff',
+                                            fontSize: '8px', fontWeight: 800, textAlign: 'center',
+                                            letterSpacing: '0.5px', lineHeight: '13px', textTransform: 'uppercase',
+                                            pointerEvents: 'none'
+                                        }}>
+                                            MAIN
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
                         <button
+                            type="button"
                             onClick={(e) => { e.stopPropagation(); fileInputRef.current?.click(); }}
-                            style={{ width: 32, height: 32, borderRadius: 4, border: '1px dashed rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '1rem', flexShrink: 0 }}
+                            style={{ width: 44, height: 44, borderRadius: 8, border: '1px dashed rgba(255,255,255,0.5)', background: 'rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '1.25rem', flexShrink: 0 }}
                             title="Add More Media"
                         >
                             +
@@ -266,13 +376,14 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
                 </>
             ) : (
                 <>
-                    <Camera size={24} style={{ marginBottom: 6, color: '#0ea5e9' }} />
-                    <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-body)', color: '#ffffff' }}>Add Media</span>
+                    <Camera size={38} style={{ marginBottom: 8, color: '#0ea5e9' }} />
+                    <span style={{ fontSize: '0.95rem', fontFamily: 'var(--font-body)', fontWeight: 600, color: '#ffffff' }}>Add Media</span>
+                    <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: 2 }}>Photos or Videos</span>
                 </>
             )}
             <input type="file" accept="image/*,video/*" multiple ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
           </div>
-          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 12, justifyContent: 'space-between' }}>
+          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'space-between' }}>
             <input 
               type="text" 
               placeholder="Product Name" 
@@ -295,20 +406,64 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
               inputStyle={inputStyle}
             />
 
+            {/* Share Location Box */}
+            <div 
+              style={{ 
+                ...inputStyle, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                userSelect: 'none'
+              }}
+              onClick={() => setIsAccurateLocation(prev => !prev)}
+            >
+              <span style={{ fontSize: '0.9rem', fontFamily: 'var(--font-body)', color: '#ffffff' }}>
+                Location
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontFamily: 'var(--font-body)', fontWeight: 500 }}>
+                  {isAccurateLocation ? 'Accurate' : 'Approximate'}
+                </span>
+                {/* Toggle Button */}
+                <div 
+                  style={{
+                    width: 38,
+                    height: 22,
+                    borderRadius: 9999,
+                    background: isAccurateLocation ? '#0ea5e9' : 'rgba(255, 255, 255, 0.2)',
+                    position: 'relative',
+                    transition: 'background-color 0.2s ease',
+                    flexShrink: 0
+                  }}
+                >
+                  <div 
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      background: '#ffffff',
+                      position: 'absolute',
+                      top: 3,
+                      left: isAccurateLocation ? 19 : 3,
+                      transition: 'left 0.2s ease',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.3)'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '4px' }}>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#ffffff', fontFamily: 'var(--font-body)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>YOUR RATING</p>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                {[1, 2, 3, 4, 5].map(star => (
-                  <Star 
-                    key={star} 
-                    size={22} 
-                    fill={star <= rating ? "var(--golden-star)" : "none"} 
-                    color={star <= rating ? "var(--golden-star)" : "rgba(255, 255, 255, 0.4)"}
-                    onClick={() => setRating(star)}
-                    style={{ cursor: 'pointer', transition: 'fill 0.2s', strokeWidth: 1.5 }}
-                  />
-                ))}
-              </div>
+              <StarRating
+                rating={rating}
+                onChange={setRating}
+                interactive={true}
+                size={22}
+                gap={6}
+                emptyColor="rgba(255, 255, 255, 0.35)"
+              />
             </div>
           </div>
         </div>

@@ -48,7 +48,7 @@ export const generateMockReviews = (centerLat, centerLng, count = 50) => {
       productName: `Product ${i + 1}`,
       category: PRODUCT_CATEGORIES[Math.floor(Math.random() * PRODUCT_CATEGORIES.length)],
       platform: platforms[Math.floor(Math.random() * platforms.length)],
-      rating: Math.floor(Math.random() * 5) + 1,
+      rating: (Math.floor(Math.random() * 9) + 2) / 2,
       summary: "This product worked exactly as expected. The delivery from " + platforms[Math.floor(Math.random() * platforms.length)] + " was fast.",
       reviewer: names[Math.floor(Math.random() * names.length)],
       trustScore: Math.floor(Math.random() * 40) + 60, // 60-100

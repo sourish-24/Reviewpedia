@@ -11,6 +11,7 @@ import MyProfilePage from './components/MyProfilePage';
 import AuthModal from './components/AuthModal';
 import ChatApp from './components/ChatApp';
 import ReviewDetailPage from './components/ReviewDetailPage';
+import StarRating from './components/StarRating';
 import { useAuth } from './context/AuthContext';
 import { formatDate } from './utils/dateUtils';
 import { getReviewUrl } from './utils/urlUtils';
@@ -505,9 +506,7 @@ function App() {
                     <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', borderRadius: '9999px', padding: '2px 10px', color: '#475569', fontSize: '0.75rem', fontWeight: 500 }}>Electronics</span>
                   </div>
                   <div style={{ display: 'flex', gap: '3px' }}>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={15} fill={i < 5 ? "var(--golden-star)" : "none"} color={i < 5 ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
-                    ))}
+                    <StarRating rating={5} size={15} gap={3} />
                   </div>
                 </div>
               </div>
@@ -566,9 +565,7 @@ function App() {
                     <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', borderRadius: '9999px', padding: '2px 10px', color: '#475569', fontSize: '0.75rem', fontWeight: 500 }}>Laptops</span>
                   </div>
                   <div style={{ display: 'flex', gap: '3px' }}>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={15} fill={i < 5 ? "var(--golden-star)" : "none"} color={i < 5 ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
-                    ))}
+                    <StarRating rating={5} size={15} gap={3} />
                   </div>
                 </div>
               </div>
@@ -627,9 +624,7 @@ function App() {
                     <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', borderRadius: '9999px', padding: '2px 10px', color: '#475569', fontSize: '0.75rem', fontWeight: 500 }}>Footwear</span>
                   </div>
                   <div style={{ display: 'flex', gap: '3px' }}>
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} size={15} fill={i < 4 ? "var(--golden-star)" : "none"} color={i < 4 ? "var(--golden-star)" : "#d4d4d8"} strokeWidth={1.5} />
-                    ))}
+                    <StarRating rating={4} size={15} gap={3} />
                   </div>
                 </div>
               </div>

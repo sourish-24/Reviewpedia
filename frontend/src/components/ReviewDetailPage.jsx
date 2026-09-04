@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import MediaLightbox from './MediaLightbox';
+import StarRating from './StarRating';
 import { formatDate } from '../utils/dateUtils';
 import { extractReviewId } from '../utils/urlUtils';
 
@@ -477,18 +478,13 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
             </div>
 
             {/* Stars & Rating (with added gap above) */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '18px' }}>
-              <div style={{ display: 'flex', gap: '3px' }}>
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={20}
-                    fill={i < (review.review?.rating || 0) ? "var(--golden-star)" : "none"}
-                    color={i < (review.review?.rating || 0) ? "var(--golden-star)" : "#cbd5e1"}
-                    strokeWidth={1.5}
-                  />
-                ))}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '18px' }}>
+              <StarRating
+                rating={review.review?.rating || 0}
+                size={20}
+                gap={3}
+                emptyColor="#cbd5e1"
+              />
               <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#1e293b' }}>
                 {review.review?.rating} / 5
               </span>
