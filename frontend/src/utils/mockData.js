@@ -1,9 +1,13 @@
 export const PRODUCT_CATEGORIES = [
+  'Mobiles',
+  'Desktop, Laptop & Accessories',
   'Electronics & Appliances',
-  'Clothing & Fashion',
-  'Automotive',
+  'Cars',
+  'Bikes',
+  'Fashion',
+  'Furniture',
+  'Properties',
   'Food & Dining',
-  'Luggage',
   'Books, Sports & Hobbies'
 ];
 

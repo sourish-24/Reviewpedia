@@ -54,12 +54,9 @@ button, input, select, textarea {
   -ms-overflow-style: none !important;
 }
 
-::placeholder,
-::-webkit-input-placeholder,
-:-ms-input-placeholder,
-::-moz-placeholder {
-  color: #ffffff !important;
-  opacity: 0.85 !important;
+::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+  opacity: 1;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -151,8 +148,8 @@ h1, h2, h3, h4, h5, h6 {
   bottom: 0;
   pointer-events: none;
   background-image: 
-    linear-gradient(to right, #F8F4F0 0.5px, transparent 0.5px),
-    linear-gradient(to bottom, #F8F4F0 0.5px, transparent 0.5px);
+    linear-gradient(to right, #F8F4F0 1px, transparent 1px),
+    linear-gradient(to bottom, #F8F4F0 1px, transparent 1px);
   background-size: 50px 50px;
   z-index: 0;
 }
@@ -166,13 +163,13 @@ h1, h2, h3, h4, h5, h6 {
   bottom: 0;
   pointer-events: none;
   background-image: 
-    linear-gradient(to right, rgba(14, 165, 233, 0.8) 0.5px, transparent 0.5px),
-    linear-gradient(to bottom, rgba(14, 165, 233, 0.8) 0.5px, transparent 0.5px);
+    linear-gradient(to right, #38bdf8 1px, transparent 1px),
+    linear-gradient(to bottom, #38bdf8 1px, transparent 1px);
   background-size: 50px 50px;
-  -webkit-mask-image: radial-gradient(260px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
-  mask-image: radial-gradient(260px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
-  z-index: 0;
-  opacity: 0.75;
+  -webkit-mask-image: radial-gradient(280px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
+  mask-image: radial-gradient(280px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
+  z-index: 1;
+  opacity: 0.85;
 }
 
 .landing-dark-header {
@@ -417,18 +414,12 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 2px;
 }
 
-.header-search-input::placeholder,
-.header-search-input::-webkit-input-placeholder,
-.header-search-input:-ms-input-placeholder,
-.header-search-input::-moz-placeholder {
+.header-search-input::placeholder {
   color: #64748b !important;
   opacity: 1 !important;
 }
 
-.create-review-input::placeholder,
-.create-review-input::-webkit-input-placeholder,
-.create-review-input:-ms-input-placeholder,
-.create-review-input::-moz-placeholder {
-  color: #ffffff !important;
-  opacity: 0.85 !important;
+.create-review-input::placeholder {
+  color: rgba(255, 255, 255, 0.5) !important;
+  opacity: 1 !important;
 }

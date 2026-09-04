@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Camera, MapPin, X, Star, Trash2 } from 'lucide-react';
-import { PRODUCT_CATEGORIES } from '../utils/mockData';
+import BrandAutocomplete, { toPascalCase } from './BrandAutocomplete';
+import CategoryDropdown from './CategoryDropdown';
 
 export default function CreateReview({ onClose, onPostSuccess, editingReview }) {
   const [rating, setRating] = useState(editingReview?.review?.rating || 0);
@@ -276,27 +277,23 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
               type="text" 
               placeholder="Product Name" 
               value={productName}
-              onChange={e => setProductName(e.target.value)}
+              onChange={e => setProductName(toPascalCase(e.target.value))}
               className="create-review-input"
               style={inputStyle} 
             />
-            <input 
-              type="text" 
-              placeholder="Brand Name (e.g. Sony, Apple)" 
+            <BrandAutocomplete 
               value={brandName}
-              onChange={e => setBrandName(e.target.value)}
+              onChange={setBrandName}
+              placeholder="Brand Name (e.g. Sony, Apple)" 
               className="create-review-input"
-              style={inputStyle} 
+              inputStyle={inputStyle} 
             />
-            <select 
+            <CategoryDropdown 
               value={category}
-              onChange={e => setCategory(e.target.value)}
+              onChange={setCategory}
               className="create-review-input"
-              style={{ ...inputStyle, cursor: 'pointer', color: '#ffffff' }}
-            >
-              <option value="" disabled hidden style={{ color: '#000000', backgroundColor: '#ffffff' }}>Select Category</option>
-              {PRODUCT_CATEGORIES.map(c => <option key={c} value={c} style={{ color: '#000000', backgroundColor: '#ffffff' }}>{c}</option>)}
-            </select>
+              inputStyle={inputStyle}
+            />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '4px' }}>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#ffffff', fontFamily: 'var(--font-body)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>YOUR RATING</p>

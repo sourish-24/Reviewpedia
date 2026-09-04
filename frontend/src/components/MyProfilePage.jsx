@@ -130,9 +130,10 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
         fontFamily: 'var(--font-body)', color: '#0f172a', overflowY: 'auto', padding: '24px', boxSizing: 'border-box'
       }}
       onMouseMove={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+        document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+        document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+        e.currentTarget.style.setProperty('--mouse-x', `${e.clientX}px`);
+        e.currentTarget.style.setProperty('--mouse-y', `${e.clientY}px`);
       }}
     >
       <div className="landing-grid-bg" />

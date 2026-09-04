@@ -61,6 +61,17 @@ function App() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Track mouse coordinates globally for glowing grid at all zoom levels
+  React.useEffect(() => {
+    if (appMode !== 'landing') return;
+    const handleMouseMove = (e) => {
+      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+    };
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [appMode]);
+
   React.useEffect(() => {
     // Reset all review windows on route change
     setIsCreatingReview(false);
@@ -176,9 +187,10 @@ function App() {
             overflowY: 'auto'
           }}
           onMouseMove={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
-            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX}px`);
+            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY}px`);
           }}
         >
           <div className="landing-grid-bg" />

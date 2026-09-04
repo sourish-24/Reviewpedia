@@ -432,38 +432,52 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
 
           {/* Product Headline & Ratings */}
           <div style={{ padding: '0 0 16px 0' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', marginBottom: '10px' }}>
-              <span style={{ backgroundColor: 'rgba(14, 165, 233, 0.12)', color: '#0284c7', border: '1px solid rgba(14, 165, 233, 0.25)', borderRadius: '9999px', padding: '3px 12px', fontSize: '0.78rem', fontWeight: 700 }}>
-                {review.product?.category || 'General'}
-              </span>
+            {/* Product Name & Brand Pillbox side-by-side with bottoms aligned */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-end',
+              gap: '12px',
+              flexWrap: 'wrap',
+              marginBottom: '6px'
+            }}>
+              <h1 style={{
+                fontSize: '2rem',
+                fontWeight: 800,
+                color: '#0f172a',
+                margin: 0,
+                letterSpacing: '-0.02em',
+                lineHeight: 1.2,
+                wordBreak: 'break-word'
+              }}>
+                {review.product?.name}
+              </h1>
               {review.product?.brand && (
-                <span style={{ backgroundColor: '#ffffff', border: '1px solid #e5e0da', color: '#334155', borderRadius: '9999px', padding: '3px 12px', fontSize: '0.78rem', fontWeight: 600 }}>
+                <span style={{
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e5e0da',
+                  color: '#334155',
+                  borderRadius: '9999px',
+                  padding: '3px 12px',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  marginBottom: '5px'
+                }}>
                   {review.product.brand}
-                </span>
-              )}
-              {review.source?.platform && 
-               review.source.platform.toLowerCase() !== 'reviewpedia' && 
-               review.source.platform.toLowerCase() !== 'local post' && (
-                <span style={{ backgroundColor: '#ffffff', color: '#64748b', border: '1px solid #e5e0da', borderRadius: '9999px', padding: '3px 10px', fontSize: '0.75rem' }}>
-                  via {review.source.platform}
                 </span>
               )}
             </div>
 
-            <h1 style={{
-              fontSize: '2rem',
-              fontWeight: 800,
-              color: '#0f172a',
-              margin: '0 0 12px 0',
-              letterSpacing: '-0.02em',
-              lineHeight: 1.25,
-              wordBreak: 'break-word'
-            }}>
-              {review.product?.name}
-            </h1>
+            {/* Category Name below (out of pillbox, keeping font size) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <span style={{ color: '#0284c7', fontSize: '0.78rem', fontWeight: 600 }}>
+                {review.product?.category || 'General'}
+              </span>
+            </div>
 
-            {/* Stars & Rating */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Stars & Rating (with added gap above) */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '18px' }}>
               <div style={{ display: 'flex', gap: '3px' }}>
                 {[...Array(5)].map((_, i) => (
                   <Star
