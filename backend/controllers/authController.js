@@ -12,8 +12,11 @@ const getCookieOptions = () => ({
 
 export const register = async (req, res) => {
     try {
-        const user = await authService.registerUser(req.body);
-        res.status(201).json({ success: true, user });
+        const { token, user } = await authService.registerUser(req.body);
+
+        res.cookie('token', token, getCookieOptions());
+
+        res.status(201).json({ success: true, token, user });
     } catch (error) {
         res.status(400).json({ success: false, error: error.message });
     }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, Heart, CornerDownRight, Trash2, Send, Plus, Minus, User as UserIcon } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
+import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
 
 /**
  * Formats a date into human-friendly relative time (e.g. "2h ago", "3d ago", "2mo ago")
@@ -107,7 +108,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
       setIsSubmitting(true);
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({ text: topCommentText.trim() })
       });
@@ -140,7 +141,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
       setIsSubmitting(true);
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({ text: replyText.trim(), parentId })
       });
@@ -186,7 +187,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
     try {
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments/${commentId}/like`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include'
       });
       if (res.ok) {
@@ -205,6 +206,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
     try {
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments/${commentId}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
         credentials: 'include'
       });
       if (res.ok) {

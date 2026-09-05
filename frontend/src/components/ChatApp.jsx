@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
 import { io } from 'socket.io-client';
+import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
 
 export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const [socket, setSocket] = useState(null);
@@ -39,7 +40,10 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const fetchConversations = async () => {
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
-            const res = await fetch(`${API_URL}/api/chat/conversations`, { credentials: 'include' });
+            const res = await fetch(`${API_URL}/api/chat/conversations`, { 
+                headers: getAuthHeaders(),
+                credentials: 'include' 
+            });
             const data = await res.json();
             if (data.success) {
                 setConversations(data.conversations);
@@ -64,7 +68,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
             const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/conversations`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getJsonAuthHeaders(),
                 credentials: 'include',
                 body: JSON.stringify({ targetUsername })
             });

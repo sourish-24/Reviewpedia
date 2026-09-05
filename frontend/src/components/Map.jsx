@@ -3,6 +3,7 @@ import L from 'leaflet';
 import * as h3 from 'h3-js';
 
 import { MapPin, Info, RefreshCw, Crosshair, X } from 'lucide-react';
+import LoadingPopup from './LoadingPopup';
 
 const getReliableUserLocation = (onSuccess, onError) => {
   if (!navigator.geolocation) {
@@ -389,18 +390,7 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
 
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      {loadingMsg && (
-        <div style={{ 
-          position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', 
-          zIndex: 9999, background: 'var(--panel-bg)', padding: '10px 20px',
-          borderRadius: 20, backdropFilter: 'blur(10px)', boxShadow: 'var(--glass-shadow)',
-          display: 'flex', alignItems: 'center', gap: 10, border: '1px solid var(--glass-border)',
-          fontWeight: 500, color: 'var(--primary-color)'
-        }}>
-          <RefreshCw className="animate-spin" size={18} />
-          {loadingMsg}
-        </div>
-      )}
+      <LoadingPopup message={loadingMsg} />
       
 
 

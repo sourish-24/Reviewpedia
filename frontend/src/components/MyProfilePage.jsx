@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX, Crop } from 'lucide-react';
 import AvatarCropModal from './AvatarCropModal';
+import { getJsonAuthHeaders, getAuthHeaders, setAuthToken } from '../utils/apiUtils';
 
 export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAccount }) {
   const [username, setUsername] = useState(user?.username || '');
@@ -31,7 +32,7 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
     try {
       const res = await fetch(`${API_URL}/api/auth/account`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         body: JSON.stringify({ email: confirmEmailInput.trim() }),
         credentials: 'include'
       });
@@ -86,12 +87,16 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
 
       const res = await fetch(`${API_URL}/api/auth/profile`, {
           method: 'PUT',
+          headers: getAuthHeaders(),
           body: formData,
           credentials: 'include'
       });
       const data = await res.json();
       
       if (data.success) {
+        if (data.token) {
+          setAuthToken(data.token);
+        }
         onUserUpdate(data.user);
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);

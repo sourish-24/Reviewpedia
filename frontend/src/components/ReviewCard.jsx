@@ -8,6 +8,7 @@ import { formatDate } from '../utils/dateUtils';
 import { getReviewUrl } from '../utils/urlUtils';
 import ReviewClampedText from './ReviewClampedText';
 import StarRating from './StarRating';
+import { getJsonAuthHeaders, getAuthHeaders } from '../utils/apiUtils';
 
 export default function ReviewCard({ review, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, onLikeToggle }) {
   const navigate = useNavigate();
@@ -59,7 +60,7 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
       const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/like`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include'
       });
       if (res.ok) {
@@ -88,6 +89,7 @@ export default function ReviewCard({ review, onClose, onUserClick, currentUser, 
           const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
           const res = await fetch(`${API_URL}/api/reviews/${review.id}`, {
             method: 'DELETE',
+            headers: getAuthHeaders(),
             credentials: 'include'
           });
           if (res.ok) {

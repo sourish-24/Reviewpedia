@@ -3,6 +3,7 @@ import { Camera, MapPin, X, Trash2 } from 'lucide-react';
 import BrandAutocomplete, { toPascalCase } from './BrandAutocomplete';
 import CategoryDropdown from './CategoryDropdown';
 import StarRating from './StarRating';
+import { getAuthHeaders } from '../utils/apiUtils';
 
 export default function CreateReview({ onClose, onPostSuccess, editingReview }) {
   const [rating, setRating] = useState(editingReview?.review?.rating || 0);
@@ -157,6 +158,7 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
 
       const res = await fetch(endpoint, {
         method,
+        headers: getAuthHeaders(),
         credentials: 'include',
         body: formData
       });

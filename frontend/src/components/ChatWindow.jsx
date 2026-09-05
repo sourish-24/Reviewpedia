@@ -3,6 +3,7 @@ import { Send, Paperclip, Loader2, Trash2, MapPin } from 'lucide-react';
 import LocationPickerModal from './LocationPickerModal';
 import MediaLightbox from './MediaLightbox';
 import ConfirmModal from './ConfirmModal';
+import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
 
 export default function ChatWindow({ conversation, currentUser, socket, onMessageSent }) {
     const [messages, setMessages] = useState([]);
@@ -75,7 +76,10 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
     const fetchMessages = async () => {
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
-            const res = await fetch(`${API_URL}/api/chat/messages/${conversation._id}`, { credentials: 'include' });
+            const res = await fetch(`${API_URL}/api/chat/messages/${conversation._id}`, { 
+                headers: getAuthHeaders(),
+                credentials: 'include' 
+            });
             const data = await res.json();
             if (data.success) {
                 setMessages(data.messages);
@@ -105,7 +109,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                 };
                 const textRes = await fetch(`${API_URL}/api/chat/messages`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: getJsonAuthHeaders(),
                     credentials: 'include',
                     body: JSON.stringify(textPayload)
                 });
@@ -125,6 +129,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                 
                 const uploadRes = await fetch(`${API_URL}/api/chat/upload`, {
                     method: 'POST',
+                    headers: getAuthHeaders(),
                     credentials: 'include',
                     body: formData
                 });
@@ -141,7 +146,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     };
                     const mediaRes = await fetch(`${API_URL}/api/chat/messages`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: getJsonAuthHeaders(),
                         credentials: 'include',
                         body: JSON.stringify(mediaPayload)
                     });
@@ -194,7 +199,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
 
             const res = await fetch(`${API_URL}/api/chat/messages`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: getJsonAuthHeaders(),
                 credentials: 'include',
                 body: JSON.stringify(payload)
             });
@@ -306,6 +311,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const res = await fetch(`${API_URL}/api/chat/conversations/${conversation._id}`, {
                         method: 'DELETE',
+                        headers: getAuthHeaders(),
                         credentials: 'include'
                     });
                     const data = await res.json();
@@ -335,6 +341,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
                     const res = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
                         method: 'DELETE',
+                        headers: getAuthHeaders(),
                         credentials: 'include'
                     });
                     const data = await res.json();
@@ -365,6 +372,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     for (const messageId of messageIds) {
                         const res = await fetch(`${API_URL}/api/chat/messages/${messageId}`, {
                             method: 'DELETE',
+                            headers: getAuthHeaders(),
                             credentials: 'include'
                         });
                         const data = await res.json();

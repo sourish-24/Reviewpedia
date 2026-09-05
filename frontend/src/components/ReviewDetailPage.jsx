@@ -10,6 +10,7 @@ import MediaLightbox from './MediaLightbox';
 import StarRating from './StarRating';
 import { formatDate } from '../utils/dateUtils';
 import { extractReviewId } from '../utils/urlUtils';
+import { getJsonAuthHeaders, getAuthHeaders } from '../utils/apiUtils';
 
 export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews, onOpenAuth, onLikeToggle, onUserClick }) {
   const navigate = useNavigate();
@@ -130,7 +131,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
       try {
         const res = await fetch(`${API_URL}/api/reviews/fetch-metadata`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: getJsonAuthHeaders(),
           credentials: 'include',
           body: JSON.stringify({ url: trimmed })
         });
@@ -181,7 +182,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
     try {
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/like`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include'
       });
       if (res.ok) {
@@ -257,7 +258,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
     try {
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/purchase-info`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include',
         body: JSON.stringify({
           purchaseLink: trimmedLink,

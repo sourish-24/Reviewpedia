@@ -27,7 +27,9 @@ app.use(cors({
         }
         return callback(null, true); // Dynamic allow for production HTTPS origins
     },
-    credentials: true
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS']
 }));
 app.use(express.json());
 app.use(cookieParser());

@@ -8,6 +8,7 @@ import { formatDate } from '../utils/dateUtils';
 import { getReviewUrl } from '../utils/urlUtils';
 import ReviewClampedText from './ReviewClampedText';
 import StarRating from './StarRating';
+import { getJsonAuthHeaders, getAuthHeaders } from '../utils/apiUtils';
 
 export default function MultiReviewCard({ reviews, onClose, onUserClick, currentUser, onDeleteSuccess, onEdit, isMyReviews, onLikeToggle }) {
   const navigate = useNavigate();
@@ -64,7 +65,7 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
       const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
       const res = await fetch(`${API_URL}/api/reviews/${reviewId}/like`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: getJsonAuthHeaders(),
         credentials: 'include'
       });
       if (res.ok) {
@@ -108,6 +109,7 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
           const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
           const res = await fetch(`${API_URL}/api/reviews/${reviewId}`, {
             method: 'DELETE',
+            headers: getAuthHeaders(),
             credentials: 'include'
           });
           if (res.ok) {

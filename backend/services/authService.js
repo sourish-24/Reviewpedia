@@ -21,14 +21,20 @@ export const registerUser = async (data) => {
     const newUser = new User({ username, email, password });
     await newUser.save();
 
-    // Return user without password
-    return {
+    const payload = {
         id: newUser._id,
         username: newUser.username,
         email: newUser.email,
         role: newUser.role,
         profilePic: newUser.profilePic,
         totalMediaBytes: newUser.totalMediaBytes || 0
+    };
+
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
+
+    return {
+        token,
+        user: payload
     };
 };
 

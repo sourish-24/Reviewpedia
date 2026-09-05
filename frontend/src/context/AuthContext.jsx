@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getAuthHeaders, setAuthToken, removeAuthToken } from '../utils/apiUtils';
 
 const AuthContext = createContext();
 
@@ -11,20 +12,23 @@ export const AuthProvider = ({ children }) => {
     const API_URL = import.meta.env.VITE_API_URL || '';
 
     useEffect(() => {
-        // Fetch current user on mount
+        // Fetch current user on mount using cookies + Authorization header fallback
         const fetchUser = async () => {
             try {
-                const res = await fetch(`${API_URL}/api/auth/me`, { credentials: 'omit' }); // Note: for full deployment, this should be 'include'
-                // Let's use include directly since we set up credentials: true in cors
-                const response = await fetch(`${API_URL}/api/auth/me`, { credentials: 'include' });
+                const response = await fetch(`${API_URL}/api/auth/me`, { 
+                    headers: { ...getAuthHeaders() },
+                    credentials: 'include' 
+                });
                 const data = await response.json();
-                if (data.success) {
+                if (data.success && data.user) {
                     setUser(data.user);
                 } else {
                     setUser(null);
+                    removeAuthToken();
                 }
             } catch (err) {
                 console.log('Not authenticated');
+                setUser(null);
             } finally {
                 setLoading(false);
             }
@@ -41,6 +45,9 @@ export const AuthProvider = ({ children }) => {
         });
         const data = await res.json();
         if (data.success) {
+            if (data.token) {
+                setAuthToken(data.token);
+            }
             setUser(data.user);
             return true;
         }
@@ -56,16 +63,28 @@ export const AuthProvider = ({ children }) => {
         });
         const data = await res.json();
         if (data.success) {
-            // Auto login after register
-            await login(email, password);
+            if (data.token) {
+                setAuthToken(data.token);
+            }
+            setUser(data.user);
             return true;
         }
         throw new Error(data.error || 'Registration failed');
     };
 
     const logout = async () => {
-        await fetch(`${API_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
-        setUser(null);
+        try {
+            await fetch(`${API_URL}/api/auth/logout`, { 
+                method: 'POST', 
+                headers: { ...getAuthHeaders() },
+                credentials: 'include' 
+            });
+        } catch (e) {
+            console.error('Logout error:', e);
+        } finally {
+            removeAuthToken();
+            setUser(null);
+        }
     };
 
     return (
