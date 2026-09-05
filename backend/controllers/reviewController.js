@@ -3,6 +3,7 @@ import User from '../models/User.js';
 import Comment from '../models/Comment.js';
 import { latLngToCell } from 'h3-js';
 import { cloudinaryInstance } from '../middlewares/uploadMiddleware.js';
+import { fetchUrlMetadata } from '../utils/metadataFetcher.js';
 
 const MAX_MEDIA_LIMIT = 128 * 1024 * 1024; // 128 MB
 
@@ -264,6 +265,9 @@ export const updateReview = async (req, res, next) => {
         if (bodyData.product?.name) review.product.name = bodyData.product.name;
         if (bodyData.product?.brand !== undefined) review.product.brand = bodyData.product.brand;
         if (bodyData.product?.category) review.product.category = bodyData.product.category;
+        if (bodyData.product?.purchaseLink !== undefined) review.product.purchaseLink = bodyData.product.purchaseLink;
+        if (bodyData.product?.purchaseType !== undefined) review.product.purchaseType = bodyData.product.purchaseType;
+        if (bodyData.product?.purchaseMeta !== undefined) review.product.purchaseMeta = bodyData.product.purchaseMeta;
 
         if (bodyData.review) {
             if (bodyData.review.text !== undefined) {
@@ -526,6 +530,67 @@ export const deleteComment = async (req, res, next) => {
         await Comment.findByIdAndDelete(commentId);
 
         res.json({ success: true, message: 'Comment deleted successfully' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const updatePurchaseInfo = async (req, res, next) => {
+    try {
+        const review = await Review.findById(req.params.id);
+        if (!review) {
+            return res.status(404).json({ error: 'Review not found' });
+        }
+
+        const userId = req.user?.id?.toString() || req.user?._id?.toString();
+        const username = req.user?.username;
+
+        const isOwner = (review.user?.id && review.user.id.toString() === userId) ||
+                        (review.user?.name === username) ||
+                        req.user?.role === 'admin';
+
+        if (!isOwner) {
+            return res.status(403).json({ error: 'You are not authorized to update this review' });
+        }
+
+        const { purchaseLink, purchaseType, purchaseMeta } = req.body;
+        if (!review.product) review.product = {};
+        review.product.purchaseLink = purchaseLink !== undefined ? purchaseLink : review.product.purchaseLink;
+        review.product.purchaseType = purchaseType || review.product.purchaseType || 'online';
+        if (purchaseMeta !== undefined) {
+            review.product.purchaseMeta = purchaseMeta || {
+                title: '',
+                description: '',
+                image: '',
+                siteName: '',
+                url: ''
+            };
+        }
+
+        await review.save();
+
+        const rObj = review.toObject();
+        rObj.id = rObj._id.toString();
+
+        res.json(rObj);
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getLinkMetadata = async (req, res, next) => {
+    try {
+        const { url } = req.body;
+        if (!url || typeof url !== 'string' || url.trim() === '') {
+            return res.status(400).json({ error: 'A valid URL is required' });
+        }
+
+        const metadata = await fetchUrlMetadata(url);
+        if (!metadata) {
+            return res.status(422).json({ error: 'Could not fetch preview for this link' });
+        }
+
+        res.json({ success: true, metadata });
     } catch (err) {
         next(err);
     }

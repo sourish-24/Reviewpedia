@@ -6,6 +6,8 @@ import {
     deleteReview, 
     updateReview, 
     toggleLikeReview,
+    updatePurchaseInfo,
+    getLinkMetadata,
     getComments,
     addComment,
     toggleLikeComment,
@@ -19,10 +21,14 @@ const router = express.Router();
 router.get('/', getReviews);
 router.post('/', requireAuth, upload.array('images', 10), createReview);
 
+// Link preview metadata
+router.post('/fetch-metadata', requireAuth, getLinkMetadata);
+
 // Review details and likes
 router.get('/:id', getReviewById);
 router.post('/:id/like', requireAuth, toggleLikeReview);
 router.put('/:id', requireAuth, upload.array('images', 10), updateReview);
+router.patch('/:id/purchase-info', requireAuth, updatePurchaseInfo);
 router.delete('/:id', requireAuth, deleteReview);
 
 // Comments and nested replies

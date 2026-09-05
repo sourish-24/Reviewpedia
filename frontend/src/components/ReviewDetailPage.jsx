@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { 
-  ArrowLeft, Star, Heart, MessageSquare, Share2, MapPin, 
-  CheckCircle, Calendar, Check, Sparkles, User as UserIcon
+  ArrowLeft, Star, Heart, MessageSquare, Share2, 
+  CheckCircle, Calendar, Check, Sparkles, User as UserIcon,
+  ExternalLink, Plus, Pencil, ShoppingBag, Loader2, Trash2
 } from 'lucide-react';
 import CommentSection from './CommentSection';
 import MediaLightbox from './MediaLightbox';
@@ -30,6 +31,12 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
   const [isLikeHovered, setIsLikeHovered] = useState(false);
   const [isCommentHovered, setIsCommentHovered] = useState(false);
   const [isShareHovered, setIsShareHovered] = useState(false);
+  const [isEditingPurchase, setIsEditingPurchase] = useState(false);
+  const [tempLink, setTempLink] = useState('');
+  const [tempMeta, setTempMeta] = useState(null);
+  const [isFetchingMeta, setIsFetchingMeta] = useState(false);
+  const [metaError, setMetaError] = useState(null);
+  const [isSavingPurchase, setIsSavingPurchase] = useState(false);
 
   const commentsRef = useRef(null);
   const profileMenuRef = useRef(null);
@@ -82,6 +89,76 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
     fetchReview();
     return () => { isMounted = false; };
   }, [reviewId, API_URL]);
+
+  // Sync purchase info when review data loads
+  useEffect(() => {
+    if (review?.product) {
+      setTempLink(review.product.purchaseLink || '');
+      setTempMeta(review.product.purchaseMeta || null);
+      setMetaError(null);
+    }
+  }, [review?.product?.purchaseLink, review?.product?.purchaseMeta]);
+
+  // Debounced live metadata fetcher when editing link
+  useEffect(() => {
+    if (!isEditingPurchase) return;
+
+    const trimmed = (tempLink || '').trim();
+    if (!trimmed) {
+      setTempMeta(null);
+      setMetaError(null);
+      setIsFetchingMeta(false);
+      return;
+    }
+
+    // Skip if already matches existing loaded metadata
+    if (tempMeta?.url && tempMeta?.title && (tempMeta.url === trimmed || tempMeta.url.includes(trimmed) || trimmed.includes(tempMeta.url))) {
+      return;
+    }
+
+    if (!trimmed.includes('.') || trimmed.length < 5) {
+      setTempMeta(null);
+      setMetaError(null);
+      setIsFetchingMeta(false);
+      return;
+    }
+
+    setIsFetchingMeta(true);
+    setMetaError(null);
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/reviews/fetch-metadata`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ url: trimmed })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.metadata && data.metadata.title) {
+            setTempMeta(data.metadata);
+            setMetaError(null);
+          } else {
+            setTempMeta(null);
+            setMetaError('Invalid link');
+          }
+        } else {
+          setTempMeta(null);
+          setMetaError('Invalid link');
+        }
+      } catch (err) {
+        console.error('Error fetching metadata:', err);
+        setTempMeta(null);
+        setMetaError('Invalid link');
+      } finally {
+        setIsFetchingMeta(false);
+      }
+    }, 700);
+
+    return () => clearTimeout(timer);
+  }, [tempLink, isEditingPurchase, API_URL]);
 
   // Handle like toggle
   const handleLike = async () => {
@@ -139,6 +216,207 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
     (currentUser?._id && localLikes.includes(currentUser._id.toString())) ||
     (currentUser?.username && localLikes.includes(currentUser.username))
   ) : false;
+
+  const isOwner = Boolean(
+    currentUser && review && (
+      (currentUser.username && review.user?.name && currentUser.username === review.user.name) ||
+      (currentUser.id && review.user?.id && (currentUser.id === review.user.id || currentUser.id.toString() === review.user.id.toString())) ||
+      (currentUser._id && review.user?.id && (currentUser._id === review.user.id || currentUser._id.toString() === review.user.id.toString())) ||
+      (currentUser.role === 'admin')
+    )
+  );
+
+  const formatExternalUrl = (url) => {
+    if (!url) return '#';
+    const trimmed = url.trim();
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+    return `https://${trimmed}`;
+  };
+
+  const getDisplayLinkTitle = (url) => {
+    if (!url) return 'Visit Link';
+    try {
+      const formatted = formatExternalUrl(url);
+      const parsed = new URL(formatted);
+      const hostname = parsed.hostname.replace(/^www\./, '');
+      if (hostname.includes('google') || hostname.includes('maps')) {
+        return 'View on Google Maps';
+      }
+      return `Visit ${hostname}`;
+    } catch {
+      return 'Visit Link';
+    }
+  };
+
+  const handleSavePurchaseInfo = async () => {
+    if (!reviewId) return;
+    setIsSavingPurchase(true);
+    const trimmedLink = tempLink.trim();
+    try {
+      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/purchase-info`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          purchaseLink: trimmedLink,
+          purchaseMeta: trimmedLink ? tempMeta : null
+        })
+      });
+
+      if (res.ok) {
+        const updatedData = await res.json();
+        setReview(prev => ({
+          ...prev,
+          product: {
+            ...prev.product,
+            purchaseLink: updatedData.product?.purchaseLink !== undefined ? updatedData.product.purchaseLink : trimmedLink,
+            purchaseMeta: updatedData.product?.purchaseMeta || (trimmedLink ? tempMeta : null)
+          }
+        }));
+        setIsEditingPurchase(false);
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || 'Failed to update purchase info');
+      }
+    } catch (err) {
+      console.error('Error saving purchase info:', err);
+      alert('Error updating purchase info');
+    } finally {
+      setIsSavingPurchase(false);
+    }
+  };
+
+  const renderWhatsAppCard = (meta, targetUrl, isClickable = true) => {
+    if (!meta || !meta.title) return null;
+
+    const cardContent = (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          backgroundColor: '#f8fafc',
+          borderRadius: '12px',
+          border: '1px solid #e2e8f0',
+          padding: '10px 12px',
+          boxSizing: 'border-box',
+          width: '100%',
+          cursor: isClickable ? 'pointer' : 'default'
+        }}
+      >
+        {/* Left: Thumbnail Image */}
+        {meta.image ? (
+          <div style={{
+            width: '64px',
+            height: '64px',
+            minWidth: '64px',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            backgroundColor: '#ffffff',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <img
+              src={meta.image}
+              alt={meta.title}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </div>
+        ) : (
+          <div style={{
+            width: '64px',
+            height: '64px',
+            minWidth: '64px',
+            borderRadius: '8px',
+            backgroundColor: '#e0f2fe',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#0ea5e9',
+            flexShrink: 0
+          }}>
+            <ShoppingBag size={24} />
+          </div>
+        )}
+
+        {/* Right: Text & Domain */}
+        <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
+          {/* Title (Bold, max 2 lines) */}
+          <div
+            style={{
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              lineHeight: 1.25,
+              overflow: 'hidden',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical'
+            }}
+            title={meta.title}
+          >
+            {meta.title}
+          </div>
+
+          {/* Description (Muted, max 1 line) */}
+          {meta.description && (
+            <div
+              style={{
+                fontSize: '0.74rem',
+                color: '#64748b',
+                lineHeight: 1.25,
+                overflow: 'hidden',
+                display: '-webkit-box',
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: 'vertical'
+              }}
+              title={meta.description}
+            >
+              {meta.description}
+            </div>
+          )}
+
+          {/* Domain / Site Name */}
+          <div style={{
+            fontSize: '0.72rem',
+            color: '#0ea5e9',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            marginTop: '2px'
+          }}>
+            <span>{meta.siteName || getDisplayLinkTitle(targetUrl || meta.url)}</span>
+            <ExternalLink size={11} />
+          </div>
+        </div>
+      </div>
+    );
+
+    if (isClickable && targetUrl) {
+      return (
+        <a
+          href={formatExternalUrl(targetUrl)}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: 'none', display: 'block', width: '100%' }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {cardContent}
+        </a>
+      );
+    }
+
+    return cardContent;
+  };
 
   const mediaList = review?.review?.media || [];
   const activeMedia = mediaList[activeMediaIndex] || null;
@@ -208,6 +486,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
       width: '100vw',
       height: '100vh',
       overflowY: 'auto',
+      overflowX: 'hidden',
       WebkitOverflowScrolling: 'touch',
       backgroundColor: '#F8F4F0',
       color: '#0f172a',
@@ -356,17 +635,403 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
       )}
 
 
-      {/* Main Container */}
-      <main style={{
+      {/* Centered Page Wrapper holding Middle Elements and Purchase Info Box */}
+      <div style={{
         maxWidth: 820,
         width: '100%',
         margin: '32px auto 60px auto',
         padding: '0 20px',
-        boxSizing: 'border-box',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '24px'
+        boxSizing: 'border-box'
       }}>
+        {/* Purchase Info Box (Matches review card border, header on top outside) */}
+        <aside className="purchase-info-sidebar">
+          {/* Header: "Where did you buy this from?" (owner) vs "Purchased from" (viewers) - OUTSIDE on top of box */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            marginBottom: '10px',
+            padding: '0 4px'
+          }}>
+            <h3 style={{
+              fontSize: '0.92rem',
+              fontWeight: 700,
+              color: '#0f172a',
+              margin: 0,
+              letterSpacing: '-0.01em'
+            }}>
+              {isOwner ? "Where did you buy this from?" : "Purchased from"}
+            </h3>
+
+            {isOwner && !isEditingPurchase && review.product?.purchaseLink && (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTempLink(review.product?.purchaseLink || '');
+                  setTempMeta(review.product?.purchaseMeta || null);
+                  setMetaError(null);
+                  setIsEditingPurchase(true);
+                }}
+                title="Edit purchase link"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  backgroundColor: 'transparent',
+                  border: 'none',
+                  color: '#0ea5e9',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  padding: '2px 6px',
+                  borderRadius: '6px'
+                }}
+              >
+                <Pencil size={12} />
+                <span>Edit</span>
+              </button>
+            )}
+          </div>
+
+          {/* Body: Edit Form OR Saved Card (Enlarged, parent box disappeared) OR Empty State */}
+          {isOwner && isEditingPurchase ? (
+            /* Editing Card */
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                border: '1px solid #e5e0da',
+                padding: '18px 20px',
+                boxSizing: 'border-box',
+                boxShadow: 'none'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Input Box for Link */}
+              <input
+                type="text"
+                value={tempLink}
+                onChange={(e) => setTempLink(e.target.value)}
+                placeholder="Paste product or store link (Amazon, Flipkart, Google Maps, etc.)"
+                style={{
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  padding: '9px 12px',
+                  fontSize: '0.8rem',
+                  borderRadius: '10px',
+                  border: '1.5px solid #e2e8f0',
+                  outline: 'none',
+                  marginBottom: '12px',
+                  backgroundColor: '#ffffff',
+                  color: '#0f172a',
+                  fontFamily: 'var(--font-body)'
+                }}
+                onFocus={(e) => e.currentTarget.style.borderColor = '#0ea5e9'}
+                onBlur={(e) => e.currentTarget.style.borderColor = '#e2e8f0'}
+                autoFocus
+              />
+
+              {/* Loading animation without box */}
+              {isFetchingMeta && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '12px 0',
+                  marginBottom: '12px'
+                }}>
+                  <Loader2 size={22} color="#0ea5e9" className="animate-spin" />
+                </div>
+              )}
+
+              {metaError && (
+                <div style={{
+                  fontSize: '0.78rem',
+                  color: '#ef4444',
+                  fontWeight: 500,
+                  marginBottom: '12px',
+                  marginTop: '-4px',
+                  paddingLeft: '2px'
+                }}>
+                  {metaError}
+                </div>
+              )}
+
+              {tempMeta && tempMeta.title && !isFetchingMeta && (
+                <div style={{ marginBottom: '12px' }}>
+                  {renderWhatsAppCard(tempMeta, tempLink, false)}
+                </div>
+              )}
+
+              {/* Bottom Bar: Black Trash Icon on the left, Cancel & Save on the right */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTempLink('');
+                    setTempMeta(null);
+                    setMetaError(null);
+                  }}
+                  title="Remove link and clear all"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'transparent',
+                    border: 'none',
+                    padding: '6px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#000000',
+                    transition: 'background-color 0.15s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <Trash2 size={17} color="#000000" />
+                </button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTempLink(review.product?.purchaseLink || '');
+                      setTempMeta(review.product?.purchaseMeta || null);
+                      setMetaError(null);
+                      setIsEditingPurchase(false);
+                    }}
+                    disabled={isSavingPurchase}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: '9999px',
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      color: '#64748b',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSavePurchaseInfo}
+                    disabled={isSavingPurchase || (tempLink.trim() !== '' && (isFetchingMeta || !tempMeta?.title))}
+                    title={(tempLink.trim() !== '' && (!tempMeta?.title || isFetchingMeta)) ? "Wait for metadata to load before saving, or clear the link" : ""}
+                    style={{
+                      padding: '5px 14px',
+                      borderRadius: '9999px',
+                      border: 'none',
+                      backgroundColor: (isSavingPurchase || (tempLink.trim() !== '' && (isFetchingMeta || !tempMeta?.title))) ? '#94a3b8' : '#0ea5e9',
+                      color: '#ffffff',
+                      fontSize: '0.78rem',
+                      fontWeight: 600,
+                      cursor: (isSavingPurchase || (tempLink.trim() !== '' && (isFetchingMeta || !tempMeta?.title))) ? 'not-allowed' : 'pointer',
+                      opacity: (isSavingPurchase || (tempLink.trim() !== '' && (isFetchingMeta || !tempMeta?.title))) ? 0.6 : 1,
+                      transition: 'all 0.15s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!isSavingPurchase && !(tempLink.trim() !== '' && (isFetchingMeta || !tempMeta?.title))) {
+                        e.currentTarget.style.backgroundColor = '#0284c7';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!isSavingPurchase && !(tempLink.trim() !== '' && (isFetchingMeta || !tempMeta?.title))) {
+                        e.currentTarget.style.backgroundColor = '#0ea5e9';
+                      }
+                    }}
+                  >
+                    {isSavingPurchase ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : review.product?.purchaseLink ? (
+            /* SAVED DISPLAY MODE: Product image, name, and link box enlarged to size of parent box (parent box disappeared!) */
+            <a
+              href={formatExternalUrl(review.product.purchaseLink)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                textDecoration: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                border: '1px solid #e5e0da',
+                padding: '18px 20px',
+                boxSizing: 'border-box',
+                width: '100%',
+                cursor: 'pointer'
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Product Thumbnail (Enlarged) */}
+              {review.product?.purchaseMeta?.image ? (
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  minWidth: '80px',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  backgroundColor: '#ffffff',
+                  border: '1px solid #e2e8f0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <img
+                    src={review.product.purchaseMeta.image}
+                    alt={review.product.purchaseMeta.title || "Product"}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                    }}
+                  />
+                </div>
+              ) : (
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  minWidth: '80px',
+                  borderRadius: '12px',
+                  backgroundColor: '#f0f9ff',
+                  border: '1px solid #e0f2fe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#0ea5e9',
+                  flexShrink: 0
+                }}>
+                  <ShoppingBag size={28} />
+                </div>
+              )}
+
+              {/* Product Info & Link */}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div
+                  style={{
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    lineHeight: 1.3,
+                    overflow: 'hidden',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical'
+                  }}
+                  title={review.product?.purchaseMeta?.title || review.product.purchaseLink}
+                >
+                  {review.product?.purchaseMeta?.title || getDisplayLinkTitle(review.product.purchaseLink)}
+                </div>
+
+                {review.product?.purchaseMeta?.description && (
+                  <div
+                    style={{
+                      fontSize: '0.76rem',
+                      color: '#64748b',
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical'
+                    }}
+                    title={review.product.purchaseMeta.description}
+                  >
+                    {review.product.purchaseMeta.description}
+                  </div>
+                )}
+
+                <div style={{
+                  fontSize: '0.74rem',
+                  color: '#0ea5e9',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  marginTop: '2px'
+                }}>
+                  <span>{review.product?.purchaseMeta?.siteName || getDisplayLinkTitle(review.product.purchaseLink)}</span>
+                  <ExternalLink size={12} />
+                </div>
+              </div>
+            </a>
+          ) : (
+            /* Empty State */
+            <div
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '16px',
+                border: '1px solid #e5e0da',
+                padding: '18px 20px',
+                boxSizing: 'border-box',
+                boxShadow: 'none',
+                cursor: isOwner ? 'pointer' : 'default'
+              }}
+              onClick={() => {
+                if (isOwner && !isEditingPurchase) {
+                  setTempLink('');
+                  setTempMeta(null);
+                  setMetaError(null);
+                  setIsEditingPurchase(true);
+                }
+              }}
+            >
+              {isOwner ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    padding: '6px 0',
+                    color: '#0ea5e9',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    width: '100%',
+                    transition: 'color 0.15s ease'
+                  }}
+                  onMouseOver={(e) => e.currentTarget.style.color = '#0284c7'}
+                  onMouseOut={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                >
+                  <Plus size={16} />
+                  <span>Add purchase link</span>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '6px 0',
+                  fontSize: '0.84rem',
+                  color: '#94a3b8',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  width: '100%'
+                }}>
+                  Not specified by reviewer
+                </div>
+              )}
+            </div>
+          )}
+        </aside>
+
+        {/* Middle Elements (Review Card & Comments) - 100% Centered */}
+        <main style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '24px'
+        }}>
         {/* Main Review Section (White Box) */}
         <article style={{
           backgroundColor: '#ffffff',
@@ -696,6 +1361,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           />
         </section>
       </main>
+      </div>
 
       {/* Lightbox for large media viewing */}
       {isLightboxOpen && mediaList.length > 0 && (

@@ -10,7 +10,16 @@ const ReviewSchema = new mongoose.Schema({
   product: {
     name: { type: String, required: true },
     brand: { type: String },
-    category: { type: String }
+    category: { type: String },
+    purchaseLink: { type: String, default: '' },
+    purchaseType: { type: String, default: 'online' },
+    purchaseMeta: {
+      title: { type: String, default: '' },
+      description: { type: String, default: '' },
+      image: { type: String, default: '' },
+      siteName: { type: String, default: '' },
+      url: { type: String, default: '' }
+    }
   },
   review: {
     title: { type: String },
