@@ -295,7 +295,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
+          alignItems: 'flex-start',
           gap: '12px',
           backgroundColor: '#f8fafc',
           borderRadius: '12px',
@@ -309,10 +309,10 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
         {/* Left: Thumbnail Image */}
         {meta.image ? (
           <div style={{
-            width: '64px',
-            height: '64px',
-            minWidth: '64px',
-            borderRadius: '8px',
+            width: '84px',
+            height: '84px',
+            minWidth: '84px',
+            borderRadius: '10px',
             overflow: 'hidden',
             backgroundColor: '#ffffff',
             border: '1px solid #e2e8f0',
@@ -332,10 +332,10 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           </div>
         ) : (
           <div style={{
-            width: '64px',
-            height: '64px',
-            minWidth: '64px',
-            borderRadius: '8px',
+            width: '84px',
+            height: '84px',
+            minWidth: '84px',
+            borderRadius: '10px',
             backgroundColor: '#e0f2fe',
             display: 'flex',
             alignItems: 'center',
@@ -343,22 +343,22 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
             color: '#0ea5e9',
             flexShrink: 0
           }}>
-            <ShoppingBag size={24} />
+            <ShoppingBag size={28} />
           </div>
         )}
 
         {/* Right: Text & Domain */}
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '3px' }}>
-          {/* Title (Bold, max 2 lines) */}
+          {/* Title (Bold, max 3 lines) */}
           <div
             style={{
               fontSize: '0.84rem',
               fontWeight: 700,
               color: '#0f172a',
-              lineHeight: 1.25,
+              lineHeight: 1.3,
               overflow: 'hidden',
               display: '-webkit-box',
-              WebkitLineClamp: 2,
+              WebkitLineClamp: 3,
               WebkitBoxOrient: 'vertical'
             }}
             title={meta.title}
@@ -860,7 +860,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
               style={{
                 textDecoration: 'none',
                 display: 'flex',
-                alignItems: 'center',
+                alignItems: 'flex-start',
                 gap: '16px',
                 backgroundColor: '#ffffff',
                 borderRadius: '16px',
@@ -875,9 +875,9 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
               {/* Product Thumbnail (Enlarged) */}
               {review.product?.purchaseMeta?.image ? (
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  minWidth: '80px',
+                  width: '100px',
+                  height: '100px',
+                  minWidth: '100px',
                   borderRadius: '12px',
                   overflow: 'hidden',
                   backgroundColor: '#ffffff',
@@ -898,9 +898,9 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                 </div>
               ) : (
                 <div style={{
-                  width: '80px',
-                  height: '80px',
-                  minWidth: '80px',
+                  width: '100px',
+                  height: '100px',
+                  minWidth: '100px',
                   borderRadius: '12px',
                   backgroundColor: '#f0f9ff',
                   border: '1px solid #e0f2fe',
@@ -910,7 +910,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                   color: '#0ea5e9',
                   flexShrink: 0
                 }}>
-                  <ShoppingBag size={28} />
+                  <ShoppingBag size={32} />
                 </div>
               )}
 
@@ -921,10 +921,10 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                     fontSize: '0.9rem',
                     fontWeight: 700,
                     color: '#0f172a',
-                    lineHeight: 1.3,
+                    lineHeight: 1.35,
                     overflow: 'hidden',
                     display: '-webkit-box',
-                    WebkitLineClamp: 2,
+                    WebkitLineClamp: 3,
                     WebkitBoxOrient: 'vertical'
                   }}
                   title={review.product?.purchaseMeta?.title || review.product.purchaseLink}
@@ -940,7 +940,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
                       lineHeight: 1.3,
                       overflow: 'hidden',
                       display: '-webkit-box',
-                      WebkitLineClamp: 1,
+                      WebkitLineClamp: 2,
                       WebkitBoxOrient: 'vertical'
                     }}
                     title={review.product.purchaseMeta.description}
