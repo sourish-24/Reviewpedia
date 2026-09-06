@@ -3,10 +3,12 @@ import { Send, Paperclip, Loader2, Trash2, MapPin } from 'lucide-react';
 import LocationPickerModal from './LocationPickerModal';
 import MediaLightbox from './MediaLightbox';
 import ConfirmModal from './ConfirmModal';
+import LoadingPopup from './LoadingPopup';
 import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
 
-export default function ChatWindow({ conversation, currentUser, socket, onMessageSent }) {
+export default function ChatWindow({ conversation, currentUser, socket, onMessageSent, onConversationDeleted }) {
     const [messages, setMessages] = useState([]);
+    const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const [text, setText] = useState('');
     const [files, setFiles] = useState([]);
     const [isSending, setIsSending] = useState(false);
@@ -74,6 +76,7 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
     };
 
     const fetchMessages = async () => {
+        setIsLoadingMessages(true);
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/messages/${conversation._id}`, { 
@@ -87,6 +90,8 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             }
         } catch (e) {
             console.error("Failed to fetch messages", e);
+        } finally {
+            setIsLoadingMessages(false);
         }
     };
 
@@ -317,8 +322,11 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                     const data = await res.json();
                     
                     if (data.success) {
-                        if (onMessageSent) onMessageSent(); 
-                        window.location.reload(); 
+                        if (onConversationDeleted) {
+                            onConversationDeleted();
+                        } else if (onMessageSent) {
+                            onMessageSent();
+                        }
                     } else {
                         alert("Failed to delete chat: " + (data.error?.message || "Unknown error"));
                     }
@@ -426,8 +434,9 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             </div>
 
             {/* Messages Area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', backgroundColor: '#161E2E' }}>
-                {messages.length === 0 ? (
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '18px', backgroundColor: '#161E2E', position: 'relative' }}>
+                <LoadingPopup message={isLoadingMessages ? "Loading messages..." : null} position="top-center" />
+                {isLoadingMessages ? null : messages.length === 0 ? (
                     <div style={{ textAlign: 'center', color: '#94a3b8', marginTop: '20px', fontSize: '0.95rem' }}>
                         Say hi to {otherUser.username}!
                     </div>

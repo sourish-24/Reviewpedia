@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
+import LoadingPopup from './LoadingPopup';
 import { io } from 'socket.io-client';
 import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
 
 export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const [socket, setSocket] = useState(null);
     const [conversations, setConversations] = useState([]);
+    const [isLoadingConversations, setIsLoadingConversations] = useState(true);
     const [activeConversation, setActiveConversation] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
 
@@ -37,7 +39,8 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
         return () => newSocket.close();
     }, [currentUser]);
 
-    const fetchConversations = async () => {
+    const fetchConversations = async (showLoading = false) => {
+        if (showLoading) setIsLoadingConversations(true);
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
             const res = await fetch(`${API_URL}/api/chat/conversations`, { 
@@ -50,11 +53,13 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
             }
         } catch (e) {
             console.error("Failed to fetch conversations", e);
+        } finally {
+            setIsLoadingConversations(false);
         }
     };
 
     useEffect(() => {
-        fetchConversations();
+        fetchConversations(true);
     }, []);
 
     useEffect(() => {
@@ -82,18 +87,24 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
         }
     };
 
+    const handleConversationDeleted = () => {
+        setActiveConversation(null);
+        fetchConversations(false);
+    };
+
     return (
         <div style={{
-            position: 'absolute', top: 0, left: 0, width: '100%', height: '100%',
-            backgroundColor: '#161E2E', zIndex: 9000, display: 'flex',
-            animation: 'fadeIn 0.2s ease-out'
+            position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+            backgroundColor: '#161E2E', zIndex: 9000, display: 'flex'
         }}>
+            <LoadingPopup message={isLoadingConversations ? "Loading chats..." : null} zIndex={9999} />
             <ChatSidebar 
                 conversations={conversations} 
                 activeConversation={activeConversation}
                 onSelectConversation={setActiveConversation}
                 onClose={onClose}
                 currentUser={currentUser}
+                isLoading={isLoadingConversations}
             />
             {activeConversation ? (
                 <ChatWindow 
@@ -101,6 +112,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
                     currentUser={currentUser} 
                     socket={socket} 
                     onMessageSent={fetchConversations}
+                    onConversationDeleted={handleConversationDeleted}
                 />
             ) : (
                 <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#161E2E', fontFamily: 'var(--font-body)' }}>

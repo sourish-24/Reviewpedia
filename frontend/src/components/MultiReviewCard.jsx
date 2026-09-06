@@ -128,7 +128,7 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
 
   return (
     <div className="review-card-overlay" style={{
-      position: 'absolute', top: '20px', left: '20px', bottom: '20px', right: 'calc(50vw + 316px)', minWidth: '320px', zIndex: 1000, maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column'
+      position: 'absolute', top: '20px', left: '20px', bottom: '20px', right: 'calc(50vw + 316px)', minWidth: '320px', zIndex: 1050, maxHeight: 'calc(100vh - 40px)', display: 'flex', flexDirection: 'column'
     }}>
       <div className="glass-panel" style={{ padding: '24px', position: 'relative', display: 'flex', flexDirection: 'column', gap: '16px', overflow: 'hidden', height: '100%' }}>
         <button onClick={onClose} style={{

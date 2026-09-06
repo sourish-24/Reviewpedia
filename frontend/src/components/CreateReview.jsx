@@ -218,8 +218,8 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
 
   return (
     <div style={{ 
-        width: '100%',
-        minWidth: '580px',
+        width: 'min(600px, calc(100vw - 40px))',
+        minWidth: 'min(580px, calc(100vw - 40px))',
         height: 'calc(100vh - 120px)',
         maxHeight: 'calc(100vh - 120px)',
         overflow: 'hidden',

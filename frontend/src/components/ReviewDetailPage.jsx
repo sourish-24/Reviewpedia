@@ -8,6 +8,8 @@ import {
 import CommentSection from './CommentSection';
 import MediaLightbox from './MediaLightbox';
 import StarRating from './StarRating';
+import LoadingPopup from './LoadingPopup';
+import NotificationIcon from './NotificationIcon';
 import { formatDate } from '../utils/dateUtils';
 import { extractReviewId } from '../utils/urlUtils';
 import { getJsonAuthHeaders, getAuthHeaders } from '../utils/apiUtils';
@@ -425,17 +427,15 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
   if (loading) {
     return (
       <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#090d16',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: '#ffffff'
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#F8F4F0',
+        zIndex: 900
       }}>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-          <div className="spinner" style={{ width: 40, height: 40, border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
-          <p style={{ margin: 0, color: '#94a3b8', fontSize: '0.95rem' }}>Loading review & comments...</p>
-        </div>
+        <LoadingPopup message="Loading review..." fixed={true} />
       </div>
     );
   }
@@ -443,18 +443,24 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
   if (error || !review) {
     return (
       <div style={{
-        minHeight: '100vh',
-        backgroundColor: '#090d16',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        backgroundColor: '#F8F4F0',
         padding: '40px 20px',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        color: '#ffffff',
-        textAlign: 'center'
+        color: '#0f172a',
+        textAlign: 'center',
+        fontFamily: 'var(--font-body)',
+        zIndex: 900
       }}>
-        <h2 style={{ fontSize: '1.75rem', marginBottom: '12px' }}>Review Not Found</h2>
-        <p style={{ color: '#94a3b8', maxWidth: 460, marginBottom: '24px' }}>
+        <h2 style={{ fontSize: '1.75rem', marginBottom: '12px', fontWeight: 700 }}>Review Not Found</h2>
+        <p style={{ color: '#64748b', maxWidth: 460, marginBottom: '24px' }}>
           {error || "The review you are looking for does not exist or may have been deleted."}
         </p>
         <button
@@ -470,8 +476,11 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '8px',
+            transition: 'background-color 0.2s'
           }}
+          onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0284c7'}
+          onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
         >
           <ArrowLeft size={16} /> Return to Browse
         </button>
@@ -496,42 +505,48 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
       flexDirection: 'column',
       zIndex: 900
     }}>
-      {/* Floating Back Button */}
-      <button
-        onClick={() => {
-          if (window.history.length > 2) navigate(-1);
-          else navigate('/browse');
-        }}
-        onMouseEnter={() => setIsBackHovered(true)}
-        onMouseLeave={() => setIsBackHovered(false)}
-        style={{
-          position: 'fixed',
-          top: 32,
-          left: 30,
-          zIndex: 1001,
-          height: 40,
-          padding: '0 20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          backgroundColor: '#F8F4F0',
-          border: '1px solid #e5e0da',
-          color: isBackHovered ? '#0ea5e9' : '#334155',
-          borderRadius: '9999px',
-          fontWeight: 600,
-          fontSize: '0.88rem',
-          cursor: 'pointer',
-          transition: 'color 0.15s ease'
-        }}
-        title="Back"
-      >
-        <ArrowLeft size={18} color={isBackHovered ? '#0ea5e9' : '#334155'} />
-        <span>Back</span>
-      </button>
+      {/* Top Header Bar */}
+      <header style={{
+        width: '100%',
+        padding: '32px 30px 8px 30px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        zIndex: 1001,
+        backgroundColor: '#F8F4F0'
+      }}>
+        {/* Left: Back Button */}
+        <button
+          onClick={() => {
+            if (window.history.length > 2) navigate(-1);
+            else navigate('/browse');
+          }}
+          onMouseEnter={() => setIsBackHovered(true)}
+          onMouseLeave={() => setIsBackHovered(false)}
+          style={{
+            height: 40,
+            padding: '0 20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            backgroundColor: '#F8F4F0',
+            border: '1px solid #e5e0da',
+            color: isBackHovered ? '#0ea5e9' : '#334155',
+            borderRadius: '9999px',
+            fontWeight: 600,
+            fontSize: '0.88rem',
+            cursor: 'pointer',
+            transition: 'color 0.15s ease'
+          }}
+          title="Back"
+        >
+          <ArrowLeft size={18} color={isBackHovered ? '#0ea5e9' : '#334155'} />
+          <span>Back</span>
+        </button>
 
-      {/* Floating Profile Pic or Sign In Button (Exact copy of Homepage profile menu) */}
-      {!currentUser ? (
-        <div style={{ position: 'fixed', top: 32, right: 30, zIndex: 1001 }}>
+        {/* Right: Notification & Profile / Sign In */}
+        {!currentUser ? (
           <button
             style={{
               height: 40, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -545,102 +560,104 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           >
             Sign In
           </button>
-        </div>
-      ) : (
-        <div ref={profileMenuRef} style={{ position: 'fixed', top: 32, right: 30, zIndex: 1001 }}>
-          <div 
-            onClick={() => setIsProfileMenuOpen(prev => !prev)}
-            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-          >
-            {currentUser.profilePic ? (
-              <img 
-                src={currentUser.profilePic} 
-                alt="Profile" 
-                style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-              />
-            ) : (
-              <div style={{ 
-                width: '40px', height: '40px', borderRadius: '50%', 
-                backgroundColor: '#0ea5e9', color: 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
-                border: '3px solid #0ea5e9', boxSizing: 'border-box',
-                boxShadow: 'none'
-              }}>
-                {currentUser.username?.[0]?.toUpperCase()}
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
+            <div ref={profileMenuRef} style={{ position: 'relative' }}>
+              <div 
+                onClick={() => setIsProfileMenuOpen(prev => !prev)}
+                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                {currentUser.profilePic ? (
+                  <img 
+                    src={currentUser.profilePic} 
+                    alt="Profile" 
+                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'block', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
+                  />
+                ) : (
+                  <div style={{ 
+                    width: '40px', height: '40px', borderRadius: '50%', 
+                    backgroundColor: '#0ea5e9', color: 'white',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
+                    border: '3px solid #0ea5e9', boxSizing: 'border-box',
+                    boxShadow: 'none'
+                  }}>
+                    {currentUser.username?.[0]?.toUpperCase()}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {isProfileMenuOpen && (
-            <div style={{
-              position: 'absolute',
-              top: '48px',
-              right: '-12px',
-              left: 'auto',
-              minWidth: '180px',
-              background: 'rgba(3, 3, 3, 0.6)',
-              border: 'none',
-              borderRadius: '16px',
-              padding: '12px',
-              backdropFilter: 'blur(12px)',
-              WebkitBackdropFilter: 'blur(12px)',
-              boxShadow: 'none',
-              zIndex: 1000,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '0.25rem',
-              color: '#ffffff'
-            }}>
-              {/* Top Segment: Username and Email (Always White) */}
-              <div style={{ padding: '2px 12px 6px 12px', cursor: 'default' }}>
-                <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {currentUser.username}
+              {isProfileMenuOpen && (
+                <div style={{
+                  position: 'absolute',
+                  top: '48px',
+                  right: '-12px',
+                  left: 'auto',
+                  minWidth: '180px',
+                  background: 'rgba(3, 3, 3, 0.6)',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '12px',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                  boxShadow: 'none',
+                  zIndex: 1000,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.25rem',
+                  color: '#ffffff'
+                }}>
+                  {/* Top Segment: Username and Email (Always White) */}
+                  <div style={{ padding: '2px 12px 6px 12px', cursor: 'default' }}>
+                    <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {currentUser.username}
+                    </div>
+                    <div style={{ color: '#ffffff', fontSize: '0.78rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
+                      {currentUser.email}
+                    </div>
+                  </div>
+
+                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
+
+                  <div 
+                    onClick={() => { setIsProfileMenuOpen(false); navigate('/profile'); }} 
+                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
+                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
+                  >
+                    <span>My Profile</span>
+                  </div>
+
+                  <div 
+                    onClick={() => { setIsProfileMenuOpen(false); navigate('/chat'); }} 
+                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
+                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
+                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
+                  >
+                    <span>Chats</span>
+                  </div>
+
+                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
+
+                  <div 
+                    onClick={() => { setIsProfileMenuOpen(false); logout(); navigate('/'); }} 
+                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ef4444', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px' }}
+                  >
+                    <span>Sign Out</span>
+                  </div>
                 </div>
-                <div style={{ color: '#ffffff', fontSize: '0.78rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
-                  {currentUser.email}
-                </div>
-              </div>
-
-              <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-
-              <div 
-                onClick={() => { setIsProfileMenuOpen(false); navigate('/profile'); }} 
-                style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
-                onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
-              >
-                <span>My Profile</span>
-              </div>
-
-              <div 
-                onClick={() => { setIsProfileMenuOpen(false); navigate('/chat'); }} 
-                style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
-                onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
-              >
-                <span>Chats</span>
-              </div>
-
-              <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-
-              <div 
-                onClick={() => { setIsProfileMenuOpen(false); logout(); navigate('/'); }} 
-                style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ef4444', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px' }}
-              >
-                <span>Sign Out</span>
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      )}
-
+          </div>
+        )}
+      </header>
 
       {/* Centered Page Wrapper holding Middle Elements and Purchase Info Box */}
       <div style={{
         maxWidth: 820,
         width: '100%',
-        margin: '32px auto 60px auto',
+        margin: '28px auto 60px auto',
         padding: '0 20px',
         boxSizing: 'border-box'
       }}>

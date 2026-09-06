@@ -10,9 +10,16 @@ const MAX_MEDIA_LIMIT = 128 * 1024 * 1024; // 128 MB
 export const getReviews = async (req, res, next) => {
     try {
         const search = req.query.search;
+        const category = req.query.category;
         let filter = {};
         if (search && search.trim() !== '') {
           filter = { $text: { $search: search } };
+        }
+        if (category && category.trim() !== '' && category.toLowerCase() !== 'all') {
+          const escaped = category.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const words = category.split(/[\s,&]+/).filter(w => w.length > 2).map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+          const pattern = words.length > 0 ? `(${escaped}|${words.join('|')})` : escaped;
+          filter['product.category'] = { $regex: new RegExp(pattern, 'i') };
         }
         const reviews = await Review.find(filter).sort({ _id: -1 }).limit(500);
 

@@ -31,7 +31,7 @@ let memoryReviewsCache = {
   query: null
 };
 
-const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, viewMode, currentUser, hexResolution }, ref) => {
+const AppMap = forwardRef(({ onReviewSelect, searchQuery, categoryQuery, mapUpdateTrigger, viewMode, currentUser, hexResolution }, ref) => {
   const mapRef = useRef(null);
   const mapInstance = useRef(null);
   const hexagonsLayer = useRef(null);
@@ -201,14 +201,15 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
       isInitialMount.current = false;
       initData(false);
     } else {
-      // If mapUpdateTrigger or searchQuery changed, fetch fresh data
+      // If mapUpdateTrigger, searchQuery, or categoryQuery changed, fetch fresh data
       initData(true);
     }
-  }, [searchQuery, mapUpdateTrigger]);
+  }, [searchQuery, categoryQuery, mapUpdateTrigger]);
 
   const initData = async (forced = false) => {
-    // If we have cached reviews for this exact search query and not forced, use memory instantly
-    if (!forced && memoryReviewsCache.data && memoryReviewsCache.query === searchQuery) {
+    const currentKey = `${searchQuery || ''}__${categoryQuery || 'All'}`;
+    // If we have cached reviews for this exact search/category query and not forced, use memory instantly
+    if (!forced && memoryReviewsCache.data && memoryReviewsCache.query === currentKey) {
       setReviews(memoryReviewsCache.data);
       setLoadingMsg(null);
       return;
@@ -219,15 +220,31 @@ const AppMap = forwardRef(({ onReviewSelect, searchQuery, mapUpdateTrigger, view
         setLoadingMsg("Fetching reviews...");
       }
       const API_URL = import.meta.env.VITE_API_URL || '';
-      let url = `${API_URL}/api/reviews`;
-      if (searchQuery) url += `?search=${encodeURIComponent(searchQuery)}`;
+      const params = new URLSearchParams();
+      if (searchQuery && searchQuery.trim()) params.append('search', searchQuery.trim());
+      if (categoryQuery && categoryQuery !== 'All') params.append('category', categoryQuery);
+      const qStr = params.toString();
+      const url = `${API_URL}/api/reviews${qStr ? `?${qStr}` : ''}`;
       const res = await fetch(url);
       const data = await res.json();
       
-      const reviewList = Array.isArray(data) ? data : [];
+      let reviewList = Array.isArray(data) ? data : [];
+
+      // Client-side safety filter to guarantee matching even with mixed data
+      if (categoryQuery && categoryQuery !== 'All') {
+        const catLower = categoryQuery.toLowerCase();
+        const catWords = catLower.split(/[\s,&]+/).filter(w => w.length > 2);
+        reviewList = reviewList.filter(r => {
+          const rCat = (r.product?.category || r.category || '').toLowerCase();
+          if (!rCat) return false;
+          if (rCat === catLower || rCat.includes(catLower) || catLower.includes(rCat)) return true;
+          return catWords.some(w => rCat.includes(w));
+        });
+      }
+
       memoryReviewsCache = {
         data: reviewList,
-        query: searchQuery
+        query: currentKey
       };
 
       setReviews(reviewList);

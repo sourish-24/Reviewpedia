@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Rochester&display=swap');
+
 :root {
   --font-body: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -157,7 +159,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 4px;
 }
 
-/* Landing Page Theme with Interactive Glowing Square Mesh Grid */
+/* Landing Page Theme */
 .landing-dark {
   background-color: #F8F4F0;
   color: #0f172a;
@@ -168,49 +170,17 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-body);
 }
 
-/* Base Square Mesh Grid Layer (Matches background #F8F4F0, invisible by default) */
-.landing-grid-bg {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  background-image: 
-    linear-gradient(to right, #F8F4F0 1px, transparent 1px),
-    linear-gradient(to bottom, #F8F4F0 1px, transparent 1px);
-  background-size: 50px 50px;
-  z-index: 0;
-}
-
-/* Hover-activated Glowing Blue Grid Lines */
-.landing-grid-glow {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  background-image: 
-    linear-gradient(to right, #38bdf8 1px, transparent 1px),
-    linear-gradient(to bottom, #38bdf8 1px, transparent 1px);
-  background-size: 50px 50px;
-  -webkit-mask-image: radial-gradient(280px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
-  mask-image: radial-gradient(280px circle at var(--mouse-x, -500px) var(--mouse-y, -500px), black 0%, transparent 75%);
-  z-index: 1;
-  opacity: 0.85;
-}
 
 .landing-dark-header {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
-  height: 96px;
+  height: 104px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 4.5rem;
+  padding: 0 30px;
   z-index: 100;
   background: transparent !important;
   backdrop-filter: none !important;
@@ -222,14 +192,14 @@ h1, h2, h3, h4, h5, h6 {
 /* ===== APP HEADER DROPDOWN (browse reviews / market research) ===== */
 
 .landing-dark-logo {
-  font-family: var(--font-display);
-  font-size: 1.6rem;
-  font-weight: 700;
-  letter-spacing: -0.03em;
+  font-family: 'Rochester', cursive;
+  font-size: 2.2rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
   display: flex;
   align-items: center;
-  gap: 12px;
   color: #0f172a;
+  user-select: none;
 }
 
 .landing-dark-nav {
@@ -461,8 +431,8 @@ h1, h2, h3, h4, h5, h6 {
 /* Purchase Info Sidebar in Review Detail Page */
 .purchase-info-sidebar {
   position: absolute;
-  top: 102px;
-  left: calc(50% + 420px);
+  top: 108px;
+  left: calc(50% + 406px);
   right: 30px;
   z-index: 10;
 }
@@ -471,7 +441,7 @@ h1, h2, h3, h4, h5, h6 {
   .purchase-info-sidebar {
     position: static !important;
     width: 100% !important;
-    margin: 0 0 24px 0 !important;
+    margin: 0 0 16px 0 !important;
     left: auto !important;
     right: auto !important;
     top: auto !important;

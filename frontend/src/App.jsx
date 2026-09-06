@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut, ShieldAlert, MessageSquare, XCircle, Layers, Users, Star, CheckCircle2, Calendar, Heart } from 'lucide-react';
+import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, ArrowLeft, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut, ShieldAlert, MessageSquare, XCircle, Layers, Users, Star, CheckCircle2, Calendar, Heart, ChevronDown, Check } from 'lucide-react';
+import { PRODUCT_CATEGORIES } from './utils/mockData';
 import AppMap from './components/Map';
 import ReviewCard from './components/ReviewCard';
 import MultiReviewCard from './components/MultiReviewCard';
@@ -12,6 +13,7 @@ import AuthModal from './components/AuthModal';
 import ChatApp from './components/ChatApp';
 import ReviewDetailPage from './components/ReviewDetailPage';
 import StarRating from './components/StarRating';
+import NotificationIcon from './components/NotificationIcon';
 import { useAuth } from './context/AuthContext';
 import { formatDate } from './utils/dateUtils';
 import { getReviewUrl } from './utils/urlUtils';
@@ -41,7 +43,12 @@ function App() {
   const [isAgentOpen, setIsAgentOpen] = useState(false);
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('All');
+  const [categoryQuery, setCategoryQuery] = useState('All');
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
   const [mapUpdateTrigger, setMapUpdateTrigger] = useState(0);
+  const [isBrowseBackHovered, setIsBrowseBackHovered] = useState(false);
 
   const [showEmailPrompt, setShowEmailPrompt] = useState(false);
   const [marketResearchEmail, setMarketResearchEmail] = useState('');
@@ -61,17 +68,6 @@ function App() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  // Track mouse coordinates globally for glowing grid at all zoom levels
-  React.useEffect(() => {
-    if (appMode !== 'landing') return;
-    const handleMouseMove = (e) => {
-      document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-      document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-    };
-    window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, [appMode]);
 
   React.useEffect(() => {
     // Reset all review windows on route change
@@ -132,7 +128,26 @@ function App() {
     mapComponentRef.current?.updateReviewLikes(reviewId, newLikes);
   };
 
-  const handleSearch = () => setQuery(searchInput);
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearch = () => {
+    setQuery(searchInput);
+    setCategoryQuery(selectedCategory);
+  };
+
+  const handleCategorySelect = (cat) => {
+    setSelectedCategory(cat);
+    setCategoryQuery(cat);
+    setIsCategoryDropdownOpen(false);
+  };
 
   const handleOpenMyReviews = async () => {
       if (!user) return;
@@ -163,16 +178,19 @@ function App() {
 
   return (
     <div className="app-container">
-      {/* Permanently mounted map instance - keeps loaded map & tiles alive in memory */}
-      <AppMap 
-        ref={mapComponentRef} 
-        onReviewSelect={handleReviewSelect} 
-        searchQuery={query} 
-        mapUpdateTrigger={mapUpdateTrigger} 
-        viewMode={appMode} 
-        currentUser={user} 
-        hexResolution={hexResolution} 
-      />
+      {/* Mounted map instance when in map-active views */}
+      {appMode !== 'chat' && (
+        <AppMap 
+          ref={mapComponentRef} 
+          onReviewSelect={handleReviewSelect} 
+          searchQuery={query} 
+          categoryQuery={categoryQuery}
+          mapUpdateTrigger={mapUpdateTrigger} 
+          viewMode={appMode} 
+          currentUser={user} 
+          hexResolution={hexResolution} 
+        />
+      )}
 
       {/* Landing Page Full-Screen Overlay */}
       {appMode === 'landing' && (
@@ -187,26 +205,21 @@ function App() {
             zIndex: 8000,
             overflowY: 'auto'
           }}
-          onMouseMove={(e) => {
-            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
-            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
-            e.currentTarget.style.setProperty('--mouse-x', `${e.clientX}px`);
-            e.currentTarget.style.setProperty('--mouse-y', `${e.clientY}px`);
-          }}
         >
-          <div className="landing-grid-bg" />
-          <div className="landing-grid-glow" />
           {/* Header */}
           <header className="landing-dark-header">
           {/* Left: Logo */}
           <div 
               className="landing-dark-logo" 
               onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-              style={{ cursor: 'pointer' }}
+              style={{ 
+                  cursor: 'pointer',
+                  fontFamily: "'Rochester', cursive",
+                  fontWeight: 650,
+                  fontSize: '2.2rem',
+                  color: '#0f172a'
+              }}
           >
-             <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                 <Navigation size={20} color="#ffffff" />
-             </div>
              Reviewpedia
           </div>
 
@@ -221,7 +234,9 @@ function App() {
           {/* Right: User / Auth Controls */}
           <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
              {user ? (
-                    <div ref={homepageProfileRef} style={{ position: 'relative' }}>
+                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                     <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
+                     <div ref={homepageProfileRef} style={{ position: 'relative' }}>
                         <div 
                             onClick={() => setIsHomepageProfileOpen(prev => !prev)}
                             style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
@@ -230,7 +245,7 @@ function App() {
                                 <img 
                                     src={user.profilePic} 
                                     alt="Profile" 
-                                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
+                                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'block', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
                                 />
                             ) : (
                                 <div style={{ 
@@ -307,6 +322,7 @@ function App() {
                             </div>
                         )}
                     </div>
+                 </div>
              ) : (
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
                     <button 
@@ -697,10 +713,18 @@ function App() {
             {/* Top Row: Logo & Description on Left, Email Subscription Input on Right */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '3rem', marginBottom: '3.5rem' }}>
                 <div style={{ maxWidth: 420 }}>
-                    <div className="landing-dark-logo" style={{ color: '#ffffff', marginBottom: '1.25rem', fontSize: '1.5rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 10 }}>
-                         <div style={{ width: 32, height: 32, background: 'linear-gradient(135deg, #0ea5e9, #0284c7)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                             <Navigation size={18} color="#ffffff" />
-                         </div>
+                    <div 
+                        className="landing-dark-logo" 
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        style={{ 
+                            color: '#ffffff', 
+                            marginBottom: '1.25rem', 
+                            fontSize: '2.2rem', 
+                            fontFamily: "'Rochester', cursive", 
+                            fontWeight: 650, 
+                            cursor: 'pointer' 
+                        }}
+                    >
                          Reviewpedia
                     </div>
                     <p style={{ color: '#94a3b8', fontSize: '1rem', lineHeight: 1.6, margin: 0 }}>
@@ -920,7 +944,7 @@ function App() {
 
       {/* Navigation Header for Consumer & Business Views */}
       {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
-        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ position: 'relative', width: 'max-content', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
               <header style={{
                   width: 'max-content', maxWidth: 'calc(100vw - 40px)', height: 64,
@@ -969,18 +993,176 @@ function App() {
                </button>
             </div>
 
-            {/* Center Group (Search) */}
-            <div style={{ width: 320, maxWidth: '40vw', height: 40, display: 'flex', alignItems: 'center', gap: 10, background: '#ffffff', borderRadius: '9999px', padding: '0 6px 0 18px', border: 'none', boxSizing: 'border-box' }}>
+            {/* Center Group (Search with Category Dropdown) */}
+            <div style={{ 
+              width: 350, 
+              maxWidth: '42vw', 
+              height: 40, 
+              display: 'flex', 
+              alignItems: 'center', 
+              background: '#ffffff', 
+              borderRadius: '9999px', 
+              border: '1px solid #cbd5e1', 
+              boxSizing: 'border-box',
+              position: 'relative'
+            }}>
+               {/* Left Category Dropdown */}
+               <div ref={categoryDropdownRef} style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
+                 <button
+                   type="button"
+                   onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
+                   style={{
+                     height: '100%',
+                     padding: '0 10px 0 16px',
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '5px',
+                     background: 'transparent',
+                     border: 'none',
+                     borderRight: '1px solid #cbd5e1',
+                     cursor: 'pointer',
+                     color: '#1e293b',
+                     fontWeight: 600,
+                     fontSize: '0.86rem',
+                     fontFamily: 'var(--font-body)',
+                     borderTopLeftRadius: '9999px',
+                     borderBottomLeftRadius: '9999px',
+                     transition: 'background-color 0.15s ease',
+                     userSelect: 'none',
+                     flexShrink: 0
+                   }}
+                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                   title={selectedCategory === 'All' ? 'All Categories' : selectedCategory}
+                 >
+                   <span style={{ maxWidth: '80px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                     {selectedCategory}
+                   </span>
+                   <ChevronDown size={13} color="#475569" style={{ transition: 'transform 0.2s ease', transform: isCategoryDropdownOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
+                 </button>
+
+                 {/* Dropdown Menu */}
+                 {isCategoryDropdownOpen && (
+                   <div 
+                     style={{
+                       position: 'absolute',
+                       top: 'calc(100% + 8px)',
+                       left: 0,
+                       minWidth: '230px',
+                       maxWidth: '280px',
+                       background: '#ffffff',
+                       borderRadius: '16px',
+                       boxShadow: '0 12px 30px rgba(0, 0, 0, 0.18)',
+                       border: '1px solid #e2e8f0',
+                       padding: '6px',
+                       zIndex: 10000,
+                       maxHeight: '320px',
+                       overflowY: 'auto',
+                       boxSizing: 'border-box'
+                     }}
+                   >
+                     {/* "All" Item */}
+                     <div
+                       onClick={() => handleCategorySelect('All')}
+                       style={{
+                         padding: '8px 12px',
+                         borderRadius: '10px',
+                         cursor: 'pointer',
+                         fontSize: '0.85rem',
+                         fontFamily: 'var(--font-body)',
+                         fontWeight: selectedCategory === 'All' ? 600 : 500,
+                         color: selectedCategory === 'All' ? '#0ea5e9' : '#1e293b',
+                         backgroundColor: selectedCategory === 'All' ? '#f0f9ff' : 'transparent',
+                         display: 'flex',
+                         alignItems: 'center',
+                         justifyContent: 'space-between',
+                         transition: 'background-color 0.15s ease'
+                       }}
+                       onMouseEnter={(e) => { if (selectedCategory !== 'All') e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                       onMouseLeave={(e) => { if (selectedCategory !== 'All') e.currentTarget.style.backgroundColor = 'transparent'; }}
+                     >
+                       <span>All</span>
+                       {selectedCategory === 'All' && <Check size={14} color="#0ea5e9" />}
+                     </div>
+
+                     <div style={{ height: '1px', backgroundColor: '#f1f5f9', margin: '4px 0' }} />
+
+                     {/* Category Items */}
+                     {PRODUCT_CATEGORIES.map((cat) => {
+                       const isSelected = selectedCategory === cat;
+                       return (
+                         <div
+                           key={cat}
+                           onClick={() => handleCategorySelect(cat)}
+                           style={{
+                             padding: '8px 12px',
+                             borderRadius: '10px',
+                             cursor: 'pointer',
+                             fontSize: '0.85rem',
+                             fontFamily: 'var(--font-body)',
+                             fontWeight: isSelected ? 600 : 500,
+                             color: isSelected ? '#0ea5e9' : '#1e293b',
+                             backgroundColor: isSelected ? '#f0f9ff' : 'transparent',
+                             display: 'flex',
+                             alignItems: 'center',
+                             justifyContent: 'space-between',
+                             transition: 'background-color 0.15s ease'
+                           }}
+                           onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc'; }}
+                           onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
+                         >
+                           <span>{cat}</span>
+                           {isSelected && <Check size={14} color="#0ea5e9" />}
+                         </div>
+                       );
+                     })}
+                   </div>
+                 )}
+               </div>
+
+               {/* Search Input */}
                <input 
                  type="text" 
-                 placeholder="Search products or categories..." 
+                 placeholder={selectedCategory === 'All' ? 'Search "Mobiles"' : `Search in ${selectedCategory}...`} 
                  value={searchInput}
                  onChange={(e) => setSearchInput(e.target.value)}
                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
                  className="header-search-input"
-                 style={{ border: 'none', background: 'transparent', outline: 'none', width: '100%', fontSize: '0.9rem', fontFamily: 'var(--font-body)', color: '#000000' }}
+                 style={{ 
+                   border: 'none', 
+                   background: 'transparent', 
+                   outline: 'none', 
+                   flex: 1, 
+                   padding: '0 12px', 
+                   fontSize: '0.88rem', 
+                   fontFamily: 'var(--font-body)', 
+                   color: '#0f172a',
+                   minWidth: 0
+                 }}
                />
-               <button onClick={handleSearch} style={{ background: 'transparent', border: 'none', width: 32, height: 32, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, padding: 0 }}>
+
+               {/* Search Button */}
+               <button 
+                 onClick={handleSearch} 
+                 style={{ 
+                   background: 'transparent', 
+                   border: 'none', 
+                   width: 32, 
+                   height: 32, 
+                   borderRadius: '50%', 
+                   display: 'flex', 
+                   alignItems: 'center', 
+                   justifyContent: 'center', 
+                   cursor: 'pointer', 
+                   flexShrink: 0, 
+                   marginRight: '4px',
+                   padding: 0,
+                   transition: 'background-color 0.15s ease'
+                 }}
+                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
+                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                 title="Search"
+               >
                   <Search size={18} color="#000000" />
                </button>
             </div>
@@ -1104,6 +1286,40 @@ function App() {
         </div>
       )}
 
+      {/* Top Left: Back Button for Browse / Map views */}
+      {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
+          <div style={{ position: 'absolute', top: 32, left: 30, zIndex: 900 }}>
+              <button 
+                  onClick={() => {
+                      if (window.history.length > 2) navigate(-1);
+                      else navigate('/');
+                  }}
+                  onMouseEnter={() => setIsBrowseBackHovered(true)}
+                  onMouseLeave={() => setIsBrowseBackHovered(false)}
+                  style={{
+                      height: 40,
+                      padding: '0 20px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      backgroundColor: '#F8F4F0',
+                      border: '1px solid #e5e0da',
+                      color: isBrowseBackHovered ? '#0ea5e9' : '#334155',
+                      borderRadius: '9999px',
+                      fontWeight: 600,
+                      fontSize: '0.88rem',
+                      fontFamily: 'var(--font-body)',
+                      cursor: 'pointer',
+                      transition: 'color 0.15s ease'
+                  }}
+                  title="Back"
+              >
+                  <ArrowLeft size={18} color={isBrowseBackHovered ? '#0ea5e9' : '#334155'} />
+                  <span>Back</span>
+              </button>
+          </div>
+      )}
+
       {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && !user && (
           <div style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001 }}>
               <button 
@@ -1123,47 +1339,50 @@ function App() {
       )}
 
       {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && user && (
-          <div className="nav-dropdown" style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001, height: '40px', width: '40px' }}>
-             {/* The dropdown menu, positioned to align with header top (top: 20 -> relative top: -12) */}
-             <div className="nav-dropdown-menu" style={{ top: '-12px', right: '-12px', left: 'auto', minWidth: '160px', borderRadius: '16px', border: 'none', padding: '12px', zIndex: 1, boxShadow: 'none' }}>
-                 {/* First row: My Profile with padding to not overlap the photo */}
-                 <div onClick={() => navigate('/profile')} style={{ padding: '0 12px', paddingRight: '48px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>My Profile</span>
-                 </div>
-                 
-                 {/* Second row: My Reviews */}
-                 <div onClick={handleOpenMyReviews} style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>My Reviews</span>
-                 </div>
+          <div style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001, display: 'flex', alignItems: 'center', gap: '14px' }}>
+             <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
+             <div className="nav-dropdown" style={{ height: '40px', width: '40px' }}>
+                {/* The dropdown menu, positioned to align with header top (top: 20 -> relative top: -12) */}
+                <div className="nav-dropdown-menu" style={{ top: '-12px', right: '-12px', left: 'auto', minWidth: '160px', borderRadius: '16px', border: 'none', padding: '12px', zIndex: 1, boxShadow: 'none' }}>
+                    {/* First row: My Profile with padding to not overlap the photo */}
+                    <div onClick={() => navigate('/profile')} style={{ padding: '0 12px', paddingRight: '48px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>My Profile</span>
+                    </div>
+                    
+                    {/* Second row: My Reviews */}
+                    <div onClick={handleOpenMyReviews} style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>My Reviews</span>
+                    </div>
 
-                 <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-                 
-                 {/* Third row: Sign Out */}
-                 <div onClick={logout} className="nav-logout-item" style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                     <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Sign Out</span>
-                 </div>
-             </div>
-             
-             {/* The profile photo, rendered ON TOP of the menu */}
-             <div style={{ position: 'relative', zIndex: 10 }}>
-                 {user.profilePic ? (
-                     <img 
-                         src={user.profilePic} 
-                         alt="Profile" 
-                         style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-                     />
-                 ) : (
-                     <div style={{ 
-                        width: '40px', height: '40px', borderRadius: '50%', 
-                        backgroundColor: '#0ea5e9', color: 'white',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
-                        border: '3px solid #0ea5e9', boxSizing: 'border-box',
-                        boxShadow: 'none'
-                     }}>
-                         {user.username.charAt(0).toUpperCase()}
-                     </div>
-                 )}
+                    <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
+                    
+                    {/* Third row: Sign Out */}
+                    <div onClick={logout} className="nav-logout-item" style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
+                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Sign Out</span>
+                    </div>
+                </div>
+                
+                {/* The profile photo, rendered ON TOP of the menu */}
+                <div style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
+                    {user.profilePic ? (
+                        <img 
+                            src={user.profilePic} 
+                            alt="Profile" 
+                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'block', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
+                        />
+                    ) : (
+                        <div style={{ 
+                           width: '40px', height: '40px', borderRadius: '50%', 
+                           backgroundColor: '#0ea5e9', color: 'white',
+                           display: 'flex', alignItems: 'center', justifyContent: 'center',
+                           fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
+                           border: '3px solid #0ea5e9', boxSizing: 'border-box',
+                           boxShadow: 'none'
+                        }}>
+                            {user.username.charAt(0).toUpperCase()}
+                        </div>
+                    )}
+                </div>
              </div>
           </div>
       )}

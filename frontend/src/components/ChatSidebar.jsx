@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowLeft, User as UserIcon } from 'lucide-react';
 
-export default function ChatSidebar({ conversations, activeConversation, onSelectConversation, onClose, currentUser }) {
+export default function ChatSidebar({ conversations, activeConversation, onSelectConversation, onClose, currentUser, isLoading }) {
     const getOtherParticipant = (convo) => {
         if (!convo || !Array.isArray(convo.participants)) return { username: 'Deleted User', profilePic: null };
         const found = convo.participants.find(p => p && p.username && p.username !== currentUser?.username);
@@ -30,7 +30,7 @@ export default function ChatSidebar({ conversations, activeConversation, onSelec
             </div>
             
             <div style={{ flex: 1, overflowY: 'auto' }}>
-                {conversations.length === 0 ? (
+                {isLoading ? null : conversations.length === 0 ? (
                     <div style={{ padding: '24px', textAlign: 'center', color: '#94a3b8', fontSize: '0.9rem' }}>
                         No active conversations yet.
                     </div>
