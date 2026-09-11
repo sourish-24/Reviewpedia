@@ -1,5 +1,15 @@
 import express from 'express';
-import { getConversations, getMessages, uploadChatMedia, createOrGetConversation, sendMessage, deleteConversation, deleteMessage } from '../controllers/chatController.js';
+import { 
+    getConversations, 
+    getMessages, 
+    uploadChatMedia, 
+    createOrGetConversation, 
+    sendMessage, 
+    deleteConversation, 
+    deleteMessage,
+    getUnreadCount,
+    markConversationAsRead
+} from '../controllers/chatController.js';
 import { requireAuth } from '../middlewares/authMiddleware.js';
 import { chatUpload } from '../middlewares/uploadMiddleware.js';
 
@@ -10,6 +20,8 @@ router.use(requireAuth);
 router.get('/conversations', getConversations);
 router.post('/conversations', createOrGetConversation);
 router.delete('/conversations/:conversationId', deleteConversation);
+router.put('/conversations/:conversationId/read', markConversationAsRead);
+router.get('/unread-count', getUnreadCount);
 router.get('/messages/:conversationId', getMessages);
 router.post('/messages', sendMessage);
 router.delete('/messages/:messageId', deleteMessage);

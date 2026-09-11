@@ -1,23 +1,109 @@
+import mongoose from 'mongoose';
 import Conversation from '../models/Conversation.js';
 import Message from '../models/Message.js';
 import User from '../models/User.js';
 import { cloudinaryInstance } from '../middlewares/uploadMiddleware.js';
 
-// Get all conversations for a user
+// Get all conversations for a user with unread message counts
 export const getConversations = async (req, res, next) => {
     try {
         const userId = req.user.id;
         const rawConversations = await Conversation.find({ participants: userId })
             .populate('participants', 'username _id profilePic')
-            .sort({ updatedAt: -1 });
+            .sort({ lastMessageAt: -1, updatedAt: -1 });
+
+        const conversationIds = rawConversations.map(c => c._id);
+
+        // Aggregate unread messages for each conversation where sender != current user
+        const unreadCounts = await Message.aggregate([
+            {
+                $match: {
+                    conversationId: { $in: conversationIds },
+                    sender: { $ne: new mongoose.Types.ObjectId(userId) },
+                    read: { $ne: true }
+                }
+            },
+            {
+                $group: {
+                    _id: '$conversationId',
+                    count: { $sum: 1 }
+                }
+            }
+        ]);
+
+        const unreadMap = {};
+        unreadCounts.forEach(item => {
+            unreadMap[item._id.toString()] = item.count;
+        });
 
         const conversations = rawConversations.map(convo => {
             const doc = convo.toObject();
             doc.participants = (doc.participants || []).map(p => p || { username: 'Deleted User', profilePic: null });
+            doc.unreadCount = unreadMap[doc._id.toString()] || 0;
             return doc;
         });
 
         res.json({ success: true, conversations });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Get total unread count across all conversations for current user
+export const getUnreadCount = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const userConversations = await Conversation.find({ participants: userId }).select('_id');
+        const conversationIds = userConversations.map(c => c._id);
+
+        const totalUnread = await Message.countDocuments({
+            conversationId: { $in: conversationIds },
+            sender: { $ne: userId },
+            read: { $ne: true }
+        });
+
+        res.json({ success: true, unreadCount: totalUnread });
+    } catch (err) {
+        next(err);
+    }
+};
+
+// Mark all messages in a conversation as read for the current user
+export const markConversationAsRead = async (req, res, next) => {
+    try {
+        const { conversationId } = req.params;
+        const userId = req.user.id;
+
+        const conversation = await Conversation.findById(conversationId);
+        if (!conversation) {
+            return res.status(404).json({ error: { message: "Conversation not found" } });
+        }
+
+        const updateResult = await Message.updateMany(
+            {
+                conversationId,
+                sender: { $ne: userId },
+                read: { $ne: true }
+            },
+            {
+                $set: { read: true, readAt: new Date() }
+            }
+        );
+
+        // Emit socket events to notify sender of read receipt and update unread counts
+        const io = req.app.get('io');
+        if (io) {
+            const otherParticipant = conversation.participants.find(p => p.toString() !== userId.toString());
+            if (otherParticipant) {
+                io.to(otherParticipant.toString()).emit('messages_read', {
+                    conversationId,
+                    readerId: userId
+                });
+            }
+            io.to(userId.toString()).emit('unread_count_update', { conversationId });
+        }
+
+        res.json({ success: true, markedCount: updateResult.modifiedCount });
     } catch (err) {
         next(err);
     }
@@ -72,6 +158,36 @@ export const createOrGetConversation = async (req, res, next) => {
 export const getMessages = async (req, res, next) => {
     try {
         const { conversationId } = req.params;
+        const userId = req.user.id;
+
+        // Automatically mark unread messages from other user as read
+        await Message.updateMany(
+            {
+                conversationId,
+                sender: { $ne: userId },
+                read: { $ne: true }
+            },
+            {
+                $set: { read: true, readAt: new Date() }
+            }
+        );
+
+        // Notify other participant of read receipt
+        const io = req.app.get('io');
+        if (io) {
+            const conversation = await Conversation.findById(conversationId);
+            if (conversation) {
+                const otherParticipant = conversation.participants.find(p => p.toString() !== userId.toString());
+                if (otherParticipant) {
+                    io.to(otherParticipant.toString()).emit('messages_read', {
+                        conversationId,
+                        readerId: userId
+                    });
+                }
+                io.to(userId.toString()).emit('unread_count_update', { conversationId });
+            }
+        }
+
         const rawMessages = await Message.find({ conversationId })
             .populate('sender', 'username _id profilePic')
             .sort({ createdAt: 1 });
@@ -156,6 +272,7 @@ export const sendMessage = async (req, res, next) => {
         const io = req.app.get('io');
         if (io && receiverId) {
             io.to(receiverId.toString()).emit('receive_message', populatedMessage);
+            io.to(receiverId.toString()).emit('unread_count_update', { conversationId });
         }
 
         res.json({ success: true, message: populatedMessage });

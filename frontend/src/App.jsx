@@ -14,7 +14,10 @@ import ChatApp from './components/ChatApp';
 import ReviewDetailPage from './components/ReviewDetailPage';
 import StarRating from './components/StarRating';
 import NotificationIcon from './components/NotificationIcon';
+import ChatIcon from './components/ChatIcon';
+import CategorySelectModal from './components/CategorySelectModal';
 import { useAuth } from './context/AuthContext';
+import { useChat } from './context/ChatContext';
 import { formatDate } from './utils/dateUtils';
 import { getReviewUrl } from './utils/urlUtils';
 import './index.css';
@@ -47,6 +50,7 @@ function App() {
   const [categoryQuery, setCategoryQuery] = useState('All');
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
+  const categoryBoxRef = useRef(null);
   const [mapUpdateTrigger, setMapUpdateTrigger] = useState(0);
   const [isBrowseBackHovered, setIsBrowseBackHovered] = useState(false);
 
@@ -55,6 +59,7 @@ function App() {
   
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, logout, setUser } = useAuth();
+  const { unreadChatCount } = useChat();
 
   const homepageProfileRef = useRef(null);
   const [isHomepageProfileOpen, setIsHomepageProfileOpen] = useState(false);
@@ -130,12 +135,23 @@ function App() {
 
   useEffect(() => {
     const handleClickOutside = (e) => {
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target)) {
+      const isOutsideTrigger = categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target);
+      const isOutsideBox = categoryBoxRef.current && !categoryBoxRef.current.contains(e.target);
+      if (isOutsideTrigger && (!categoryBoxRef.current || isOutsideBox)) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
         setIsCategoryDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleSearch = () => {
@@ -235,6 +251,7 @@ function App() {
           <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
              {user ? (
                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                      <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
                      <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
                      <div ref={homepageProfileRef} style={{ position: 'relative' }}>
                         <div 
@@ -945,15 +962,15 @@ function App() {
       {/* Navigation Header for Consumer & Business Views */}
       {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
         <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <div style={{ position: 'relative', width: 'max-content', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
+          <div style={{ position: 'relative', width: 'min(600px, calc(100vw - 40px))', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
               <header style={{
-                  width: 'max-content', maxWidth: 'calc(100vw - 40px)', height: 64,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12,
+                  width: 'min(600px, calc(100vw - 40px))', maxWidth: 'calc(100vw - 40px)', height: 64,
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16,
                   background: 'rgba(3, 3, 3, 0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderRadius: '9999px', border: 'none',
-                  padding: '12px', boxShadow: 'none', color: '#ffffff', boxSizing: 'border-box'
+                  padding: '0 18px', boxShadow: 'none', color: '#ffffff', boxSizing: 'border-box'
               }}>
             {/* Left Group */}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
                 <button 
                   style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'none', border: 'none', color: '#ffffff', transition: 'color 0.2s', padding: 0 }}
                   onClick={() => mapComponentRef.current?.locateUser()}
@@ -971,32 +988,13 @@ function App() {
                 >
                   <Crosshair size={20} color="currentColor" />
                 </button>
-                <button 
-                   onClick={() => {
-                       if (!user) setShowAuthModal('login');
-                       else navigate('/chat');
-                   }} 
-                   style={{ width: 40, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: 'none', border: 'none', color: '#ffffff', transition: 'color 0.2s', padding: 0 }}
-                   onMouseOver={(e) => {
-                       e.currentTarget.style.color = '#0ea5e9';
-                       const svg = e.currentTarget.querySelector('svg');
-                       if (svg) svg.setAttribute('stroke', '#0ea5e9');
-                   }}
-                   onMouseOut={(e) => {
-                       e.currentTarget.style.color = '#ffffff';
-                       const svg = e.currentTarget.querySelector('svg');
-                       if (svg) svg.setAttribute('stroke', '#ffffff');
-                   }}
-                   title="Messages"
-               >
-                  <MessageCircle size={18} color="currentColor" />
-               </button>
             </div>
 
             {/* Center Group (Search with Category Dropdown) */}
             <div style={{ 
               width: 350, 
               maxWidth: '42vw', 
+              flex: '0 1 350px',
               height: 40, 
               display: 'flex', 
               alignItems: 'center', 
@@ -1006,11 +1004,14 @@ function App() {
               boxSizing: 'border-box',
               position: 'relative'
             }}>
-               {/* Left Category Dropdown */}
+               {/* Left Category Dropdown Trigger */}
                <div ref={categoryDropdownRef} style={{ height: '100%', display: 'flex', alignItems: 'center' }}>
                  <button
                    type="button"
-                   onClick={() => setIsCategoryDropdownOpen(prev => !prev)}
+                   onClick={() => {
+                     setIsCreatingReview(false);
+                     setIsCategoryDropdownOpen(prev => !prev);
+                   }}
                    style={{
                      height: '100%',
                      padding: '0 10px 0 16px',
@@ -1040,84 +1041,6 @@ function App() {
                    </span>
                    <ChevronDown size={13} color="#475569" style={{ transition: 'transform 0.2s ease', transform: isCategoryDropdownOpen ? 'rotate(180deg)' : 'none', flexShrink: 0 }} />
                  </button>
-
-                 {/* Dropdown Menu */}
-                 {isCategoryDropdownOpen && (
-                   <div 
-                     style={{
-                       position: 'absolute',
-                       top: 'calc(100% + 8px)',
-                       left: 0,
-                       minWidth: '230px',
-                       maxWidth: '280px',
-                       background: '#ffffff',
-                       borderRadius: '16px',
-                       boxShadow: '0 12px 30px rgba(0, 0, 0, 0.18)',
-                       border: '1px solid #e2e8f0',
-                       padding: '6px',
-                       zIndex: 10000,
-                       maxHeight: '320px',
-                       overflowY: 'auto',
-                       boxSizing: 'border-box'
-                     }}
-                   >
-                     {/* "All" Item */}
-                     <div
-                       onClick={() => handleCategorySelect('All')}
-                       style={{
-                         padding: '8px 12px',
-                         borderRadius: '10px',
-                         cursor: 'pointer',
-                         fontSize: '0.85rem',
-                         fontFamily: 'var(--font-body)',
-                         fontWeight: selectedCategory === 'All' ? 600 : 500,
-                         color: selectedCategory === 'All' ? '#0ea5e9' : '#1e293b',
-                         backgroundColor: selectedCategory === 'All' ? '#f0f9ff' : 'transparent',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'space-between',
-                         transition: 'background-color 0.15s ease'
-                       }}
-                       onMouseEnter={(e) => { if (selectedCategory !== 'All') e.currentTarget.style.backgroundColor = '#f8fafc'; }}
-                       onMouseLeave={(e) => { if (selectedCategory !== 'All') e.currentTarget.style.backgroundColor = 'transparent'; }}
-                     >
-                       <span>All</span>
-                       {selectedCategory === 'All' && <Check size={14} color="#0ea5e9" />}
-                     </div>
-
-                     <div style={{ height: '1px', backgroundColor: '#f1f5f9', margin: '4px 0' }} />
-
-                     {/* Category Items */}
-                     {PRODUCT_CATEGORIES.map((cat) => {
-                       const isSelected = selectedCategory === cat;
-                       return (
-                         <div
-                           key={cat}
-                           onClick={() => handleCategorySelect(cat)}
-                           style={{
-                             padding: '8px 12px',
-                             borderRadius: '10px',
-                             cursor: 'pointer',
-                             fontSize: '0.85rem',
-                             fontFamily: 'var(--font-body)',
-                             fontWeight: isSelected ? 600 : 500,
-                             color: isSelected ? '#0ea5e9' : '#1e293b',
-                             backgroundColor: isSelected ? '#f0f9ff' : 'transparent',
-                             display: 'flex',
-                             alignItems: 'center',
-                             justifyContent: 'space-between',
-                             transition: 'background-color 0.15s ease'
-                           }}
-                           onMouseEnter={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = '#f8fafc'; }}
-                           onMouseLeave={(e) => { if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent'; }}
-                         >
-                           <span>{cat}</span>
-                           {isSelected && <Check size={14} color="#0ea5e9" />}
-                         </div>
-                       );
-                     })}
-                   </div>
-                 )}
                </div>
 
                {/* Search Input */}
@@ -1168,7 +1091,7 @@ function App() {
             </div>
 
             {/* Right Group (User & Add Review) */}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
 
                 {appMode === 'consumer' && (
                     <button 
@@ -1191,6 +1114,7 @@ function App() {
                             if (!user) setShowAuthModal('login');
                             else {
                                 setEditingReviewData(null);
+                                setIsCategoryDropdownOpen(false);
                                 setIsCreatingReview(prev => !prev);
                             }
                         }}
@@ -1266,6 +1190,17 @@ function App() {
              </div>
           )}
           </div>
+
+          {/* Category Dropdown Modal */}
+          {isCategoryDropdownOpen && (
+            <CategorySelectModal
+              ref={categoryBoxRef}
+              selectedCategory={selectedCategory}
+              onSelectCategory={handleCategorySelect}
+              onClose={() => setIsCategoryDropdownOpen(false)}
+            />
+          )}
+
           <div style={{ display: isCreatingReview ? 'block' : 'none', width: '100%' }}>
               <CreateReview 
                   key={editingReviewData ? `edit-${editingReviewData.id}` : `create-${mapUpdateTrigger}`}
@@ -1340,6 +1275,7 @@ function App() {
 
       {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && user && (
           <div style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001, display: 'flex', alignItems: 'center', gap: '14px' }}>
+             <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
              <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
              <div className="nav-dropdown" style={{ height: '40px', width: '40px' }}>
                 {/* The dropdown menu, positioned to align with header top (top: 20 -> relative top: -12) */}

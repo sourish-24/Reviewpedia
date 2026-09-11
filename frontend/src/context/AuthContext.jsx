@@ -54,11 +54,25 @@ export const AuthProvider = ({ children }) => {
         throw new Error(data.error || 'Login failed');
     };
 
-    const register = async (username, email, password) => {
+    const sendSignupOtp = async (email, username) => {
+        const res = await fetch(`${API_URL}/api/auth/send-signup-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, username }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+            return true;
+        }
+        throw new Error(data.error || 'Failed to send verification code');
+    };
+
+    const register = async (username, email, password, otp) => {
         const res = await fetch(`${API_URL}/api/auth/register`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password }),
+            body: JSON.stringify({ username, email, password, otp }),
             credentials: 'include'
         });
         const data = await res.json();
@@ -70,6 +84,55 @@ export const AuthProvider = ({ children }) => {
             return true;
         }
         throw new Error(data.error || 'Registration failed');
+    };
+
+    const sendEmailUpdateOtp = async (newEmail) => {
+        const res = await fetch(`${API_URL}/api/auth/send-email-update-otp`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()
+            },
+            body: JSON.stringify({ newEmail }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+            return true;
+        }
+        throw new Error(data.error || 'Failed to send verification code');
+    };
+
+    const sendForgotPasswordOtp = async (email) => {
+        const res = await fetch(`${API_URL}/api/auth/send-forgot-password-otp`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+            return true;
+        }
+        throw new Error(data.error || 'Failed to send password reset code');
+    };
+
+    const resetPassword = async (email, otp, newPassword) => {
+        const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp, newPassword }),
+            credentials: 'include'
+        });
+        const data = await res.json();
+        if (data.success) {
+            if (data.token) {
+                setAuthToken(data.token);
+            }
+            setUser(data.user);
+            return true;
+        }
+        throw new Error(data.error || 'Failed to reset password');
     };
 
     const logout = async () => {
@@ -88,7 +151,18 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, setUser, loading, login, register, logout }}>
+        <AuthContext.Provider value={{ 
+            user, 
+            setUser, 
+            loading, 
+            login, 
+            register, 
+            sendSignupOtp, 
+            sendEmailUpdateOtp, 
+            sendForgotPasswordOtp, 
+            resetPassword, 
+            logout 
+        }}>
             {children}
         </AuthContext.Provider>
     );

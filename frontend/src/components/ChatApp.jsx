@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ChatSidebar from './ChatSidebar';
 import ChatWindow from './ChatWindow';
 import LoadingPopup from './LoadingPopup';
 import { io } from 'socket.io-client';
 import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
+import { useChat } from '../context/ChatContext';
 
 export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const [socket, setSocket] = useState(null);
@@ -11,22 +12,36 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const [isLoadingConversations, setIsLoadingConversations] = useState(true);
     const [activeConversation, setActiveConversation] = useState(null);
     const [isConnected, setIsConnected] = useState(false);
+    const { markConversationRead, refreshUnreadCount } = useChat();
+    const activeConversationRef = useRef(null);
 
     useEffect(() => {
-        const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
-        const newSocket = io(API_URL, {
+        activeConversationRef.current = activeConversation;
+    }, [activeConversation]);
+
+    useEffect(() => {
+        const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+        const SOCKET_URL = import.meta.env.VITE_API_URL || (isLocalhost ? 'http://localhost:3001' : 'https://reviewpedia.onrender.com');
+        const newSocket = io(SOCKET_URL, {
             withCredentials: true,
         });
 
         newSocket.on('connect', () => {
             setIsConnected(true);
-            newSocket.emit('join', currentUser.id);
+            newSocket.emit('join', (currentUser.id || currentUser._id)?.toString());
         });
 
         newSocket.on('disconnect', () => setIsConnected(false));
         
         newSocket.on('receive_message', (message) => {
-            // Re-fetch conversations to update latest message order
+            // If the message is for the currently open conversation, mark as read immediately
+            if (activeConversationRef.current && activeConversationRef.current._id === message.conversationId) {
+                markConversationRead(message.conversationId);
+            }
+            fetchConversations();
+        });
+
+        newSocket.on('messages_read', () => {
             fetchConversations();
         });
 
@@ -37,7 +52,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
         setSocket(newSocket);
 
         return () => newSocket.close();
-    }, [currentUser]);
+    }, [currentUser, markConversationRead]);
 
     const fetchConversations = async (showLoading = false) => {
         if (showLoading) setIsLoadingConversations(true);
@@ -68,6 +83,15 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
         }
     }, [initialChatUser]);
 
+    const handleSelectConversation = (convo) => {
+        setActiveConversation(convo);
+        if (convo && convo._id) {
+            // Optimistically mark this conversation as read in the sidebar state
+            setConversations(prev => prev.map(c => c._id === convo._id ? { ...c, unreadCount: 0 } : c));
+            markConversationRead(convo._id);
+        }
+    };
+
     const startConversation = async (targetUsername) => {
         try {
             const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
@@ -90,6 +114,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
     const handleConversationDeleted = () => {
         setActiveConversation(null);
         fetchConversations(false);
+        refreshUnreadCount();
     };
 
     return (
@@ -101,7 +126,7 @@ export default function ChatApp({ currentUser, onClose, initialChatUser }) {
             <ChatSidebar 
                 conversations={conversations} 
                 activeConversation={activeConversation}
-                onSelectConversation={setActiveConversation}
+                onSelectConversation={handleSelectConversation}
                 onClose={onClose}
                 currentUser={currentUser}
                 isLoading={isLoadingConversations}

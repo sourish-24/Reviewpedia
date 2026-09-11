@@ -10,6 +10,8 @@ import MediaLightbox from './MediaLightbox';
 import StarRating from './StarRating';
 import LoadingPopup from './LoadingPopup';
 import NotificationIcon from './NotificationIcon';
+import ChatIcon from './ChatIcon';
+import { useChat } from '../context/ChatContext';
 import { formatDate } from '../utils/dateUtils';
 import { extractReviewId } from '../utils/urlUtils';
 import { getJsonAuthHeaders, getAuthHeaders } from '../utils/apiUtils';
@@ -18,6 +20,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
+  const { unreadChatCount } = useChat();
 
   // Extract reviewId from params or URL pathname
   const reviewId = params.id || extractReviewId(location.pathname);
@@ -562,6 +565,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           </button>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
             <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
             <div ref={profileMenuRef} style={{ position: 'relative' }}>
               <div 

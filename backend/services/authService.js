@@ -151,3 +151,34 @@ export const deleteAccount = async (userId, confirmEmail) => {
 
     return { success: true, message: 'Account deleted successfully' };
 };
+
+export const resetUserPassword = async (email, newPassword) => {
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail });
+    if (!user) {
+        throw new Error('No account found with this email address');
+    }
+
+    if (!newPassword || newPassword.length < 6) {
+        throw new Error('Password must be at least 6 characters long');
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    const payload = {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        profilePic: user.profilePic,
+        totalMediaBytes: user.totalMediaBytes || 0
+    };
+
+    const token = jwt.sign(payload, getJwtSecret(), { expiresIn: '7d' });
+
+    return {
+        token,
+        user: payload
+    };
+};

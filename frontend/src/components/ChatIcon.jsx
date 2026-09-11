@@ -1,23 +1,14 @@
 import React, { useState } from 'react';
-import { Bell } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 
 /**
- * Reusable Notification Icon component for headers.
+ * Reusable Chat Icon component for headers.
  * 
- * - Appears on the left side of the profile picture in headers across pages.
- * - Shows an unread notification count badge (if unreadCount > 0).
- * - Has NO background color (pure icon presentation with smooth hover color transition).
- * 
- * @param {Object} props
- * @param {number} [props.unreadCount=0] - Number of unread notifications to display on the badge.
- * @param {string} [props.color='#ffffff'] - Base icon color.
- * @param {string} [props.hoverColor='#0ea5e9'] - Color on hover.
- * @param {number} [props.size=22] - Icon size in pixels.
- * @param {Function} [props.onClick] - Click handler.
- * @param {string} [props.className=''] - Additional CSS classes.
- * @param {React.CSSProperties} [props.style={}] - Style overrides.
+ * - Appears beside NotificationIcon in headers across pages.
+ * - Black outline with #F8F4F0 inside.
+ * - Smooth hover transition to #0ea5e9 and subtle scale up.
  */
-export default function NotificationIcon({
+export default function ChatIcon({
   unreadCount = 0,
   color = '#000000',
   fillColor = '#F8F4F0',
@@ -37,7 +28,7 @@ export default function NotificationIcon({
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      title={unreadCount > 0 ? `${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}` : 'Notifications'}
+      title="Chats"
       className={className}
       style={{
         background: 'none',
@@ -58,7 +49,7 @@ export default function NotificationIcon({
         ...style
       }}
     >
-      <Bell size={size} strokeWidth={2} fill={fillColor} />
+      <MessageCircle size={size} strokeWidth={2} fill={fillColor} />
 
       {/* Unread count badge */}
       {unreadCount > 0 && (
@@ -71,7 +62,7 @@ export default function NotificationIcon({
             height: '16px',
             padding: '0 4px',
             borderRadius: '9999px',
-            backgroundColor: '#ef4444',
+            backgroundColor: '#0ea5e9',
             color: '#ffffff',
             fontSize: '0.62rem',
             fontWeight: 700,

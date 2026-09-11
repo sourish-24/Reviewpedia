@@ -5,8 +5,10 @@ import MediaLightbox from './MediaLightbox';
 import ConfirmModal from './ConfirmModal';
 import LoadingPopup from './LoadingPopup';
 import { getAuthHeaders, getJsonAuthHeaders } from '../utils/apiUtils';
+import { useChat } from '../context/ChatContext';
 
 export default function ChatWindow({ conversation, currentUser, socket, onMessageSent, onConversationDeleted }) {
+    const { markConversationRead } = useChat();
     const [messages, setMessages] = useState([]);
     const [isLoadingMessages, setIsLoadingMessages] = useState(true);
     const [text, setText] = useState('');
@@ -53,6 +55,21 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
             if (newMessage.conversationId === conversation._id) {
                 setMessages(prev => [...prev, newMessage]);
                 scrollToBottom();
+                if (markConversationRead) {
+                    markConversationRead(conversation._id);
+                }
+            }
+        };
+
+        const handleMessagesRead = ({ conversationId }) => {
+            if (conversationId === conversation._id) {
+                setMessages(prev => prev.map(m => {
+                    const isMyMsg = (m.sender === currentUser.id || m.sender?._id === currentUser.id || m.sender?.username === currentUser.username);
+                    if (isMyMsg) {
+                        return { ...m, read: true, readAt: m.readAt || new Date() };
+                    }
+                    return m;
+                }));
             }
         };
 
@@ -62,12 +79,14 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
         };
 
         socket.on('receive_message', handleNewMessage);
+        socket.on('messages_read', handleMessagesRead);
         socket.on('message_deleted', handleMessageDeleted);
         return () => {
             socket.off('receive_message', handleNewMessage);
+            socket.off('messages_read', handleMessagesRead);
             socket.off('message_deleted', handleMessageDeleted);
         };
-    }, [socket, conversation._id]);
+    }, [socket, conversation._id, currentUser, markConversationRead]);
 
     const scrollToBottom = () => {
         setTimeout(() => {
@@ -509,11 +528,28 @@ export default function ChatWindow({ conversation, currentUser, socket, onMessag
                                 <div style={{ 
                                     fontSize: '0.7rem', 
                                     color: '#94a3b8', 
-                                    marginTop: '4px',
-                                    padding: '0 4px',
-                                    alignSelf: isMine ? 'flex-end' : 'flex-start'
+                                    marginTop: '4px', 
+                                    padding: '0 4px', 
+                                    alignSelf: isMine ? 'flex-end' : 'flex-start',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
                                 }}>
-                                    {new Date(group.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    <span>{new Date(group.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    {isMine && (
+                                        <span 
+                                            title={group.messages[group.messages.length - 1]?.read ? "Read" : "Sent"}
+                                            style={{ 
+                                                color: group.messages[group.messages.length - 1]?.read ? '#38bdf8' : '#94a3b8',
+                                                fontWeight: 700,
+                                                fontSize: '0.75rem',
+                                                letterSpacing: '-1.5px',
+                                                marginLeft: '2px'
+                                            }}
+                                        >
+                                            {group.messages[group.messages.length - 1]?.read ? '✓✓' : '✓'}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
                         );

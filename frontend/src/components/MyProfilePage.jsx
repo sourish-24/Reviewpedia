@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX, Crop } from 'lucide-react';
+import { Camera, ArrowLeft, Mail, User as UserIcon, Save, AlertCircle, CheckCircle, Edit2, X, Users, UserX, Crop, KeyRound, CheckCircle2 } from 'lucide-react';
 import AvatarCropModal from './AvatarCropModal';
 import { getJsonAuthHeaders, getAuthHeaders, setAuthToken } from '../utils/apiUtils';
+import { useAuth } from '../context/AuthContext';
 
 export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAccount }) {
+  const { sendEmailUpdateOtp } = useAuth();
   const [username, setUsername] = useState(user?.username || '');
   const [email, setEmail] = useState(user?.email || '');
   const [profilePicFile, setProfilePicFile] = useState(null);
@@ -14,12 +16,30 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
   
+  // Email update OTP modal state
+  const [showEmailOtpModal, setShowEmailOtpModal] = useState(false);
+  const [emailOtp, setEmailOtp] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpResendCooldown, setOtpResendCooldown] = useState(0);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [confirmEmailInput, setConfirmEmailInput] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   
   const API_URL = import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
+
+  // Countdown timer for email OTP resend
+  useEffect(() => {
+    let timer;
+    if (otpResendCooldown > 0) {
+      timer = setInterval(() => {
+        setOtpResendCooldown(prev => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [otpResendCooldown]);
 
   const handleDeleteAccountConfirm = async () => {
     if (confirmEmailInput.trim().toLowerCase() !== user?.email?.toLowerCase()) {
@@ -75,12 +95,43 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
   };
 
   const handleSave = async () => {
+    setMessage({ type: '', text: '' });
+    
+    // Check if user is attempting to change their email address
+    const isEmailChanging = email.trim().toLowerCase() !== user?.email?.toLowerCase();
+    
+    if (isEmailChanging) {
+      // Prompt OTP verification for the new email address
+      setOtpError('');
+      setEmailOtp('');
+      setSaving(true);
+      try {
+        await sendEmailUpdateOtp(email.trim());
+        setShowEmailOtpModal(true);
+        setOtpResendCooldown(60);
+      } catch (err) {
+        setMessage({ type: 'error', text: err.message || 'Failed to send verification code' });
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
+
+    // Direct save if email did not change
+    await executeSaveProfile();
+  };
+
+  const executeSaveProfile = async (otpCode = null) => {
     setSaving(true);
     setMessage({ type: '', text: '' });
+    setOtpError('');
     try {
       const formData = new FormData();
-      formData.append('username', username);
-      formData.append('email', email);
+      formData.append('username', username.trim());
+      formData.append('email', email.trim());
+      if (otpCode) {
+        formData.append('otp', otpCode.trim());
+      }
       if (profilePicFile) {
         formData.append('profilePic', profilePicFile);
       }
@@ -100,15 +151,35 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
         onUserUpdate(data.user);
         setMessage({ type: 'success', text: 'Profile updated successfully!' });
         setIsEditing(false);
+        setShowEmailOtpModal(false);
+        setEmailOtp('');
         setProfilePicFile(null);
         setPendingCropFile(null);
       } else {
         throw new Error(data.error || 'Failed to update profile');
       }
     } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+      if (showEmailOtpModal) {
+        setOtpError(error.message || 'Verification failed');
+      } else {
+        setMessage({ type: 'error', text: error.message || 'Failed to update profile' });
+      }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleResendEmailOtp = async () => {
+    if (otpResendCooldown > 0 || otpSending) return;
+    setOtpError('');
+    setOtpSending(true);
+    try {
+      await sendEmailUpdateOtp(email.trim());
+      setOtpResendCooldown(60);
+    } catch (err) {
+      setOtpError(err.message || 'Failed to resend verification code');
+    } finally {
+      setOtpSending(false);
     }
   };
 
@@ -345,6 +416,124 @@ export default function MyProfilePage({ user, onBack, onUserUpdate, onDeleteAcco
               </div>
           </div>
       </div>
+
+      {/* Email Change OTP Verification Modal */}
+      {showEmailOtpModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 20000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px', boxSizing: 'border-box'
+        }}>
+          <div style={{
+            width: '100%', maxWidth: '440px', background: '#161E2E',
+            border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px',
+            padding: '28px', color: '#ffffff', display: 'flex', flexDirection: 'column',
+            gap: '16px', boxSizing: 'border-box'
+          }}>
+            {/* Header */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <div style={{ width: 44, height: 44, borderRadius: '50%', background: 'rgba(14, 165, 233, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <KeyRound size={22} color="#0ea5e9" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 600, color: '#ffffff', fontFamily: 'var(--font-display)' }}>Verify New Email</h3>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#94a3b8', marginTop: '2px' }}>Confirm your new email address</p>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '0.88rem', color: '#cbd5e1', lineHeight: 1.5 }}>
+              We sent a 6-digit verification code to <strong style={{ color: '#ffffff' }}>{email}</strong>. Enter it below to update your profile email:
+            </p>
+
+            {/* OTP Input */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <input 
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                placeholder="Enter 6-digit code"
+                value={emailOtp}
+                onChange={(e) => { setEmailOtp(e.target.value.replace(/\D/g, '')); setOtpError(''); }}
+                autoFocus
+                style={{
+                  width: '100%', padding: '12px 16px', background: '#1f293d',
+                  border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '12px',
+                  color: '#ffffff', fontSize: '1.3rem', letterSpacing: '6px', textAlign: 'center',
+                  fontWeight: 700, outline: 'none', boxSizing: 'border-box'
+                }}
+                onFocus={(e) => { e.target.style.borderColor = '#0ea5e9'; }}
+                onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'; }}
+              />
+              {otpError && (
+                <p style={{ margin: 0, color: '#ef4444', fontSize: '0.8rem', fontWeight: 500 }}>{otpError}</p>
+              )}
+            </div>
+
+            {/* Resend Link */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', fontSize: '0.82rem' }}>
+              <button
+                type="button"
+                onClick={handleResendEmailOtp}
+                disabled={otpResendCooldown > 0 || otpSending}
+                style={{
+                  background: 'none', border: 'none',
+                  color: otpResendCooldown > 0 ? '#64748b' : '#0ea5e9',
+                  cursor: otpResendCooldown > 0 ? 'default' : 'pointer',
+                  fontWeight: 600, padding: 0
+                }}
+              >
+                {otpResendCooldown > 0 ? `Resend code in ${otpResendCooldown}s` : 'Resend Code'}
+              </button>
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={() => { setShowEmailOtpModal(false); setEmailOtp(''); setOtpError(''); }}
+                disabled={saving}
+                style={{
+                  flex: 1, height: '42px', borderRadius: '9999px', background: '#161E2E',
+                  border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600,
+                  cursor: saving ? 'not-allowed' : 'pointer', transition: 'color 0.2s'
+                }}
+                onMouseOver={(e) => { if (!saving) e.currentTarget.style.color = '#0ea5e9'; }}
+                onMouseOut={(e) => { if (!saving) e.currentTarget.style.color = '#ffffff'; }}
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={() => executeSaveProfile(emailOtp)}
+                disabled={saving || emailOtp.length !== 6}
+                style={{
+                  flex: 1, height: '42px', borderRadius: '9999px', background: '#0ea5e9',
+                  border: 'none', color: '#ffffff', fontSize: '0.88rem', fontWeight: 600,
+                  cursor: (saving || emailOtp.length !== 6) ? 'not-allowed' : 'pointer',
+                  opacity: (saving || emailOtp.length !== 6) ? 0.4 : 1,
+                  transition: 'background-color 0.2s'
+                }}
+                onMouseOver={(e) => {
+                  if (!saving && emailOtp.length === 6) {
+                    e.currentTarget.style.backgroundColor = '#0284c7';
+                  }
+                }}
+                onMouseOut={(e) => {
+                  if (!saving && emailOtp.length === 6) {
+                    e.currentTarget.style.backgroundColor = '#0ea5e9';
+                  }
+                }}
+              >
+                {saving ? 'Verifying...' : 'Confirm & Update'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteModal && (
