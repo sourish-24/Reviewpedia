@@ -50,7 +50,17 @@ function buildCommentTree(commentsList) {
   return roots;
 }
 
-export default function CommentSection({ reviewId, reviewAuthor, currentUser, onOpenAuth, onCommentCountChange }) {
+export default function CommentSection({
+  reviewId,
+  snippetId,
+  reviewAuthor,
+  currentUser,
+  onOpenAuth,
+  onCommentCountChange,
+  theme = 'light',
+  initialComments = [],
+  inputPosition = 'top'
+}) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [topCommentText, setTopCommentText] = useState('');
@@ -61,6 +71,23 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
   const [collapsedIds, setCollapsedIds] = useState({});
 
   const API_URL = import.meta.env.VITE_API_URL || '';
+  const isDark = theme === 'dark';
+  const targetId = snippetId || reviewId;
+  const isSnippet = Boolean(snippetId);
+  const commentsEndpoint = isSnippet
+    ? `${API_URL}/api/snippets/${snippetId}/comments`
+    : `${API_URL}/api/reviews/${reviewId}/comments`;
+
+  const normalizeComments = (list) => {
+    if (!Array.isArray(list)) return [];
+    return list.map(c => ({
+      ...c,
+      id: (c.id || c._id || `c-${Math.random().toString(36).slice(2, 9)}`).toString(),
+      parentId: c.parentId ? c.parentId.toString() : null,
+      likes: Array.isArray(c.likes) ? c.likes : [],
+      user: c.user || {}
+    }));
+  };
 
   // Notify parent of comments count
   useEffect(() => {
@@ -69,23 +96,33 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
     }
   }, [comments.length, onCommentCountChange]);
 
-  // Fetch comments for review
+  // Fetch comments
   useEffect(() => {
-    if (!reviewId) return;
-    let isMounted = true;
+    if (!targetId) return;
+    if (String(targetId).startsWith('demo-')) {
+      setComments(normalizeComments(initialComments));
+      setLoading(false);
+      return;
+    }
 
+    let isMounted = true;
     async function fetchComments() {
       try {
         setLoading(true);
-        const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments`, {
+        const res = await fetch(commentsEndpoint, {
           credentials: 'include'
         });
         if (res.ok) {
           const data = await res.json();
-          if (isMounted) setComments(data);
+          if (isMounted) setComments(normalizeComments(data));
+        } else if (initialComments && initialComments.length > 0) {
+          if (isMounted) setComments(normalizeComments(initialComments));
         }
       } catch (err) {
         console.error('Failed to load comments:', err);
+        if (isMounted && initialComments && initialComments.length > 0) {
+          setComments(normalizeComments(initialComments));
+        }
       } finally {
         if (isMounted) setLoading(false);
       }
@@ -93,7 +130,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
 
     fetchComments();
     return () => { isMounted = false; };
-  }, [reviewId, API_URL]);
+  }, [targetId, commentsEndpoint]);
 
   // Submit top-level comment
   const handlePostTopComment = async (e) => {
@@ -104,9 +141,29 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
     }
     if (!topCommentText.trim() || isSubmitting) return;
 
+    if (String(targetId).startsWith('demo-')) {
+      const newComment = {
+        id: `c-demo-${Date.now()}`,
+        _id: `c-demo-${Date.now()}`,
+        user: {
+          id: currentUser.id || currentUser._id,
+          name: currentUser.username,
+          profilePic: currentUser.profilePic || ''
+        },
+        text: topCommentText.trim(),
+        parentId: null,
+        likes: [],
+        createdAt: new Date()
+      };
+      setComments(prev => [...prev, newComment]);
+      setTopCommentText('');
+      setIsTopCommentFocused(false);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments`, {
+      const res = await fetch(commentsEndpoint, {
         method: 'POST',
         headers: getJsonAuthHeaders(),
         credentials: 'include',
@@ -115,7 +172,14 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
 
       if (res.ok) {
         const newComment = await res.json();
-        setComments(prev => [...prev, newComment]);
+        const normalized = {
+          ...newComment,
+          id: (newComment.id || newComment._id).toString(),
+          parentId: newComment.parentId ? newComment.parentId.toString() : null,
+          likes: newComment.likes || [],
+          user: newComment.user || {}
+        };
+        setComments(prev => [...prev, normalized]);
         setTopCommentText('');
         setIsTopCommentFocused(false);
       } else {
@@ -137,9 +201,29 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
     }
     if (!replyText.trim() || isSubmitting) return;
 
+    if (String(targetId).startsWith('demo-')) {
+      const newReply = {
+        id: `c-demo-${Date.now()}`,
+        _id: `c-demo-${Date.now()}`,
+        parentId: parentId.toString(),
+        user: {
+          id: currentUser.id || currentUser._id,
+          name: currentUser.username,
+          profilePic: currentUser.profilePic || ''
+        },
+        text: replyText.trim(),
+        likes: [],
+        createdAt: new Date()
+      };
+      setComments(prev => [...prev, newReply]);
+      setReplyText('');
+      setReplyingToId(null);
+      return;
+    }
+
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments`, {
+      const res = await fetch(commentsEndpoint, {
         method: 'POST',
         headers: getJsonAuthHeaders(),
         credentials: 'include',
@@ -148,7 +232,14 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
 
       if (res.ok) {
         const newReply = await res.json();
-        setComments(prev => [...prev, newReply]);
+        const normalized = {
+          ...newReply,
+          id: (newReply.id || newReply._id).toString(),
+          parentId: newReply.parentId ? newReply.parentId.toString() : null,
+          likes: newReply.likes || [],
+          user: newReply.user || {}
+        };
+        setComments(prev => [...prev, normalized]);
         setReplyText('');
         setReplyingToId(null);
       } else {
@@ -184,8 +275,10 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
       return c;
     }));
 
+    if (String(targetId).startsWith('demo-')) return;
+
     try {
-      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments/${commentId}/like`, {
+      const res = await fetch(`${commentsEndpoint}/${commentId}/like`, {
         method: 'POST',
         headers: getJsonAuthHeaders(),
         credentials: 'include'
@@ -203,27 +296,29 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm('Delete this comment and its replies?')) return;
 
+    // Remove comment and descendants locally
+    const toDelete = new Set([commentId.toString()]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      comments.forEach(c => {
+        if (c.parentId && toDelete.has(c.parentId.toString()) && !toDelete.has(c.id.toString())) {
+          toDelete.add(c.id.toString());
+          changed = true;
+        }
+      });
+    }
+    setComments(prev => prev.filter(c => !toDelete.has(c.id.toString())));
+
+    if (String(targetId).startsWith('demo-')) return;
+
     try {
-      const res = await fetch(`${API_URL}/api/reviews/${reviewId}/comments/${commentId}`, {
+      const res = await fetch(`${commentsEndpoint}/${commentId}`, {
         method: 'DELETE',
         headers: getAuthHeaders(),
         credentials: 'include'
       });
-      if (res.ok) {
-        // Remove comment and descendants
-        const toDelete = new Set([commentId]);
-        let changed = true;
-        while (changed) {
-          changed = false;
-          comments.forEach(c => {
-            if (c.parentId && toDelete.has(c.parentId) && !toDelete.has(c.id)) {
-              toDelete.add(c.id);
-              changed = true;
-            }
-          });
-        }
-        setComments(prev => prev.filter(c => !toDelete.has(c.id)));
-      } else {
+      if (!res.ok) {
         const err = await res.json();
         alert(err.error || 'Failed to delete comment');
       }
@@ -238,10 +333,9 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
 
   const commentTree = buildCommentTree(comments);
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
-      {/* Top Comment Input Area (Part of background) */}
-      {currentUser ? (
+  const renderInputSection = () => {
+    if (currentUser) {
+      return (
         <div style={{
           display: 'flex',
           flexDirection: 'column',
@@ -249,7 +343,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
           width: '100%',
           boxSizing: 'border-box'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: '#64748b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.85rem', color: isDark ? '#94a3b8' : '#64748b' }}>
             {currentUser.profilePic ? (
               <img src={currentUser.profilePic} alt={currentUser.username} style={{ width: 24, height: 24, borderRadius: '50%', objectFit: 'cover' }} />
             ) : (
@@ -257,7 +351,7 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
                 {currentUser.username?.[0]?.toUpperCase() || 'U'}
               </div>
             )}
-            <span>Comment as <strong style={{ color: '#0f172a', fontWeight: 600 }}>{currentUser.username}</strong></span>
+            <span>Comment as <strong style={{ color: isDark ? '#f8fafc' : '#0f172a', fontWeight: 600 }}>{currentUser.username}</strong></span>
           </div>
 
           <textarea
@@ -270,22 +364,22 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
             }}
             onBlur={(e) => {
               setIsTopCommentFocused(false);
-              e.target.style.borderColor = '#e5e0da';
+              e.target.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.15)' : '#e5e0da';
             }}
-            placeholder="What are your thoughts on this review or product?"
+            placeholder={isSnippet ? "What are your thoughts on this snippet or product?" : "What are your thoughts on this review or product?"}
             rows={isTopCommentFocused || topCommentText.trim() ? 3 : 2}
             style={{
               width: '100%',
               boxSizing: 'border-box',
               padding: '12px 14px',
-              border: '1px solid #e5e0da',
+              border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid #e5e0da',
               borderRadius: '12px',
               fontSize: '0.92rem',
               fontFamily: 'var(--font-body)',
-              color: '#1e293b',
+              color: isDark ? '#f8fafc' : '#1e293b',
               outline: 'none',
-              resize: 'vertical',
-              backgroundColor: '#ffffff',
+              resize: 'none',
+              backgroundColor: isDark ? '#242424' : '#ffffff',
               transition: 'border-color 0.2s',
               lineHeight: 1.5
             }}
@@ -308,15 +402,15 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
                     padding: '0 16px',
                     borderRadius: '9999px',
                     backgroundColor: 'transparent',
-                    color: '#64748b',
+                    color: isDark ? '#94a3b8' : '#64748b',
                     border: 'none',
                     cursor: 'pointer',
                     fontWeight: 600,
                     fontSize: '0.88rem',
                     transition: 'color 0.15s'
                   }}
-                  onMouseOver={(e) => e.currentTarget.style.color = '#1e293b'}
-                  onMouseOut={(e) => e.currentTarget.style.color = '#64748b'}
+                  onMouseOver={(e) => e.currentTarget.style.color = isDark ? '#f8fafc' : '#1e293b'}
+                  onMouseOut={(e) => e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b'}
                 >
                   Cancel
                 </button>
@@ -328,8 +422,8 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
                   height: 36,
                   padding: '0 20px',
                   borderRadius: '9999px',
-                  backgroundColor: topCommentText.trim() ? '#0ea5e9' : '#e4e0dc',
-                  color: topCommentText.trim() ? '#ffffff' : '#8c827a',
+                  backgroundColor: topCommentText.trim() ? '#0ea5e9' : (isDark ? 'rgba(255, 255, 255, 0.1)' : '#e4e0dc'),
+                  color: topCommentText.trim() ? '#ffffff' : (isDark ? '#64748b' : '#8c827a'),
                   border: 'none',
                   cursor: topCommentText.trim() && !isSubmitting ? 'pointer' : 'not-allowed',
                   fontWeight: 600,
@@ -346,78 +440,133 @@ export default function CommentSection({ reviewId, reviewAuthor, currentUser, on
             </div>
           )}
         </div>
-      ) : (
-        <div style={{
-          background: 'transparent',
-          border: '1px dashed #cbd5e1',
-          borderRadius: '16px',
-          padding: '24px',
-          textAlign: 'center',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: '12px'
-        }}>
-          <p style={{ margin: 0, fontSize: '0.95rem', color: '#475569' }}>
-            Log in or create an account to share your thoughts and join the discussion.
-          </p>
-          <button
-            onClick={() => onOpenAuth && onOpenAuth('login')}
-            style={{
-              height: 38,
-              padding: '0 24px',
-              borderRadius: '9999px',
-              backgroundColor: '#0ea5e9',
-              color: '#ffffff',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: '0.88rem'
-            }}
-          >
-            Log In / Sign Up
-          </button>
-        </div>
-      )}
+      );
+    }
 
-      {/* Comment List / Tree */}
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '32px 0', color: '#94a3b8', fontSize: '0.95rem' }}>
+    return (
+      <div style={{
+        background: isDark ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
+        border: isDark ? '1px dashed rgba(255, 255, 255, 0.15)' : '1px dashed #cbd5e1',
+        borderRadius: '16px',
+        padding: '20px',
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '12px'
+      }}>
+        <p style={{ margin: 0, fontSize: '0.95rem', color: isDark ? '#cbd5e1' : '#475569' }}>
+          Log in or create an account to share your thoughts and join the discussion.
+        </p>
+        <button
+          onClick={() => onOpenAuth && onOpenAuth('login')}
+          style={{
+            height: 38,
+            padding: '0 24px',
+            borderRadius: '9999px',
+            backgroundColor: '#0ea5e9',
+            color: '#ffffff',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: 600,
+            fontSize: '0.88rem'
+          }}
+        >
+          Log In / Sign Up
+        </button>
+      </div>
+    );
+  };
+
+  const renderCommentTree = () => {
+    if (loading) {
+      return (
+        <div style={{ textAlign: 'center', padding: '32px 0', color: isDark ? '#64748b' : '#94a3b8', fontSize: '0.95rem' }}>
           Loading discussion...
         </div>
-      ) : commentTree.length === 0 ? (
+      );
+    }
+
+    if (commentTree.length === 0) {
+      return (
         <div style={{
           textAlign: 'center',
           padding: '40px 20px',
-          color: '#64748b'
+          color: isDark ? '#94a3b8' : '#64748b'
         }}>
-          <MessageSquare size={36} color="#cbd5e1" style={{ margin: '0 auto 12px auto' }} />
-          <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem', color: '#334155' }}>No comments yet</p>
-          <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: '#94a3b8' }}>Be the first one to share your review or question!</p>
+          <MessageSquare size={36} color={isDark ? '#475569' : '#cbd5e1'} style={{ margin: '0 auto 12px auto' }} />
+          <p style={{ margin: 0, fontWeight: 600, fontSize: '1rem', color: isDark ? '#f8fafc' : '#334155' }}>No comments yet</p>
+          <p style={{ margin: '4px 0 0 0', fontSize: '0.88rem', color: isDark ? '#64748b' : '#94a3b8' }}>Be the first one to share your review or question!</p>
         </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {commentTree.map(node => (
-            <CommentNode
-              key={node.id}
-              node={node}
-              reviewAuthor={reviewAuthor}
-              currentUser={currentUser}
-              collapsedIds={collapsedIds}
-              toggleCollapse={toggleCollapse}
-              replyingToId={replyingToId}
-              setReplyingToId={setReplyingToId}
-              replyText={replyText}
-              setReplyText={setReplyText}
-              handlePostReply={handlePostReply}
-              handleToggleLike={handleToggleLike}
-              handleDeleteComment={handleDeleteComment}
-              isSubmitting={isSubmitting}
-              onOpenAuth={onOpenAuth}
-            />
-          ))}
+      );
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {commentTree.map(node => (
+          <CommentNode
+            key={node.id}
+            node={node}
+            reviewAuthor={reviewAuthor}
+            currentUser={currentUser}
+            collapsedIds={collapsedIds}
+            toggleCollapse={toggleCollapse}
+            replyingToId={replyingToId}
+            setReplyingToId={setReplyingToId}
+            replyText={replyText}
+            setReplyText={setReplyText}
+            handlePostReply={handlePostReply}
+            handleToggleLike={handleToggleLike}
+            handleDeleteComment={handleDeleteComment}
+            isSubmitting={isSubmitting}
+            onOpenAuth={onOpenAuth}
+            isDark={isDark}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  if (inputPosition === 'bottom') {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
+        width: '100%',
+        boxSizing: 'border-box',
+        overflow: 'hidden'
+      }}>
+        {/* Scrollable Comment Tree */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          minHeight: 0
+        }}>
+          {renderCommentTree()}
         </div>
-      )}
+
+        {/* Bottom Input Area pinned at the bottom of the comment section window */}
+        <div style={{
+          flexShrink: 0,
+          padding: '14px 20px 16px 20px',
+          borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid #e5e0da',
+          backgroundColor: isDark ? '#181818' : '#ffffff'
+        }}>
+          {renderInputSection()}
+        </div>
+      </div>
+    );
+  }
+
+  // Default: inputPosition === 'top' (for Detailed Review Page)
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%', boxSizing: 'border-box' }}>
+      {renderInputSection()}
+      {renderCommentTree()}
     </div>
   );
 }
@@ -440,7 +589,8 @@ function CommentNode({
   handleDeleteComment,
   isSubmitting,
   onOpenAuth,
-  depth = 0
+  depth = 0,
+  isDark = false
 }) {
   const isCollapsed = !!collapsedIds[node.id];
   const isReplying = replyingToId === node.id;
@@ -513,7 +663,7 @@ function CommentNode({
               style={{
                 width: '2px',
                 flex: 1,
-                backgroundColor: '#cbd5e1',
+                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1',
                 marginTop: '4px',
                 position: 'relative',
                 display: 'flex',
@@ -521,8 +671,8 @@ function CommentNode({
                 cursor: 'pointer',
                 transition: 'background-color 0.15s'
               }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#94a3b8'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#cbd5e1'}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = isDark ? 'rgba(255, 255, 255, 0.35)' : '#94a3b8'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = isDark ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1'}
               title="Click to collapse thread"
             >
               {/* Circular (-) collapse button positioned on the vertical line (Reddit style) */}
@@ -538,9 +688,9 @@ function CommentNode({
                   width: 16,
                   height: 16,
                   borderRadius: '50%',
-                  backgroundColor: '#F8F4F0',
-                  border: '1.5px solid #94a3b8',
-                  color: '#64748b',
+                  backgroundColor: isDark ? '#181818' : '#F8F4F0',
+                  border: isDark ? '1.5px solid rgba(255, 255, 255, 0.25)' : '1.5px solid #94a3b8',
+                  color: isDark ? '#94a3b8' : '#64748b',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -554,8 +704,8 @@ function CommentNode({
                   e.currentTarget.style.color = '#0ea5e9';
                 }}
                 onMouseOut={(e) => {
-                  e.currentTarget.style.borderColor = '#94a3b8';
-                  e.currentTarget.style.color = '#64748b';
+                  e.currentTarget.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.25)' : '#94a3b8';
+                  e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b';
                 }}
                 title="Collapse thread"
               >
@@ -569,18 +719,18 @@ function CommentNode({
         <div style={{ flex: 1, minWidth: 0, paddingBottom: '6px' }}>
           {/* Header Row: @Username • time ago */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '2px' }}>
-            <span style={{ fontWeight: 600, fontSize: '0.88rem', color: '#0f172a' }}>
+            <span style={{ fontWeight: 600, fontSize: '0.88rem', color: isDark ? '#f8fafc' : '#0f172a' }}>
               @{node.user?.name || 'Anonymous'}
             </span>
 
             {isOP && (
-              <span style={{ backgroundColor: 'rgba(14, 165, 233, 0.12)', color: '#0284c7', fontSize: '0.72rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px' }}>
+              <span style={{ backgroundColor: 'rgba(14, 165, 233, 0.15)', color: '#38bdf8', fontSize: '0.72rem', fontWeight: 700, padding: '1px 6px', borderRadius: '4px' }}>
                 OP
               </span>
             )}
 
-            <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>•</span>
-            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>
+            <span style={{ color: isDark ? '#64748b' : '#94a3b8', fontSize: '0.75rem' }}>•</span>
+            <span style={{ fontSize: '0.78rem', color: isDark ? '#94a3b8' : '#64748b' }}>
               {formatTimeAgo(node.createdAt || node.metadata?.date)}
             </span>
           </div>
@@ -590,7 +740,7 @@ function CommentNode({
             margin: '0 0 6px 0',
             fontSize: '0.92rem',
             lineHeight: 1.5,
-            color: '#1e293b',
+            color: isDark ? '#f1f5f9' : '#1e293b',
             whiteSpace: 'pre-wrap',
             wordBreak: 'break-word',
             fontFamily: 'var(--font-body)'
@@ -611,13 +761,13 @@ function CommentNode({
                 border: 'none',
                 padding: '2px 4px',
                 cursor: 'pointer',
-                color: isLiked ? '#ef4444' : '#64748b',
+                color: isLiked ? '#ef4444' : (isDark ? '#94a3b8' : '#64748b'),
                 fontSize: '0.8rem',
                 fontWeight: 600,
                 transition: 'color 0.15s'
               }}
-              onMouseOver={(e) => { if (!isLiked) e.currentTarget.style.color = '#0f172a'; }}
-              onMouseOut={(e) => { if (!isLiked) e.currentTarget.style.color = '#64748b'; }}
+              onMouseOver={(e) => { if (!isLiked) e.currentTarget.style.color = isDark ? '#ffffff' : '#0f172a'; }}
+              onMouseOut={(e) => { if (!isLiked) e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b'; }}
               title={isLiked ? 'Unlike' : 'Like'}
             >
               <Heart size={14} fill={isLiked ? '#ef4444' : 'none'} color={isLiked ? '#ef4444' : 'currentColor'} />
@@ -647,13 +797,13 @@ function CommentNode({
                 border: 'none',
                 padding: '2px 4px',
                 cursor: 'pointer',
-                color: isReplying ? '#0ea5e9' : '#64748b',
+                color: isReplying ? '#0ea5e9' : (isDark ? '#94a3b8' : '#64748b'),
                 fontSize: '0.8rem',
                 fontWeight: 600,
                 transition: 'color 0.15s'
               }}
-              onMouseOver={(e) => { if (!isReplying) e.currentTarget.style.color = '#0f172a'; }}
-              onMouseOut={(e) => { if (!isReplying) e.currentTarget.style.color = '#64748b'; }}
+              onMouseOver={(e) => { if (!isReplying) e.currentTarget.style.color = isDark ? '#ffffff' : '#0f172a'; }}
+              onMouseOut={(e) => { if (!isReplying) e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b'; }}
             >
               <span>{isReplying ? 'Cancel' : 'Reply'}</span>
             </button>
@@ -702,12 +852,12 @@ function CommentNode({
                   border: 'none',
                   padding: '2px 4px',
                   cursor: 'pointer',
-                  color: '#94a3b8',
+                  color: isDark ? '#64748b' : '#94a3b8',
                   fontSize: '0.78rem',
                   transition: 'color 0.15s'
                 }}
                 onMouseOver={(e) => e.currentTarget.style.color = '#ef4444'}
-                onMouseOut={(e) => e.currentTarget.style.color = '#94a3b8'}
+                onMouseOut={(e) => e.currentTarget.style.color = isDark ? '#64748b' : '#94a3b8'}
                 title="Delete comment"
               >
                 <Trash2 size={13} />
@@ -734,17 +884,17 @@ function CommentNode({
                   width: '100%',
                   boxSizing: 'border-box',
                   padding: '10px 12px',
-                  border: '1px solid #e5e0da',
+                  border: isDark ? '1px solid rgba(255, 255, 255, 0.15)' : '1px solid #e5e0da',
                   borderRadius: '10px',
                   fontSize: '0.88rem',
                   fontFamily: 'var(--font-body)',
                   outline: 'none',
                   resize: 'vertical',
-                  backgroundColor: '#ffffff',
-                  color: '#1e293b'
+                  backgroundColor: isDark ? '#242424' : '#ffffff',
+                  color: isDark ? '#f8fafc' : '#1e293b'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
-                onBlur={(e) => e.target.style.borderColor = '#e5e0da'}
+                onBlur={(e) => e.target.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.15)' : '#e5e0da'}
                 autoFocus
               />
               <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
@@ -756,12 +906,14 @@ function CommentNode({
                     padding: '0 14px',
                     borderRadius: '9999px',
                     backgroundColor: 'transparent',
-                    color: '#64748b',
+                    color: isDark ? '#94a3b8' : '#64748b',
                     border: 'none',
                     cursor: 'pointer',
                     fontSize: '0.82rem',
                     fontWeight: 600
                   }}
+                  onMouseOver={(e) => e.currentTarget.style.color = isDark ? '#ffffff' : '#1e293b'}
+                  onMouseOut={(e) => e.currentTarget.style.color = isDark ? '#94a3b8' : '#64748b'}
                 >
                   Cancel
                 </button>
@@ -772,8 +924,8 @@ function CommentNode({
                     height: 30,
                     padding: '0 16px',
                     borderRadius: '9999px',
-                    backgroundColor: replyText.trim() ? '#0ea5e9' : '#e4e0dc',
-                    color: replyText.trim() ? '#ffffff' : '#8c827a',
+                    backgroundColor: replyText.trim() ? '#0ea5e9' : (isDark ? 'rgba(255, 255, 255, 0.1)' : '#e4e0dc'),
+                    color: replyText.trim() ? '#ffffff' : (isDark ? '#64748b' : '#8c827a'),
                     border: 'none',
                     cursor: replyText.trim() && !isSubmitting ? 'pointer' : 'not-allowed',
                     fontSize: '0.82rem',
@@ -814,7 +966,7 @@ function CommentNode({
                     top: 0,
                     bottom: '-14px',
                     width: '2px',
-                    backgroundColor: '#cbd5e1'
+                    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.15)' : '#cbd5e1'
                   }} />
                 )}
 
@@ -825,8 +977,8 @@ function CommentNode({
                   top: 0,
                   width: '15px',
                   height: '14px',
-                  borderLeft: '2px solid #cbd5e1',
-                  borderBottom: '2px solid #cbd5e1',
+                  borderLeft: isDark ? '2px solid rgba(255, 255, 255, 0.15)' : '2px solid #cbd5e1',
+                  borderBottom: isDark ? '2px solid rgba(255, 255, 255, 0.15)' : '2px solid #cbd5e1',
                   borderBottomLeftRadius: '10px',
                   boxSizing: 'border-box',
                   pointerEvents: 'none'
@@ -848,6 +1000,7 @@ function CommentNode({
                   isSubmitting={isSubmitting}
                   onOpenAuth={onOpenAuth}
                   depth={depth + 1}
+                  isDark={isDark}
                 />
               </div>
             );

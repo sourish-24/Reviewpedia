@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, ArrowLeft, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut, ShieldAlert, MessageSquare, XCircle, Layers, Users, Star, CheckCircle2, Calendar, Heart, ChevronDown, Check } from 'lucide-react';
+import { Search, Navigation, Plus, MapPin, BarChart3, ArrowRight, ArrowUpRight, ArrowLeft, Mail, MessageCircle, Crosshair, Hexagon, Youtube, Linkedin, Instagram, Facebook, User as UserIcon, LogOut, ShieldAlert, MessageSquare, XCircle, Layers, Users, Star, CheckCircle2, Calendar, Heart, ChevronDown, Check, Film } from 'lucide-react';
 import { PRODUCT_CATEGORIES } from './utils/mockData';
 import AppMap from './components/Map';
 import ReviewCard from './components/ReviewCard';
@@ -12,10 +12,13 @@ import MyProfilePage from './components/MyProfilePage';
 import AuthModal from './components/AuthModal';
 import ChatApp from './components/ChatApp';
 import ReviewDetailPage from './components/ReviewDetailPage';
+import SnippetsPage from './components/SnippetsPage';
 import StarRating from './components/StarRating';
 import NotificationIcon from './components/NotificationIcon';
 import ChatIcon from './components/ChatIcon';
+import SnippetsIcon from './components/SnippetsIcon';
 import CategorySelectModal from './components/CategorySelectModal';
+import ProfileDropdown from './components/ProfileDropdown';
 import { useAuth } from './context/AuthContext';
 import { useChat } from './context/ChatContext';
 import { formatDate } from './utils/dateUtils';
@@ -32,6 +35,7 @@ function App() {
   else if (location.pathname.startsWith('/research')) appMode = 'business';
   else if (location.pathname.startsWith('/profile')) appMode = 'myProfileSettings';
   else if (location.pathname.startsWith('/chat')) appMode = 'chat';
+  else if (location.pathname.startsWith('/snippets') || location.pathname.startsWith('/snippet/')) appMode = 'snippets';
   else if (location.pathname.startsWith('/reviews/') || location.pathname.startsWith('/review/')) appMode = 'reviewDetail';
   const [selectedLocationReviews, setSelectedLocationReviews] = useState(null);
   const [selectedReview, setSelectedReview] = useState(null);
@@ -60,19 +64,6 @@ function App() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, logout, setUser } = useAuth();
   const { unreadChatCount } = useChat();
-
-  const homepageProfileRef = useRef(null);
-  const [isHomepageProfileOpen, setIsHomepageProfileOpen] = useState(false);
-
-  React.useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (homepageProfileRef.current && !homepageProfileRef.current.contains(e.target)) {
-        setIsHomepageProfileOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   React.useEffect(() => {
     // Reset all review windows on route change
@@ -195,7 +186,7 @@ function App() {
   return (
     <div className="app-container">
       {/* Mounted map instance when in map-active views */}
-      {appMode !== 'chat' && (
+      {appMode !== 'chat' && appMode !== 'snippets' && (
         <AppMap 
           ref={mapComponentRef} 
           onReviewSelect={handleReviewSelect} 
@@ -233,115 +224,36 @@ function App() {
                   fontFamily: "'Rochester', cursive",
                   fontWeight: 650,
                   fontSize: '2.2rem',
-                  color: '#0f172a'
+                  color: '#0f172a',
+                  lineHeight: 1,
+                  height: 40,
+                  display: 'flex',
+                  alignItems: 'center'
               }}
           >
              Reviewpedia
           </div>
 
           {/* Center: Navigation Links */}
-          <nav className="landing-dark-nav" style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '3rem', alignItems: 'center' }}>
+          <nav className="landing-dark-nav" style={{ position: 'absolute', top: 20, height: 40, left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '2.5rem', alignItems: 'center' }}>
              <a href="#problem" style={{ fontSize: '0.88rem' }}>About</a>
-             <a onClick={() => navigate('/browse')} style={{ fontSize: '0.88rem' }}>Browse Reviews</a>
-             <a onClick={() => setShowEmailPrompt(true)} style={{ fontSize: '0.88rem' }}>Research</a>
+             <a onClick={() => navigate('/browse')} style={{ fontSize: '0.88rem', cursor: 'pointer' }}>Browse Reviews</a>
+             <a onClick={() => setShowEmailPrompt(true)} style={{ fontSize: '0.88rem', cursor: 'pointer' }}>Research</a>
              <a href="#problem" style={{ fontSize: '0.88rem' }}>Contact Us</a>
           </nav>
 
           {/* Right: User / Auth Controls */}
-          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center', height: 40 }}>
              {user ? (
                  <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                      <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
+                     <SnippetsIcon color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/snippets')} />
+                     <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
                      <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
-                     <div ref={homepageProfileRef} style={{ position: 'relative' }}>
-                        <div 
-                            onClick={() => setIsHomepageProfileOpen(prev => !prev)}
-                            style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                        >
-                            {user.profilePic ? (
-                                <img 
-                                    src={user.profilePic} 
-                                    alt="Profile" 
-                                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'block', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-                                />
-                            ) : (
-                                <div style={{ 
-                                    width: '40px', height: '40px', borderRadius: '50%', 
-                                    backgroundColor: '#0ea5e9', color: 'white',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
-                                    border: '3px solid #0ea5e9', boxSizing: 'border-box',
-                                    boxShadow: 'none'
-                                }}>
-                                    {user.username[0].toUpperCase()}
-                                </div>
-                            )}
-                        </div>
-
-                        {isHomepageProfileOpen && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '48px',
-                                right: '-12px',
-                                left: 'auto',
-                                minWidth: '180px',
-                                background: 'rgba(3, 3, 3, 0.6)',
-                                border: 'none',
-                                borderRadius: '16px',
-                                padding: '12px',
-                                backdropFilter: 'blur(12px)',
-                                WebkitBackdropFilter: 'blur(12px)',
-                                boxShadow: 'none',
-                                zIndex: 1000,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '0.25rem',
-                                color: '#ffffff'
-                            }}>
-                                {/* Top Segment: Username and Email (Always White) */}
-                                <div style={{ padding: '2px 12px 6px 12px', cursor: 'default' }}>
-                                    <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {user.username}
-                                    </div>
-                                    <div style={{ color: '#ffffff', fontSize: '0.78rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
-                                        {user.email}
-                                    </div>
-                                </div>
-
-                                <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-
-                                <div 
-                                    onClick={() => { setIsHomepageProfileOpen(false); navigate('/profile'); }} 
-                                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
-                                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
-                                >
-                                    <span>My Profile</span>
-                                </div>
-
-                                <div 
-                                    onClick={() => { setIsHomepageProfileOpen(false); navigate('/chat'); }} 
-                                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
-                                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
-                                >
-                                    <span>Chats</span>
-                                </div>
-
-                                <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-
-                                <div 
-                                    onClick={() => { setIsHomepageProfileOpen(false); logout(); navigate('/'); }} 
-                                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ef4444', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px' }}
-                                >
-                                    <span>Sign Out</span>
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                     <ProfileDropdown user={user} logout={logout} />
                  </div>
              ) : (
                 <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                    <SnippetsIcon color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/snippets')} />
                     <button 
                         style={{ background: 'none', border: 'none', color: '#475569', fontSize: '0.88rem', fontWeight: 600, cursor: 'pointer', transition: 'color 0.2s', padding: '6px 12px' }} 
                         onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
@@ -960,7 +872,7 @@ function App() {
       )}
 
       {/* Navigation Header for Consumer & Business Views */}
-      {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
+      {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'snippets' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
         <div style={{ position: 'absolute', top: 20, left: '50%', transform: 'translateX(-50%)', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ position: 'relative', width: 'min(600px, calc(100vw - 40px))', margin: '0 auto', display: 'flex', justifyContent: 'center' }}>
               <header style={{
@@ -1091,11 +1003,11 @@ function App() {
             </div>
 
             {/* Right Group (User & Add Review) */}
-            <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
 
                 {appMode === 'consumer' && (
                     <button 
-                        style={{ height: 40, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', background: 'none', border: 'none', color: '#ffffff', transition: 'color 0.2s' }}
+                        style={{ height: 40, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', background: 'none', border: 'none', color: '#ffffff', transition: 'color 0.2s' }}
                         onMouseOver={(e) => {
                             e.currentTarget.style.color = '#0ea5e9';
                             const svg = e.currentTarget.querySelector('svg');
@@ -1119,7 +1031,7 @@ function App() {
                             }
                         }}
                     >
-                        <Plus size={18} color="currentColor" /> <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#ffffff', whiteSpace: 'nowrap', transition: 'color 0.2s' }}>Add a review</span>
+                        <Plus size={18} color="currentColor" /> <span style={{ fontWeight: 600, fontSize: '0.85rem', color: '#ffffff', whiteSpace: 'nowrap', transition: 'color 0.2s' }}>Add review</span>
                     </button>
                 )}
                 {appMode === 'business' && (
@@ -1222,8 +1134,8 @@ function App() {
       )}
 
       {/* Top Left: Back Button for Browse / Map views */}
-      {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
-          <div style={{ position: 'absolute', top: 32, left: 30, zIndex: 900 }}>
+      {appMode !== 'landing' && appMode !== 'chat' && appMode !== 'snippets' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && (
+          <div style={{ position: 'absolute', top: 20, left: 30, zIndex: 900 }}>
               <button 
                   onClick={() => {
                       if (window.history.length > 2) navigate(-1);
@@ -1255,8 +1167,9 @@ function App() {
           </div>
       )}
 
-      {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && !user && (
-          <div style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001 }}>
+      {appMode !== 'chat' && appMode !== 'snippets' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && !user && (
+          <div style={{ position: 'absolute', top: 20, right: 30, zIndex: 1001, display: 'flex', alignItems: 'center', gap: '14px' }}>
+              <SnippetsIcon color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/snippets')} />
               <button 
                   style={{ 
                       height: 40, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -1273,53 +1186,12 @@ function App() {
           </div>
       )}
 
-      {appMode !== 'chat' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && user && (
-          <div style={{ position: 'absolute', top: 32, right: 30, zIndex: 1001, display: 'flex', alignItems: 'center', gap: '14px' }}>
+      {appMode !== 'chat' && appMode !== 'snippets' && appMode !== 'myProfileSettings' && appMode !== 'reviewDetail' && user && (
+          <div style={{ position: 'absolute', top: 20, right: 30, zIndex: 1001, display: 'flex', alignItems: 'center', gap: '14px' }}>
+             <SnippetsIcon color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/snippets')} />
              <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
              <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
-             <div className="nav-dropdown" style={{ height: '40px', width: '40px' }}>
-                {/* The dropdown menu, positioned to align with header top (top: 20 -> relative top: -12) */}
-                <div className="nav-dropdown-menu" style={{ top: '-12px', right: '-12px', left: 'auto', minWidth: '160px', borderRadius: '16px', border: 'none', padding: '12px', zIndex: 1, boxShadow: 'none' }}>
-                    {/* First row: My Profile with padding to not overlap the photo */}
-                    <div onClick={() => navigate('/profile')} style={{ padding: '0 12px', paddingRight: '48px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>My Profile</span>
-                    </div>
-                    
-                    {/* Second row: My Reviews */}
-                    <div onClick={handleOpenMyReviews} style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>My Reviews</span>
-                    </div>
-
-                    <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-                    
-                    {/* Third row: Sign Out */}
-                    <div onClick={logout} className="nav-logout-item" style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>Sign Out</span>
-                    </div>
-                </div>
-                
-                {/* The profile photo, rendered ON TOP of the menu */}
-                <div style={{ position: 'relative', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
-                    {user.profilePic ? (
-                        <img 
-                            src={user.profilePic} 
-                            alt="Profile" 
-                            style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'block', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-                        />
-                    ) : (
-                        <div style={{ 
-                           width: '40px', height: '40px', borderRadius: '50%', 
-                           backgroundColor: '#0ea5e9', color: 'white',
-                           display: 'flex', alignItems: 'center', justifyContent: 'center',
-                           fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
-                           border: '3px solid #0ea5e9', boxSizing: 'border-box',
-                           boxShadow: 'none'
-                        }}>
-                            {user.username.charAt(0).toUpperCase()}
-                        </div>
-                    )}
-                </div>
-             </div>
+             <ProfileDropdown user={user} logout={logout} />
           </div>
       )}
 
@@ -1439,6 +1311,18 @@ function App() {
           onOpenAuth={(mode) => setShowAuthModal(mode || 'login')}
           onLikeToggle={handleLikeToggle}
           onUserClick={(u, userObj) => setSelectedUser(userObj || u)}
+        />
+      )}
+
+      {appMode === 'snippets' && (
+        <SnippetsPage 
+          currentUser={user}
+          logout={logout}
+          onOpenAuth={(mode) => setShowAuthModal(mode || 'login')}
+          onStartChat={(targetUsername) => {
+            setInitialChatUser(targetUsername);
+            navigate('/chat');
+          }}
         />
       )}
 

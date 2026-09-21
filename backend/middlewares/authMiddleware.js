@@ -26,3 +26,19 @@ export const requireAuth = (req, res, next) => {
         res.status(401).json({ success: false, error: 'Invalid token.' });
     }
 };
+
+export const optionalAuth = (req, res, next) => {
+    let token = req.cookies?.token;
+    if (!token && req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        token = req.headers.authorization.split(' ')[1];
+    }
+    if (token) {
+        try {
+            const decoded = jwt.verify(token, getJwtSecret());
+            req.user = decoded;
+        } catch (ex) {
+            // Ignore invalid token for optional auth
+        }
+    }
+    next();
+};

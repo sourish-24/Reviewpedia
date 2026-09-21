@@ -11,6 +11,8 @@ import StarRating from './StarRating';
 import LoadingPopup from './LoadingPopup';
 import NotificationIcon from './NotificationIcon';
 import ChatIcon from './ChatIcon';
+import SnippetsIcon from './SnippetsIcon';
+import ProfileDropdown from './ProfileDropdown';
 import { useChat } from '../context/ChatContext';
 import { formatDate } from '../utils/dateUtils';
 import { extractReviewId } from '../utils/urlUtils';
@@ -45,20 +47,7 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
   const [isSavingPurchase, setIsSavingPurchase] = useState(false);
 
   const commentsRef = useRef(null);
-  const profileMenuRef = useRef(null);
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const API_URL = import.meta.env.VITE_API_URL || '';
-
-  // Close profile dropdown when clicking outside (like homepage)
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target)) {
-        setIsProfileMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
   // Fetch review details
   useEffect(() => {
@@ -511,10 +500,10 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
       {/* Top Header Bar */}
       <header style={{
         width: '100%',
-        padding: '32px 30px 8px 30px',
+        padding: '20px 30px 8px 30px',
         boxSizing: 'border-box',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         justifyContent: 'space-between',
         zIndex: 1001,
         backgroundColor: '#F8F4F0'
@@ -548,111 +537,30 @@ export default function ReviewDetailPage({ currentUser, logout, onOpenMyReviews,
           <span>Back</span>
         </button>
 
-        {/* Right: Notification & Profile / Sign In */}
+        {/* Right: Snippets, Notification, Chat & Profile / Sign In */}
         {!currentUser ? (
-          <button
-            style={{
-              height: 40, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-              cursor: 'pointer', background: '#0ea5e9', border: 'none', color: '#ffffff',
-              borderRadius: '9999px', fontWeight: 600, fontSize: '0.88rem', fontFamily: 'var(--font-body)',
-              transition: 'background-color 0.2s', boxShadow: 'none'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0284c7'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
-            onClick={() => onOpenAuth && onOpenAuth('login')}
-          >
-            Sign In
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <SnippetsIcon color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/snippets')} />
+            <button
+              style={{
+                height: 40, padding: '0 24px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                cursor: 'pointer', background: '#0ea5e9', border: 'none', color: '#ffffff',
+                borderRadius: '9999px', fontWeight: 600, fontSize: '0.88rem', fontFamily: 'var(--font-body)',
+                transition: 'background-color 0.2s', boxShadow: 'none'
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0284c7'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#0ea5e9'}
+              onClick={() => onOpenAuth && onOpenAuth('login')}
+            >
+              Sign In
+            </button>
+          </div>
         ) : (
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <SnippetsIcon color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/snippets')} />
             <ChatIcon unreadCount={unreadChatCount} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} onClick={() => navigate('/chat')} />
             <NotificationIcon unreadCount={0} color="#000000" fillColor="#F8F4F0" hoverColor="#0ea5e9" size={22} />
-            <div ref={profileMenuRef} style={{ position: 'relative' }}>
-              <div 
-                onClick={() => setIsProfileMenuOpen(prev => !prev)}
-                style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-              >
-                {currentUser.profilePic ? (
-                  <img 
-                    src={currentUser.profilePic} 
-                    alt="Profile" 
-                    style={{ width: '40px', height: '40px', borderRadius: '50%', objectFit: 'cover', display: 'block', cursor: 'pointer', border: '3px solid #0ea5e9', boxSizing: 'border-box', boxShadow: 'none' }} 
-                  />
-                ) : (
-                  <div style={{ 
-                    width: '40px', height: '40px', borderRadius: '50%', 
-                    backgroundColor: '#0ea5e9', color: 'white',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 'bold', fontSize: '1rem', cursor: 'pointer',
-                    border: '3px solid #0ea5e9', boxSizing: 'border-box',
-                    boxShadow: 'none'
-                  }}>
-                    {currentUser.username?.[0]?.toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {isProfileMenuOpen && (
-                <div style={{
-                  position: 'absolute',
-                  top: '48px',
-                  right: '-12px',
-                  left: 'auto',
-                  minWidth: '180px',
-                  background: 'rgba(3, 3, 3, 0.6)',
-                  border: 'none',
-                  borderRadius: '16px',
-                  padding: '12px',
-                  backdropFilter: 'blur(12px)',
-                  WebkitBackdropFilter: 'blur(12px)',
-                  boxShadow: 'none',
-                  zIndex: 1000,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '0.25rem',
-                  color: '#ffffff'
-                }}>
-                  {/* Top Segment: Username and Email (Always White) */}
-                  <div style={{ padding: '2px 12px 6px 12px', cursor: 'default' }}>
-                    <div style={{ color: '#ffffff', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {currentUser.username}
-                    </div>
-                    <div style={{ color: '#ffffff', fontSize: '0.78rem', opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginTop: '2px' }}>
-                      {currentUser.email}
-                    </div>
-                  </div>
-
-                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-
-                  <div 
-                    onClick={() => { setIsProfileMenuOpen(false); navigate('/profile'); }} 
-                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
-                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
-                  >
-                    <span>My Profile</span>
-                  </div>
-
-                  <div 
-                    onClick={() => { setIsProfileMenuOpen(false); navigate('/chat'); }} 
-                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ffffff', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px', transition: 'color 0.2s ease' }}
-                    onMouseOver={(e) => e.currentTarget.style.color = '#0ea5e9'}
-                    onMouseOut={(e) => e.currentTarget.style.color = '#ffffff'}
-                  >
-                    <span>Chats</span>
-                  </div>
-
-                  <hr style={{ border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.08)', margin: '4px 0', padding: 0 }} />
-
-                  <div 
-                    onClick={() => { setIsProfileMenuOpen(false); logout(); navigate('/'); }} 
-                    style={{ padding: '0 12px', cursor: 'pointer', height: '36px', display: 'flex', alignItems: 'center', boxSizing: 'border-box', color: '#ef4444', fontSize: '0.9rem', fontWeight: 600, background: 'transparent', borderRadius: '8px' }}
-                  >
-                    <span>Sign Out</span>
-                  </div>
-                </div>
-              )}
-            </div>
+            <ProfileDropdown user={currentUser} logout={logout} />
           </div>
         )}
       </header>
