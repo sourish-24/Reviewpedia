@@ -25,7 +25,7 @@ export const ChatProvider = ({ children }) => {
 
     const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
     const API_URL = import.meta.env.VITE_API_URL || (isLocalhost ? '' : 'https://reviewpedia.onrender.com');
-    const SOCKET_URL = import.meta.env.VITE_API_URL || (isLocalhost ? 'http://localhost:3001' : 'https://reviewpedia.onrender.com');
+    const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_URL || 'https://reviewpedia.onrender.com';
 
     // Fetch total unread count from server
     const refreshUnreadCount = useCallback(async () => {

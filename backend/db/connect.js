@@ -1,7 +1,11 @@
 import mongoose from 'mongoose';
 
 export const connectToDb = async () => {
-    const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/reviewpedia';
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+        throw new Error('MONGODB_URI environment variable is missing.');
+    }
+    console.log('Connecting to MongoDB Atlas database...');
     await mongoose.connect(uri);
-    console.log(`Connected to MongoDB database successfully`);
+    console.log('Connected to MongoDB Atlas database successfully');
 };

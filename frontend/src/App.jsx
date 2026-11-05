@@ -19,6 +19,8 @@ import ChatIcon from './components/ChatIcon';
 import SnippetsIcon from './components/SnippetsIcon';
 import CategorySelectModal from './components/CategorySelectModal';
 import ProfileDropdown from './components/ProfileDropdown';
+import StoryTimeline from './components/StoryTimeline';
+import ReviewClampedText from './components/ReviewClampedText';
 import { useAuth } from './context/AuthContext';
 import { useChat } from './context/ChatContext';
 import { formatDate } from './utils/dateUtils';
@@ -27,6 +29,7 @@ import './index.css';
 
 function App() {
   const mapComponentRef = useRef(null);
+  const landingRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -183,6 +186,72 @@ function App() {
      navigate('/research');
   };
 
+  // Smooth mouse-wheel momentum scrolling for landing page overlay to make timeline progress glide like butter
+  useEffect(() => {
+    if (appMode !== 'landing') return;
+    const container = landingRef.current;
+    if (!container) return;
+
+    let targetY = container.scrollTop;
+    let currentY = container.scrollTop;
+    let isAnimating = false;
+    let rafId = null;
+
+    const onWheel = (e) => {
+      // Don't intercept ctrl+wheel (zoom) or pure horizontal scrolls
+      if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
+
+      // Don't intercept if scrolling inside a nested scrollable element (modal, dropdown, etc.)
+      let el = e.target;
+      while (el && el !== container) {
+        const style = window.getComputedStyle(el);
+        if ((style.overflowY === 'auto' || style.overflowY === 'scroll') && el.scrollHeight > el.clientHeight) {
+          return;
+        }
+        el = el.parentElement;
+      }
+
+      e.preventDefault();
+
+      let delta = e.deltaY;
+      if (e.deltaMode === 1) delta *= 33; // lines
+      else if (e.deltaMode === 2) delta *= window.innerHeight; // pages
+
+      // Sync with actual position if not currently animating (e.g. scrollbar dragged)
+      if (!isAnimating) {
+        currentY = container.scrollTop;
+        targetY = container.scrollTop;
+      }
+
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      targetY = Math.max(0, Math.min(maxScroll, targetY + delta));
+
+      if (!isAnimating) {
+        isAnimating = true;
+        const tick = () => {
+          const diff = targetY - currentY;
+          if (Math.abs(diff) > 0.5) {
+            currentY += diff * 0.14; // smooth exponential decay
+            container.scrollTop = Math.round(currentY);
+            rafId = requestAnimationFrame(tick);
+          } else {
+            currentY = targetY;
+            container.scrollTop = targetY;
+            isAnimating = false;
+          }
+        };
+        rafId = requestAnimationFrame(tick);
+      }
+    };
+
+    container.addEventListener('wheel', onWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', onWheel);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
+  }, [appMode]);
+
   return (
     <div className="app-container">
       {/* Mounted map instance when in map-active views */}
@@ -202,6 +271,7 @@ function App() {
       {/* Landing Page Full-Screen Overlay */}
       {appMode === 'landing' && (
         <div 
+          ref={landingRef}
           className="landing-dark"
           style={{
             position: 'fixed',
@@ -218,7 +288,7 @@ function App() {
           {/* Left: Logo */}
           <div 
               className="landing-dark-logo" 
-              onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+              onClick={() => landingRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
               style={{ 
                   cursor: 'pointer',
                   fontFamily: "'Rochester', cursive",
@@ -283,7 +353,7 @@ function App() {
           <p style={{ color: '#475569', fontSize: '1.2rem', maxWidth: '680px', textAlign: 'center', marginBottom: '2.5rem', lineHeight: 1.65 }}>
              Reviewpedia helps you find real reviews of everyday items from people around you. Make friends , chat, discuss
           </p>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '7rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: 0 }}>
               <button className="landing-btn-primary" onClick={() => navigate('/browse')}>
                   Get Started <ArrowRight size={18} />
               </button>
@@ -293,45 +363,11 @@ function App() {
           </div>
         </div>
 
-        {/* Section 1: The Online Shopping Dilemma */}
-        <section id="problem" style={{ position: 'relative', zIndex: 2, padding: '180px 2rem 150px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
-          <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '4rem', fontFamily: 'var(--font-display)' }}>
-            Why Traditional Reviews Fail You
-          </h2>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', textAlign: 'left' }}>
-            <div className="landing-card" style={{ padding: '2.2rem', alignItems: 'flex-start', textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#161E2E', margin: '0 0 0.6rem 0' }}>Fake & Paid Reviews</h3>
-              <p style={{ color: '#64748b', fontSize: '1.02rem', lineHeight: 1.65, margin: 0 }}>
-                Shopping platforms like Amazon and Flipkart contain incentivized 5-star ratings that distort real product ratings.
-              </p>
-            </div>
-
-            <div className="landing-card" style={{ padding: '2.2rem', alignItems: 'flex-start', textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#161E2E', margin: '0 0 0.6rem 0' }}>Silent Influencers</h3>
-              <p style={{ color: '#64748b', fontSize: '1.02rem', lineHeight: 1.65, margin: 0 }}>
-                YouTube & Insta reviewers get paid to promote items and rarely reply to DMs or comments when you need real answers.
-              </p>
-            </div>
-
-            <div className="landing-card" style={{ padding: '2.2rem', alignItems: 'flex-start', textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#161E2E', margin: '0 0 0.6rem 0' }}>Regional Quality Traps</h3>
-              <p style={{ color: '#64748b', fontSize: '1.02rem', lineHeight: 1.65, margin: 0 }}>
-                A positive review in Delhi won't guarantee quality in Bengaluru due to local suppliers and distributor variances.
-              </p>
-            </div>
-
-            <div className="landing-card" style={{ padding: '2.2rem', alignItems: 'flex-start', textAlign: 'left' }}>
-              <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: '#161E2E', margin: '0 0 0.6rem 0' }}>Anonymous Chaos</h3>
-              <p style={{ color: '#64748b', fontSize: '1.02rem', lineHeight: 1.65, margin: 0 }}>
-                Quora and Reddit threads lack verified ownership and location checks, leading to unverified, chaotic opinions.
-              </p>
-            </div>
-          </div>
-        </section>
+        {/* Section 1: The Online Shopping Dilemma (Interactive Story Timeline) */}
+        <StoryTimeline onGetStarted={() => navigate('/browse')} />
 
         {/* Section 2: Core Pillars */}
-        <section id="features" style={{ position: 'relative', zIndex: 2, padding: '150px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
+        <section id="features" style={{ position: 'relative', zIndex: 2, padding: '240px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '4rem', fontFamily: 'var(--font-display)' }}>
             How Reviewpedia Empowers You
           </h2>
@@ -368,13 +404,13 @@ function App() {
         </section>
 
         {/* Section 3: Comparison Table */}
-        <section id="comparison" style={{ position: 'relative', zIndex: 2, padding: '150px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
+        <section id="comparison" style={{ position: 'relative', zIndex: 2, padding: '240px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '1.25rem', fontFamily: 'var(--font-display)' }}>
             The Clear Difference
           </h2>
           <p style={{ color: '#475569', fontSize: '1.25rem', marginBottom: '4rem' }}>See how Reviewpedia compares to traditional review channels.</p>
 
-          <div style={{ background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: '28px', border: '1px solid rgba(2, 132, 199, 0.15)', overflow: 'hidden', boxShadow: '0 20px 40px rgba(15, 23, 42, 0.05)' }}>
+          <div style={{ background: 'rgba(255, 255, 255, 0.85)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', borderRadius: '28px', border: '1px solid rgba(2, 132, 199, 0.15)', overflow: 'hidden', boxShadow: 'none' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontFamily: 'var(--font-body)' }}>
               <thead>
                 <tr style={{ background: '#161E2E', color: '#ffffff' }}>
@@ -389,36 +425,36 @@ function App() {
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Location-Based Reviews</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>City Name Only</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Hyper-Local Pins</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>1-on-1 Chat with Reviewer</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Unresponsive DMs</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>Unresponsive DMs</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>Public Threads</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Direct 1-on-1 DM</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Make Friends</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#161E2E', fontWeight: 600, fontSize: '1.05rem' }}>Yes</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Yes</td>
                 </tr>
                 <tr style={{ borderBottom: '1px solid rgba(2, 132, 199, 0.08)' }}>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Centralized Cross-Site Ratings</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Platform Only</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No Ratings</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>No Ratings</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>Platform Only</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No Ratings</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>No Ratings</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Multi-Platform Aggregated</td>
                 </tr>
                 <tr>
                   <td style={{ padding: '20px 28px', fontWeight: 600, color: '#161E2E', fontSize: '1.05rem' }}>Protection from Paid/Bot Reviews</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>High Fake Rate</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Paid Sponsorships</td>
-                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#ef4444', fontSize: '1.05rem' }}>Anonymous Noise</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>High Fake Rate</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>Paid Sponsorships</td>
+                  <td style={{ padding: '20px 20px', textAlign: 'center', color: '#94a3b8', fontSize: '1.05rem' }}>Anonymous Noise</td>
                   <td style={{ padding: '20px 20px', textAlign: 'center', color: '#0ea5e9', fontWeight: 700, fontSize: '1.05rem', background: 'rgba(14, 165, 233, 0.05)' }}>Literally Your Neighbours</td>
                 </tr>
               </tbody>
@@ -427,7 +463,7 @@ function App() {
         </section>
 
         {/* Section 4: Community Spotlight */}
-        <section id="community" style={{ position: 'relative', zIndex: 2, padding: '150px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
+        <section id="community" style={{ position: 'relative', zIndex: 2, padding: '240px 2rem', maxWidth: 1380, margin: '0 auto', textAlign: 'center' }}>
           <h2 style={{ fontSize: '3.2rem', fontWeight: 800, letterSpacing: '-0.04em', color: '#161E2E', marginBottom: '1.25rem', fontFamily: 'var(--font-display)' }}>
             Connect With Real Shoppers
           </h2>
@@ -438,30 +474,34 @@ function App() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '2rem', textAlign: 'left' }}>
             {/* Review Card 1 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/sony-wh1000xm5.jpg" alt="Sony WH-1000XM5" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
-                    Sony WH-1000XM5
-                  </h3>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    <span style={{ backgroundColor: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.3)', borderRadius: '9999px', padding: '2px 10px', color: '#0ea5e9', fontSize: '0.75rem', fontWeight: 600 }}>Sony</span>
-                    <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', borderRadius: '9999px', padding: '2px 10px', color: '#475569', fontSize: '0.75rem', fontWeight: 500 }}>Electronics</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '3px' }}>
-                    <StarRating rating={5} size={15} gap={3} />
-                  </div>
+              <div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                  Sony WH-1000XM5
+                </h3>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>Sony</span>
+                  <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>Electronics & Appliances</span>
                 </div>
               </div>
 
-              <p style={{ margin: 0, padding: '4px 0', lineHeight: 1.6, fontSize: '0.98rem', fontFamily: 'var(--font-body)', color: '#27272a' }}>
-                "Noise cancellation is incredible for commuting in Delhi Metro. Battery easily lasts 30+ hours."
-              </p>
+              <div 
+                style={{ 
+                  width: '100%', height: 200, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  color: '#71717a', flexShrink: 0, overflow: 'hidden', position: 'relative' 
+                }}
+              >
+                <img src="/sony-wh1000xm5.jpg" alt="Sony WH-1000XM5" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
 
-              {/* Heart button right above horizontal rule */}
-              <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+              <div>
+                <StarRating rating={5} size={16} gap={2} />
+              </div>
+
+              <ReviewClampedText text="Noise cancellation is incredible for commuting in Delhi Metro. Battery easily lasts 30+ hours." />
+
+              {/* Heart and comments button row right above horizontal rule */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 2px 0' }}>
                 <button
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
@@ -472,55 +512,67 @@ function App() {
                   <Heart size={14} fill="none" color="#71717a" />
                   <span>12</span>
                 </button>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    background: 'none', border: 'none',
+                    padding: '3px 8px', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
+                  }}
+                >
+                  <MessageSquare size={14} color="#71717a" />
+                  <span>3</span>
+                </button>
               </div>
 
-              <div style={{ paddingTop: '16px', marginTop: '4px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
-                    R
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '16px', borderTop: '1px solid #e4e4e7', marginTop: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
+                      R
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        Rahul Sharma
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#161E2E' }}>
-                      Rahul Sharma <CheckCircle2 size={14} color="#0ea5e9" />
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <MapPin size={12} color="#0ea5e9" /> New Delhi
-                    </p>
+                  <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <Calendar size={12} /> {formatDate('2026-08-05')}
                   </div>
-                </div>
-
-                <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0 }}>
-                  <Calendar size={13} /> {formatDate('2026-08-05')}
                 </div>
               </div>
             </div>
 
             {/* Review Card 2 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/macbook m2.jpg" alt="MacBook Air M2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
-                    MacBook Air M2
-                  </h3>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    <span style={{ backgroundColor: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.3)', borderRadius: '9999px', padding: '2px 10px', color: '#0ea5e9', fontSize: '0.75rem', fontWeight: 600 }}>Apple</span>
-                    <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', borderRadius: '9999px', padding: '2px 10px', color: '#475569', fontSize: '0.75rem', fontWeight: 500 }}>Laptops</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '3px' }}>
-                    <StarRating rating={5} size={15} gap={3} />
-                  </div>
+              <div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                  MacBook Air M2
+                </h3>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>Apple</span>
+                  <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>Laptops</span>
                 </div>
               </div>
 
-              <p style={{ margin: 0, padding: '4px 0', lineHeight: 1.6, fontSize: '0.98rem', fontFamily: 'var(--font-body)', color: '#27272a' }}>
-                "Super lightweight for work. Keyboard feels solid and display is super bright."
-              </p>
+              <div 
+                style={{ 
+                  width: '100%', height: 200, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  color: '#71717a', flexShrink: 0, overflow: 'hidden', position: 'relative' 
+                }}
+              >
+                <img src="/macbook m2.jpg" alt="MacBook Air M2" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
 
-              {/* Heart button right above horizontal rule */}
-              <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+              <div>
+                <StarRating rating={5} size={16} gap={2} />
+              </div>
+
+              <ReviewClampedText text="Super lightweight for work. Keyboard feels solid and display is super bright." />
+
+              {/* Heart and comments button row right above horizontal rule */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 2px 0' }}>
                 <button
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
@@ -531,55 +583,67 @@ function App() {
                   <Heart size={14} fill="none" color="#71717a" />
                   <span>19</span>
                 </button>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    background: 'none', border: 'none',
+                    padding: '3px 8px', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
+                  }}
+                >
+                  <MessageSquare size={14} color="#71717a" />
+                  <span>4</span>
+                </button>
               </div>
 
-              <div style={{ paddingTop: '16px', marginTop: '4px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
-                    P
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '16px', borderTop: '1px solid #e4e4e7', marginTop: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
+                      P
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        Priya Patel
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#161E2E' }}>
-                      Priya Patel <CheckCircle2 size={14} color="#0ea5e9" />
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <MapPin size={12} color="#0ea5e9" /> Bengaluru
-                    </p>
+                  <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <Calendar size={12} /> {formatDate('2026-08-03')}
                   </div>
-                </div>
-
-                <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0 }}>
-                  <Calendar size={13} /> {formatDate('2026-08-03')}
                 </div>
               </div>
             </div>
 
             {/* Review Card 3 */}
             <div style={{ background: '#F8F4F0', borderRadius: '24px', border: '1px solid #e4e4e7', padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px', boxShadow: '0 8px 24px rgba(15, 23, 42, 0.04)', textAlign: 'left' }}>
-              <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
-                <div style={{ width: 76, height: 76, backgroundColor: '#e4e4e7', border: '1px solid #cbd5e1', borderRadius: 12, overflow: 'hidden', flexShrink: 0 }}>
-                  <img src="/nike air max.jpg" alt="Nike Air Max" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: '#161E2E', margin: '0 0 6px 0', wordBreak: 'break-word' }}>
-                    Nike Air Max
-                  </h3>
-                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '8px' }}>
-                    <span style={{ backgroundColor: 'rgba(14, 165, 233, 0.15)', border: '1px solid rgba(14, 165, 233, 0.3)', borderRadius: '9999px', padding: '2px 10px', color: '#0ea5e9', fontSize: '0.75rem', fontWeight: 600 }}>Nike</span>
-                    <span style={{ backgroundColor: 'rgba(100, 116, 139, 0.1)', borderRadius: '9999px', padding: '2px 10px', color: '#475569', fontSize: '0.75rem', fontWeight: 500 }}>Footwear</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: '3px' }}>
-                    <StarRating rating={4} size={15} gap={3} />
-                  </div>
+              <div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                  Nike Air Max
+                </h3>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                  <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>Nike</span>
+                  <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>Footwear</span>
                 </div>
               </div>
 
-              <p style={{ margin: 0, padding: '4px 0', lineHeight: 1.6, fontSize: '0.98rem', fontFamily: 'var(--font-body)', color: '#27272a' }}>
-                "Great arch support for daily running. Bought online at a discount — feel free to DM for size tips!"
-              </p>
+              <div 
+                style={{ 
+                  width: '100%', height: 200, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                  borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                  color: '#71717a', flexShrink: 0, overflow: 'hidden', position: 'relative' 
+                }}
+              >
+                <img src="/nike air max.jpg" alt="Nike Air Max" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              </div>
 
-              {/* Heart button right above horizontal rule */}
-              <div style={{ display: 'flex', alignItems: 'center', margin: '0 0 2px 0' }}>
+              <div>
+                <StarRating rating={4} size={16} gap={2} />
+              </div>
+
+              <ReviewClampedText text="Great arch support for daily running. Bought online at a discount — feel free to DM for size tips!" />
+
+              {/* Heart and comments button row right above horizontal rule */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', margin: '0 0 2px 0' }}>
                 <button
                   style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
@@ -590,25 +654,33 @@ function App() {
                   <Heart size={14} fill="none" color="#71717a" />
                   <span>8</span>
                 </button>
+                <button
+                  style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px',
+                    background: 'none', border: 'none',
+                    padding: '3px 8px', cursor: 'pointer', color: '#71717a', fontSize: '0.75rem', fontWeight: 600
+                  }}
+                >
+                  <MessageSquare size={14} color="#71717a" />
+                  <span>2</span>
+                </button>
               </div>
 
-              <div style={{ paddingTop: '16px', marginTop: '4px', borderTop: '1px solid #e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#0ea5e9', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '1rem', flexShrink: 0 }}>
-                    A
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '16px', borderTop: '1px solid #e4e4e7', marginTop: '4px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', backgroundColor: '#e4e4e7', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '0.8rem', color: 'var(--primary)', fontFamily: 'var(--font-display)', textTransform: 'uppercase', flexShrink: 0 }}>
+                      A
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                        Aniket Verma
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <p style={{ fontWeight: 600, fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: 5, margin: 0, color: '#161E2E' }}>
-                      Aniket Verma <CheckCircle2 size={14} color="#0ea5e9" />
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: '#64748b', margin: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
-                      <MapPin size={12} color="#0ea5e9" /> Mumbai
-                    </p>
+                  <div style={{ textAlign: 'right', fontSize: '0.75rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0, whiteSpace: 'nowrap' }}>
+                    <Calendar size={12} /> {formatDate('2026-07-28')}
                   </div>
-                </div>
-
-                <div style={{ textAlign: 'right', fontSize: '0.78rem', color: '#71717a', display: 'flex', alignItems: 'center', gap: '4px', fontFamily: 'var(--font-body)', flexShrink: 0 }}>
-                  <Calendar size={13} /> {formatDate('2026-07-28')}
                 </div>
               </div>
             </div>
@@ -616,7 +688,7 @@ function App() {
         </section>
 
         {/* Section 5: Call to Action */}
-        <section style={{ position: 'relative', zIndex: 2, padding: '160px 2rem 220px 2rem', maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+        <section style={{ position: 'relative', zIndex: 2, padding: '240px 2rem 280px 2rem', maxWidth: 1100, margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
           <h2 className="landing-title" style={{ margin: '0 0 1.5rem 0' }}>
             Stop buying blindly. <br />
             <span style={{ color: '#0ea5e9', fontStyle: 'italic' }}>start connecting</span>
@@ -668,6 +740,8 @@ function App() {
                       style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255, 255, 255, 0.2)', paddingBottom: '12px' }}
                     >
                         <input 
+                          id="footer-newsletter-email"
+                          name="newsletterEmail"
                           type="email" 
                           placeholder="Enter Your Email"
                           style={{ background: 'transparent', border: 'none', outline: 'none', color: '#ffffff', fontSize: '1.5rem', fontFamily: 'var(--font-body)', width: '100%', paddingRight: '16px' }}
@@ -804,16 +878,18 @@ function App() {
                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                          <label style={{ fontSize: '0.78rem', color: '#ffffff', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Work Email</label>
                          <input 
-                             type="email" 
-                             value={marketResearchEmail} 
-                             onChange={(e) => setMarketResearchEmail(e.target.value)} 
-                             placeholder="you@example.com"
-                             autoFocus
-                             onKeyDown={(e) => e.key === 'Enter' && startBusinessMode()}
-                             style={{ padding: '12px 16px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '12px', background: '#1f293d', outline: 'none', fontSize: '0.95rem', fontFamily: 'var(--font-body)', transition: 'all 0.2s', color: '#ffffff', boxSizing: 'border-box' }}
-                             onFocus={(e) => { e.target.style.borderColor = '#0ea5e9'; e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.2)'; }}
-                             onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'; e.target.style.boxShadow = 'none'; }}
-                         />
+                              id="market-research-email"
+                              name="marketResearchEmail"
+                              type="email" 
+                              value={marketResearchEmail} 
+                              onChange={(e) => setMarketResearchEmail(e.target.value)} 
+                              placeholder="you@example.com"
+                              autoFocus
+                              onKeyDown={(e) => e.key === 'Enter' && startBusinessMode()}
+                              style={{ padding: '12px 16px', border: '1px solid rgba(255, 255, 255, 0.12)', borderRadius: '12px', background: '#1f293d', outline: 'none', fontSize: '0.95rem', fontFamily: 'var(--font-body)', transition: 'all 0.2s', color: '#ffffff', boxSizing: 'border-box' }}
+                              onFocus={(e) => { e.target.style.borderColor = '#0ea5e9'; e.target.style.boxShadow = '0 0 0 3px rgba(14, 165, 233, 0.2)'; }}
+                              onBlur={(e) => { e.target.style.borderColor = 'rgba(255, 255, 255, 0.12)'; e.target.style.boxShadow = 'none'; }}
+                          />
                      </div>
 
                      {/* Equal Width Action Buttons */}
@@ -957,6 +1033,8 @@ function App() {
 
                {/* Search Input */}
                <input 
+                 id="header-search-input"
+                 name="searchInput"
                  type="text" 
                  placeholder={selectedCategory === 'All' ? 'Search "Mobiles"' : `Search in ${selectedCategory}...`} 
                  value={searchInput}
@@ -1084,6 +1162,8 @@ function App() {
                 
                 <div style={{ height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <input 
+                        id="hex-resolution-slider"
+                        name="hexResolution"
                         type="range" 
                         min="3" 
                         max="10" 

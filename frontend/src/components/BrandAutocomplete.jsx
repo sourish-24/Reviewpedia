@@ -89,8 +89,10 @@ export default function BrandAutocomplete({
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '42px', display: 'flex' }}>
       <input
+        id="brand-autocomplete-input"
+        name="brandName"
         type="text"
         placeholder={placeholder}
         value={value}

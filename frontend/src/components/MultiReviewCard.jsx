@@ -192,53 +192,44 @@ export default function MultiReviewCard({ reviews, onClose, onUserClick, current
                         </div>
                     )}
                     
-                    <div style={{ display: 'flex', gap: 16 }}>
+                    <div style={{ paddingRight: '36px' }}>
+                        <h3 style={{ fontSize: '1.125rem', fontWeight: 700, margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                          {review.product?.name}
+                        </h3>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '6px', flexWrap: 'wrap' }}>
+                            {review.product?.brand && <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>{review.product.brand}</span>}
+                            <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>{review.product?.category}</span>
+                        </div>
+                    </div>
+
+                    {review.review?.media && review.review.media.length > 0 && (
                         <div 
                             style={{ 
-                                width: 72, height: 72, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
-                                borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                width: '100%', height: 200, backgroundColor: '#e4e4e7', border: '1px solid #d4d4d8', 
+                                borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', 
                                 color: '#71717a', flexShrink: 0, overflow: 'hidden', 
-                                cursor: review.review?.media?.length ? 'pointer' : 'default', position: 'relative' 
+                                cursor: 'pointer', position: 'relative' 
                             }}
                             onClick={(e) => {
                                 e.stopPropagation();
-                                if (review.review?.media?.length) {
-                                    setActiveLightbox({ review, initialIndex: 0 });
-                                }
+                                setActiveLightbox({ review, initialIndex: 0 });
                             }}
                         >
-                            {review.review?.media && review.review.media.length > 0 ? (
-                                <>
-                                    {review.review.media[0].type === 'video' ? (
-                                        <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                        <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    )}
-                                    {review.review.media.length > 1 && (
-                                        <div style={{ position: 'absolute', bottom: 2, right: 2, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.65rem', fontWeight: 'bold', padding: '1px 5px', borderRadius: '4px' }}>
-                                            +{review.review.media.length - 1}
-                                        </div>
-                                    )}
-                                </>
+                            {review.review.media[0].type === 'video' ? (
+                                <video src={review.review.media[0].url} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
-                                <ImageIcon size={32} />
+                                <img src={review.review.media[0].url} alt="Review media" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                            {review.review.media.length > 1 && (
+                                <div style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.7)', color: 'white', fontSize: '0.72rem', fontWeight: 'bold', padding: '2px 8px', borderRadius: '6px', backdropFilter: 'blur(4px)' }}>
+                                    +{review.review.media.length - 1}
+                                </div>
                             )}
                         </div>
+                    )}
 
-                        <div style={{ flex: 1, minWidth: 0, paddingRight: '36px' }}>
-                            <h3 style={{ fontSize: '1.125rem', margin: 0, color: '#18181b', wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                              {review.product?.name}
-                            </h3>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px', flexWrap: 'wrap' }}>
-                                {review.product?.brand && <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#5138d6', fontWeight: 600, wordBreak: 'break-word', maxWidth: '100%' }}>{review.product.brand}</span>}
-                                <span className="chip" style={{ backgroundColor: '#e4e4e7', padding: '2px 8px', color: '#52525b', wordBreak: 'break-word', maxWidth: '100%' }}>{review.product?.category}</span>
-                            </div>
-
-                            
-                            <div style={{ margin: '8px 0 0 0' }}>
-                                <StarRating rating={review.review?.rating || 0} size={15} gap={2} />
-                            </div>
-                        </div>
+                    <div>
+                        <StarRating rating={review.review?.rating || 0} size={16} gap={2} />
                     </div>
 
                     <ReviewClampedText text={review.review?.text || review.review?.title} />

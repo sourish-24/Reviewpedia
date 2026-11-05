@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Camera, MapPin, X, Trash2 } from 'lucide-react';
+import { Camera, X, Trash2 } from 'lucide-react';
 import BrandAutocomplete, { toPascalCase } from './BrandAutocomplete';
 import CategoryDropdown from './CategoryDropdown';
 import StarRating from './StarRating';
@@ -208,7 +208,7 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
   };
 
   const inputStyle = {
-      width: '100%', padding: '10px 18px', border: '1px solid rgba(255, 255, 255, 0.15)',
+      width: '100%', height: '42px', padding: '0 18px', border: '1px solid rgba(255, 255, 255, 0.15)',
       background: 'rgba(255, 255, 255, 0.05)', outline: 'none', fontSize: '0.9rem',
       fontFamily: 'var(--font-body)', color: '#ffffff', transition: 'border-color 0.2s',
       borderRadius: '9999px', boxSizing: 'border-box'
@@ -242,7 +242,7 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
         <div style={{ display: 'flex', gap: 18, marginBottom: 20 }}>
           <div 
             style={{ 
-              width: 260, height: 260, flexShrink: 0, display: 'flex', flexDirection: 'column', 
+              width: 266, height: 266, flexShrink: 0, display: 'flex', flexDirection: 'column', 
               alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#ffffff', 
               background: 'rgba(255, 255, 255, 0.05)', border: mediaItems.length > 0 ? 'none' : '1px dashed rgba(255, 255, 255, 0.3)', 
               borderRadius: '18px', overflow: 'hidden', position: 'relative' 
@@ -383,10 +383,12 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
                     <span style={{ fontSize: '0.72rem', color: 'rgba(255, 255, 255, 0.5)', marginTop: 2 }}>Photos or Videos</span>
                 </>
             )}
-            <input type="file" accept="image/*,video/*" multiple ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
+            <input id="create-review-media-file" name="reviewMedia" type="file" accept="image/*,video/*" multiple ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
           </div>
-          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 14, justifyContent: 'space-between' }}>
+          <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 14, width: '100%', minWidth: 0 }}>
             <input 
+              id="create-review-product-name"
+              name="productName"
               type="text" 
               placeholder="Product Name" 
               value={productName}
@@ -408,7 +410,7 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
               inputStyle={inputStyle}
             />
 
-            {/* Share Location Box */}
+            {/* Location Toggle Box */}
             <div 
               style={{ 
                 ...inputStyle, 
@@ -420,11 +422,16 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
               }}
               onClick={() => setIsAccurateLocation(prev => !prev)}
             >
-              <span style={{ fontSize: '0.9rem', fontFamily: 'var(--font-body)', color: '#ffffff' }}>
+              <span style={{ color: '#ffffff', fontSize: '0.9rem', fontFamily: 'var(--font-body)' }}>
                 Location
               </span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: '0.85rem', color: '#94a3b8', fontFamily: 'var(--font-body)', fontWeight: 500 }}>
+                <span style={{ 
+                  fontSize: '0.85rem', 
+                  color: '#94a3b8', 
+                  fontFamily: 'var(--font-body)', 
+                  fontWeight: 500 
+                }}>
                   {isAccurateLocation ? 'Accurate' : 'Approximate'}
                 </span>
                 {/* Toggle Button */}
@@ -456,14 +463,25 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', paddingLeft: '4px' }}>
-              <p style={{ margin: 0, fontSize: '0.75rem', color: '#ffffff', fontFamily: 'var(--font-body)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', whiteSpace: 'nowrap' }}>YOUR RATING</p>
+            {/* Rating Box */}
+            <div 
+              style={{ 
+                ...inputStyle, 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'space-between',
+                userSelect: 'none'
+              }}
+            >
+              <span style={{ color: '#ffffff', fontSize: '0.9rem', fontFamily: 'var(--font-body)' }}>
+                Your Rating
+              </span>
               <StarRating
                 rating={rating}
                 onChange={setRating}
                 interactive={true}
-                size={22}
-                gap={6}
+                size={20}
+                gap={5}
                 emptyColor="rgba(255, 255, 255, 0.35)"
               />
             </div>
@@ -471,11 +489,13 @@ export default function CreateReview({ onClose, onPostSuccess, editingReview }) 
         </div>
 
         <textarea 
+          id="create-review-text"
+          name="reviewText"
           placeholder="Share your experience (What did you like? Dislike?)" 
           value={summary}
           onChange={e => setSummary(e.target.value)}
           className="create-review-input"
-          style={{ ...inputStyle, borderRadius: '20px', padding: '14px 18px', flex: 1, minHeight: '120px', resize: 'none', marginBottom: 20 }}
+          style={{ ...inputStyle, height: 'auto', borderRadius: '20px', padding: '14px 18px', flex: 1, minHeight: '120px', resize: 'none', marginBottom: 20 }}
         />
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', marginTop: 'auto' }}>

@@ -12,7 +12,7 @@ import {
     sendForgotPasswordOtp,
     resetPassword
 } from '../controllers/authController.js';
-import { requireAuth } from '../middlewares/authMiddleware.js';
+import { requireAuth, optionalAuth } from '../middlewares/authMiddleware.js';
 import { upload } from '../middlewares/uploadMiddleware.js';
 
 const router = express.Router();
@@ -23,7 +23,7 @@ router.post('/send-forgot-password-otp', sendForgotPasswordOtp);
 router.post('/reset-password', resetPassword);
 router.post('/login', login);
 router.post('/logout', logout);
-router.get('/me', requireAuth, getMe);
+router.get('/me', optionalAuth, getMe);
 router.get('/user/:username', getUserByUsername);
 router.post('/send-email-update-otp', requireAuth, sendEmailUpdateOtp);
 router.put('/profile', requireAuth, upload.single('profilePic'), updateProfile);

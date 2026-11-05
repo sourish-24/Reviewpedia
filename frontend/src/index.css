@@ -177,7 +177,7 @@ h1, h2, h3, h4, h5, h6 {
 
 
 .landing-dark-header {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
@@ -187,10 +187,10 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: space-between;
   padding: 20px 30px 0 30px;
   box-sizing: border-box;
-  z-index: 100;
-  background: transparent !important;
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
+  z-index: 1000;
+  background: rgba(248, 244, 240, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   border-bottom: none !important;
   box-shadow: none !important;
 }
@@ -298,7 +298,8 @@ h1, h2, h3, h4, h5, h6 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding-top: 240px;
+  padding-top: 260px;
+  padding-bottom: 220px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -481,5 +482,69 @@ h1, h2, h3, h4, h5, h6 {
   to {
     opacity: 1;
     transform: translate(-50%, 0);
+  }
+}
+
+/* ==========================================================================
+   Story Cards (Why Traditional Reviews Fail You)
+   ========================================================================== */
+
+.story-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  max-width: 1240px;
+  margin: 0 auto;
+}
+
+.story-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 2.2rem 2.4rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  text-align: left;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+  box-sizing: border-box;
+}
+
+.story-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 4px;
+  font-size: 1.22rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.45;
+  margin-bottom: 1rem;
+}
+
+.story-card-body {
+  color: #475569;
+  font-size: 1.02rem;
+  line-height: 1.7;
+  margin: 0;
+  flex-grow: 1;
+}
+
+.story-card-body strong {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+@media (max-width: 960px) {
+  .story-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .story-card {
+    padding: 1.6rem 1.8rem;
+  }
+  .story-card-header {
+    font-size: 1.12rem;
   }
 }

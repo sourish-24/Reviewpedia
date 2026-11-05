@@ -55,7 +55,7 @@ export default function CategoryDropdown({
   };
 
   return (
-    <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
+    <div ref={containerRef} style={{ position: 'relative', width: '100%', height: '42px', display: 'flex' }}>
       {/* Trigger Button mimicking the inputStyle */}
       <div
         onClick={() => setIsOpen((prev) => !prev)}
